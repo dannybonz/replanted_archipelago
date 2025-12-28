@@ -1,0 +1,496 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{023F8C55-AA3F-4568-8994-E6D3FE979F25}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ReplantedArchipelago</RootNamespace>
+    <AssemblyName>ReplantedArchipelago</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\..\..\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\Mods\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Archipelago.MultiClient.Net, Version=6.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Archipelago.MultiClient.Net.6.7.0\lib\net45\Archipelago.MultiClient.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2Cppcom.Tivadar.Best.HTTP.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppFacepunch.Steamworks.Win64.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppGoogle.Protobuf.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppGrpc.Core.Api.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppGrpc.Net.Client.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppGrpc.Net.Common.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2Cppio.sentry.unity.runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppMicrosoft.Extensions.Logging.Abstractions.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppMono.Security.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppOOI.Logging.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppOOI.Platform.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppPrimeTween.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppReloaded.Input.Components.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.Microsoft.Bcl.AsyncInterfaces.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.System.Buffers.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.System.Collections.Immutable.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.System.Memory.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.System.Numerics.Vectors.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.System.Reflection.Metadata.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.System.Runtime.CompilerServices.Unsafe.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.System.Text.Encodings.Web.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.System.Text.Json.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.System.Threading.Tasks.Extensions.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.Unity.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSentry.Unity.Native.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2Cppspine-csharp.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2Cppspine-unity.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Configuration.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Core.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Diagnostics.DiagnosticSource.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.IO.Compression.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Net.Http.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Numerics.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Runtime.CompilerServices.Unsafe.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Runtime.Serialization.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Text.Encodings.Web.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Text.Json.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppSystem.Xml.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.Common.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.Content.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.DataModels.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.DebugKit.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.EditorUtils.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.Extensions.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.Injectors.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.Localizations.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.Logger.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.PanelViews.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.TreeState.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2CppTekly.Webster.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Il2Cpp__Generated.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.Addressables.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.Burst.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.Burst.Unsafe.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.Collections.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.Collections.LowLevel.ILSupport.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.InputSystem.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.InputSystem.ForUI.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.Mathematics.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.Profiling.Core.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.RenderPipeline.Universal.ShaderLibrary.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.RenderPipelines.Core.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.RenderPipelines.Core.Runtime.Shared.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.RenderPipelines.GPUDriven.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.RenderPipelines.Universal.Runtime.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.ResourceManager.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.Serialization.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\Unity.TextMeshPro.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.AccessibilityModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.AIModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.AndroidJNIModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.AnimationModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.ARModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.AssetBundleModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.AudioModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.ClothModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.ContentLoadModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.CrashReportingModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.DirectorModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.DSPGraphModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.GameCenterModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.GIModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.GraphicsStateCollectionSerializerModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.GridModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.HierarchyCoreModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.HotReloadModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.ImageConversionModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.InputForUIModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.InputLegacyModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.InputModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.JSONSerializeModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.LocalizationModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.MarshallingModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.MultiplayerModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.ParticleSystemModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.PerformanceReportingModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.Physics2DModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.PhysicsModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.PropertiesModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.ScreenCaptureModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.ShaderVariantAnalyticsModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.SharedInternalsModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.SpriteMaskModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.SpriteShapeModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.StreamingModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.SubstanceModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.SubsystemsModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.TerrainModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.TerrainPhysicsModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.TextCoreFontEngineModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.TextCoreTextEngineModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.TextRenderingModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.TilemapModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.TLSModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UIElementsModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UIModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UmbraModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityAnalyticsCommonModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityAnalyticsModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityConnectModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityCurlModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityTestProtocolModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestAssetBundleModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestAudioModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestTextureModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestWWWModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.VehiclesModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.VFXModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.VideoModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.VRModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.WindModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files %28x86%29\Steam\steamapps\common\PVZ Replanted\MelonLoader\Il2CppAssemblies\UnityEngine.XRModule.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="C:\Program Files (x86)\Steam\steamapps\common\PVZ Replanted\MelonLoader\net6\MelonLoader.dll" />
+    <Reference Include="C:\Program Files (x86)\Steam\steamapps\common\PVZ Replanted\MelonLoader\net6\0Harmony.dll" />
+    <Reference Include="C:\Program Files (x86)\Steam\steamapps\common\PVZ Replanted\MelonLoader\net6\Il2CppInterop.Runtime.dll" />
+    <Reference Include="C:\Program Files (x86)\Steam\steamapps\common\PVZ Replanted\MelonLoader\net6\Il2CppInterop.Common.dll" />
+    <Reference Include="Il2CppInterop.HarmonySupport, Version=1.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\PVZ Replanted\MelonLoader\net6\Il2CppInterop.HarmonySupport.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Archipelago.MultiClient.Net.6.7.0\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="APClient.cs" />
+    <Compile Include="APSettings.cs" />
+    <Compile Include="Data.cs" />
+    <Compile Include="Main.cs" />
+    <Compile Include="Patches\DataPatch.cs" />
+    <Compile Include="Patches\Gameplay.cs" />
+    <Compile Include="Patches\Menu.cs" />
+    <Compile Include="Patches\Profile.cs" />
+    <Compile Include="Patches\Secrets.cs" />
+    <Compile Include="Patches\Store.cs" />
+    <Compile Include="Patches\Unlocks.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
