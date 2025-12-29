@@ -19,7 +19,10 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(GameplayActivity __instance)
             {
-                var board = __instance.Board; //Represents the lawn and its contents
+                if (__instance == null || __instance.Board == null || !(__instance.GameScene == GameScenes.Playing || __instance.GameScene == GameScenes.LevelIntro))
+                {
+                    return;
+                }
 
                 if (APClient.chooserRefreshState == "toggle" && __instance.m_crazyDaveService.CrazyDaveState == CrazyDaveState.Off)
                 {
@@ -28,6 +31,7 @@ namespace ReplantedArchipelago.Patches
                 }
 
                 //Cheat keys
+                var board = __instance.Board; //Represents the lawn and its contents
                 if (Data.CheatKeys)
                 {
                     //Instant Level Win - F1
@@ -49,130 +53,122 @@ namespace ReplantedArchipelago.Patches
                     }
                 }
 
-                if (board != null && (__instance.GameScene == GameScenes.Playing || __instance.GameScene == GameScenes.Award)) //If in gameplay
+                if (board.mTutorialState != TutorialState.Off)
                 {
-                    if (board.mTutorialState != TutorialState.Off)
+                    board.SetTutorialState(TutorialState.Off);
+                }
+
+                if (__instance.GameScene == GameScenes.Playing && Main.QueuedIngameMessages.Count > 0 && board.mAdvice.mDuration == 0) //If there are queued up AP messages to display
+                {
+                    Data.QueuedIngameMessage message = Main.QueuedIngameMessages.Dequeue();
+                    Main.currentMessage = message.MessageLabel;
+
+                    //Init ingame message
+                    board.DisplayAdviceAgain("AP_PLACEHOLDER", MessageStyle.HintLong, AdviceType.NeedWheelbarrow);
+                    board.mAdvice.ClearLabel();
+
+                    //Set style
+                    board.mAdvice.mLabel = Main.currentMessage;
+                    board.mAdvice.mMessageStyle = MessageStyle.HintLong;
+                    board.mAdvice.mFlashing = (float)0.7529412;
+                    board.mAdvice.mPosY = 527;
+                    board.mAdvice.mGreyBoxHeight = 55;
+                    board.mAdvice.mColor = new UnityEngine.Color((float)0.992, (float)0.961, (float)0.678);
+
+                    //Activate traps
+                    if (message.ItemId == Data.itemIds["Seed Packet Cooldown Trap"]) //Seed Packet Cooldown Trap
                     {
-                        board.SetTutorialState(TutorialState.Off);
-                    }
-
-                    /*if (board.mAdvice.mLabel == "$ADVICE_PLANT_SUNFLOWER1" || board.mAdvice.mLabel == "$PROMPT_UI_SELECT_SEED")
-                    {
-                        board.mAdvice.mDuration = 0;
-                    }*/
-
-                    if (Main.QueuedIngameMessages.Count > 0 && board.mAdvice.mDuration == 0) //If there are queued up AP messages to display
-                    {
-                        Data.QueuedIngameMessage message = Main.QueuedIngameMessages.Dequeue();
-                        Main.currentMessage = message.MessageLabel;
-
-                        //Init ingame message
-                        board.DisplayAdviceAgain("AP_PLACEHOLDER", MessageStyle.HintLong, AdviceType.NeedWheelbarrow);
-                        board.mAdvice.ClearLabel();
-
-                        //Set style
-                        board.mAdvice.mLabel = Main.currentMessage;
-                        board.mAdvice.mMessageStyle = MessageStyle.HintLong;
-                        board.mAdvice.mFlashing = (float)0.7529412;
-                        board.mAdvice.mPosY = 527;
-                        board.mAdvice.mGreyBoxHeight = 55;
-                        board.mAdvice.mColor = new UnityEngine.Color((float)0.992, (float)0.961, (float)0.678);
-
-                        //Activate traps
-                        if (message.ItemId == Data.itemIds["Seed Packet Cooldown Trap"]) //Seed Packet Cooldown Trap
+                        if (board.HasConveyorBeltSeedBank() == false) //Don't trigger if playing a conveyor belt level (causes weird issues)
                         {
-                            if (board.HasConveyorBeltSeedBank() == false) //Don't trigger if playing a conveyor belt level (causes weird issues)
+                            foreach (SeedPacket seedPacket in board.SeedBanks[0].SeedPackets)
                             {
-                                foreach (SeedPacket seedPacket in board.SeedBanks[0].SeedPackets)
+                                if (seedPacket != null && seedPacket.PacketType != SeedType.None)
                                 {
-                                    if (seedPacket != null && seedPacket.PacketType != SeedType.None)
-                                    {
-                                        seedPacket.mRefreshCounter = 0;
-                                        seedPacket.mRefreshTime = Plant.GetRefreshTime(__instance, seedPacket.mPacketType, seedPacket.mImitaterType);
-                                        seedPacket.mRefreshing = true;
-                                        seedPacket.mActive = false;
-                                    }
+                                    seedPacket.mRefreshCounter = 0;
+                                    seedPacket.mRefreshTime = Plant.GetRefreshTime(__instance, seedPacket.mPacketType, seedPacket.mImitaterType);
+                                    seedPacket.mRefreshing = true;
+                                    seedPacket.mActive = false;
                                 }
                             }
                         }
-                        else if (message.ItemId == Data.itemIds["Mower Deploy Trap"]) //Mower Deploy Trap
-                        {
-                            for (int i = 0; i < board.m_lawnMowers.Count; i++)
-                            {
-                                board.m_lawnMowers[i].StartMower();
-                            }
-                        }
-                        else if (message.ItemId == Data.itemIds["Zombie Ambush Trap"]) //Zombie Ambush Trap
-                        {
-                            if (board.mBackground == BackgroundType.Pool || board.mBackground == BackgroundType.Fog)
-                            {
-                                board.SpawnZombiesFromPool();
-                            }
-                            else if (board.mBackground == BackgroundType.Night)
-                            {
-                                board.SpawnZombiesFromGraves();
-                            }
-                            else
-                            {
-                                board.SpawnZombiesFromSky();
-                            }
-                        }
-
-                        //Activate secrets
-                        if (message.ItemId == Data.itemIds["mustache"])
-                        {
-                            __instance.UserService.ActiveUserProfile.mMustacheModeActive = true;
-                            board.SetMustacheMode(true);
-                        }
-                        else if (message.ItemId == Data.itemIds["future"])
-                        {
-                            __instance.UserService.ActiveUserProfile.mFutureModeActive = true;
-                            board.SetFutureMode(true);
-                        }
-                        else if (message.ItemId == Data.itemIds["trickedout"])
-                        {
-                            __instance.UserService.ActiveUserProfile.mTrickedOutModeActive = true;
-                            board.SetSuperMowerMode(true);
-                        }
-                        else if (message.ItemId == Data.itemIds["daisies"])
-                        {
-                            __instance.UserService.ActiveUserProfile.mDaisesModeActive = true;
-                            board.SetDaisyMode(true);
-                        }
-                        else if (message.ItemId == Data.itemIds["pinata"])
-                        {
-                            __instance.UserService.ActiveUserProfile.mPinataModeActive = true;
-                            board.SetPinataMode(true);
-                        }
-                        else if (message.ItemId == Data.itemIds["sukhbir"])
-                        {
-                            __instance.UserService.ActiveUserProfile.mSukhbirModeActive = true;
-                            board.SetSukhbirMode(true);
-                        }
-                        else if (message.ItemId == Data.itemIds["dance"])
-                        {
-                            __instance.UserService.ActiveUserProfile.mDanceModeActive = true;
-                            board.SetDanceMode(true);
-                        }
-
-                        int messageDuration = 600 - (Main.QueuedIngameMessages.Count * 5); //Reduces message duration if there are lots of them queued up
-                        if (messageDuration < 100)
-                        {
-                            messageDuration = 100;
-                        }
-
-                        board.mAdvice.mDuration = messageDuration;
                     }
-                    else if (board.mAdvice.mDuration == 10000) //Certain tutorial messages are given this number
+                    else if (message.ItemId == Data.itemIds["Mower Deploy Trap"]) //Mower Deploy Trap
                     {
-                        board.mAdvice.mDuration = 0;
+                        for (int i = 0; i < board.m_lawnMowers.Count; i++)
+                        {
+                            board.m_lawnMowers[i].StartMower();
+                        }
+                    }
+                    else if (message.ItemId == Data.itemIds["Zombie Ambush Trap"]) //Zombie Ambush Trap
+                    {
+                        if (board.mBackground == BackgroundType.Pool || board.mBackground == BackgroundType.Fog)
+                        {
+                            board.SpawnZombiesFromPool();
+                        }
+                        else if (board.mBackground == BackgroundType.Night)
+                        {
+                            board.SpawnZombiesFromGraves();
+                        }
+                        else if (!(__instance.GameMode == GameMode.Adventure && board.mLevel < 4))
+                        {
+                            board.SpawnZombiesFromSky();
+                        }
                     }
 
-                    //Update shovel display
-                    if (board.ShowShovel == true && APClient.HasShovel() == false)
+                    //Activate secrets
+                    if (message.ItemId == Data.itemIds["mustache"])
                     {
-                        board.ShowShovel = false;
+                        __instance.UserService.ActiveUserProfile.mMustacheModeActive = true;
+                        board.SetMustacheMode(true);
                     }
+                    else if (message.ItemId == Data.itemIds["future"])
+                    {
+                        __instance.UserService.ActiveUserProfile.mFutureModeActive = true;
+                        board.SetFutureMode(true);
+                    }
+                    else if (message.ItemId == Data.itemIds["trickedout"])
+                    {
+                        __instance.UserService.ActiveUserProfile.mTrickedOutModeActive = true;
+                        board.SetSuperMowerMode(true);
+                    }
+                    else if (message.ItemId == Data.itemIds["daisies"])
+                    {
+                        __instance.UserService.ActiveUserProfile.mDaisesModeActive = true;
+                        board.SetDaisyMode(true);
+                    }
+                    else if (message.ItemId == Data.itemIds["pinata"])
+                    {
+                        __instance.UserService.ActiveUserProfile.mPinataModeActive = true;
+                        board.SetPinataMode(true);
+                    }
+                    else if (message.ItemId == Data.itemIds["sukhbir"])
+                    {
+                        __instance.UserService.ActiveUserProfile.mSukhbirModeActive = true;
+                        board.SetSukhbirMode(true);
+                    }
+                    else if (message.ItemId == Data.itemIds["dance"])
+                    {
+                        __instance.UserService.ActiveUserProfile.mDanceModeActive = true;
+                        board.SetDanceMode(true);
+                    }
+
+                    int messageDuration = 600 - (Main.QueuedIngameMessages.Count * 5); //Reduces message duration if there are lots of them queued up
+                    if (messageDuration < 100)
+                    {
+                        messageDuration = 100;
+                    }
+
+                    board.mAdvice.mDuration = messageDuration;
+                }
+                else if (board.mAdvice.mDuration == 10000) //Certain tutorial messages are given this number
+                {
+                    board.mAdvice.mDuration = 0;
+                }
+
+                //Update shovel display
+                if (board.ShowShovel == true && APClient.HasShovel() == false)
+                {
+                    board.ShowShovel = false;
                 }
             }
         }
@@ -360,6 +356,7 @@ namespace ReplantedArchipelago.Patches
                 if (!__instance.mApp.IsCoopMode() && !__instance.mApp.IsVersusMode() && !__instance.mApp.IsIZombieLevel() && !__instance.mApp.IsScaryPotterLevel() && !__instance.mApp.IsWhackAZombieLevel() && !__instance.mApp.IsChallengeWithoutSeedBank() && !__instance.HasConveyorBeltSeedBank() && __instance.mApp.GameMode != GameMode.ChallengeBeghouled && __instance.mApp.GameMode != GameMode.ChallengeBeghouledTwist && __instance.mApp.GameMode != GameMode.ChallengeZombiquarium)
                 {
                     long[] forcedPlants = Array.Empty<long>();
+                    long[] bannedPlants = Array.Empty<long>();
 
                     if (__instance.mApp.GameMode == GameMode.ChallengeArtChallenge1)
                     {
@@ -373,8 +370,16 @@ namespace ReplantedArchipelago.Patches
                     {
                         forcedPlants = new long[] { 129 };
                     }
+                    else if (__instance.mApp.GameMode == GameMode.ChallengeLastStand)
+                    {
+                        bannedPlants = new long[] { 101, 109, 141 };
+                    }
+                    else if (__instance.mApp.ReloadedGameMode == ReloadedGameMode.CloudyDay)
+                    {
+                        bannedPlants = new long[] { 109, 141 };
+                    }
 
-                    __result = APClient.GetSeedSlots(forcedPlants);
+                    __result = APClient.GetSeedSlots(forcedPlants, bannedPlants);
                     return false;
                 }
                 return true;

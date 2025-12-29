@@ -19,12 +19,11 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(MainMenuPanelView __instance)
             {
-                GameObject accountSign = __instance.transform.Find("Canvas/Layout/Center/Main/AccountSign").gameObject;
                 GameObject usersPanel = __instance.transform.parent.Find("P_UsersPanel").gameObject;
-                Data.panelTemplate = usersPanel;
-
-                accountSign.SetActive(false);
-                usersPanel.SetActive(false);
+                if (usersPanel != null)
+                {
+                    usersPanel.SetActive(false);
+                }
 
                 APClient.chooserRefreshState = "none"; //No need to refresh seed chooser
             }
@@ -33,12 +32,18 @@ namespace ReplantedArchipelago.Patches
         [HarmonyPatch(typeof(MainMenuPanelView), nameof(MainMenuPanelView.Start))]
         public class MainMenuStartPatch
         {
-            private static void Postfix()
+            private static void Postfix(MainMenuPanelView __instance)
             {
                 if (APClient.newSecrets)
                 {
                     APClient.newSecrets = false;
                     Main.RefreshProfile();
+                }
+
+                GameObject accountSign = __instance.transform.Find("Canvas/Layout/Center/Main/AccountSign").gameObject;
+                if (accountSign != null)
+                {
+                    accountSign.SetActive(false);
                 }
             }
         }

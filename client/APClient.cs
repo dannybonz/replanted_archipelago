@@ -346,27 +346,18 @@ namespace ReplantedArchipelago
             return false;
         }
 
-        public static int GetSeedSlots(params long[] extraPlants)
+        public static int GetSeedSlots(long[] extraPlants, long[] bannedPlants)
         {
             int numberOfSlots = receivedItems.Count(item => item == Data.itemIds["Extra Seed Slot"]) + 1;
+            int numberOfPlants = GetHowManyPlants(extraPlants, bannedPlants);
 
-            int numberOfPlants = GetHowManyPlants(extraPlants);
-
-            return Math.Min(GetHowManyPlants(), numberOfSlots);
+            return Math.Min(numberOfPlants, numberOfSlots);
         }
 
-        public static int GetHowManyPlants(params long[] extraPlants)
+        public static int GetHowManyPlants(long[] extraPlants, long[] bannedPlants)
         {
-            var receivedPlants = receivedItems.Where(item => item >= 100 && item < 200);
-
-            if (extraPlants == null || extraPlants.Length == 0)
-            {
-                return receivedPlants.Distinct().Count();
-            }
-            else
-            {
-                return receivedPlants.Union(extraPlants).Distinct().Count();
-            }
+            var availablePlants = receivedItems.Where(item => item >= 100 && item < 200).Union(extraPlants).Except(bannedPlants).Distinct().Count();
+            return availablePlants;
         }
 
         public static void CompletedLevel(int levelNumber, string mode)

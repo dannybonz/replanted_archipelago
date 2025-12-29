@@ -9,14 +9,16 @@ using System.Reflection;
 using UnityEngine;
 using HarmonyPatch = HarmonyLib.HarmonyPatch;
 
-[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "0.1.0", "dannybonz")]
+[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.0.0", "dannybonz")]
 [assembly: MelonGame("PopCap Games", "PvZ Replanted")]
 
 namespace ReplantedArchipelago
 {
     public class Main : MelonMod
     {
-        //Init variables  for login box
+        public static HarmonyLib.Harmony harmony;
+
+        //Init variables for login box
         private string hostText = "";
         private string slotText = "";
         private string passwordText = "";
@@ -38,7 +40,7 @@ namespace ReplantedArchipelago
         {
             MelonLogger.Msg("Initialising...");
 
-            var harmony = new HarmonyLib.Harmony("com.dannybonz.pvzrandomiser");
+            harmony = new HarmonyLib.Harmony("com.dannybonz.pvzrandomiser");
             harmony.PatchAll();
 
             //Patch DataService getters
@@ -66,6 +68,8 @@ namespace ReplantedArchipelago
             hostText = APSettings.Host.Value;
             slotText = APSettings.SlotName.Value;
             passwordText = APSettings.Password.Value;
+
+            Application.runInBackground = true;
         }
 
         public override void OnGUI()
@@ -265,6 +269,7 @@ namespace ReplantedArchipelago
 
         public static System.Collections.Generic.List<UserProfile> GetUserProfiles(UserService theService) //Returns a list of all UserProfile objects
         {
+            MelonLogger.Msg("Profile Validation: Checking for matching profiles...");
             userService = theService; //Updates the stored userService object
             System.Collections.Generic.List<UserProfile> profiles = new System.Collections.Generic.List<UserProfile>();
 
@@ -282,6 +287,7 @@ namespace ReplantedArchipelago
                 }
             }
 
+            MelonLogger.Msg("Profile Validation: Found profiles.");
             return profiles;
         }
 
@@ -342,7 +348,6 @@ namespace ReplantedArchipelago
                     {
                         profileValidated = false;
 
-                        MelonLogger.Msg("Profile Validation: Checking for matching profiles..");
                         System.Collections.Generic.List<UserProfile> profiles = GetUserProfiles(userService); //Get all profiles
                         System.Collections.Generic.List<int> matchingProfileIndexes = GetMatchingProfiles(profiles, desiredGuids); //Of the previously accessed profiles, get any profiles that have been previously used in this AP
 
@@ -395,8 +400,12 @@ namespace ReplantedArchipelago
             }
             else if (APClient.connectionStatus == 1)
             {
-                __instance.m_minLoadingTime = __instance.m_curLoadTime - 1; //Complete loading ASAP
+                __instance.m_minLoadingTime = 0; //Complete loading ASAP
+                __instance.m_curLoadTime = 100;
                 Main.readyToConnect = false; //Already connected, no need to connect anymore
+
+                //No need to patch loading anymore - prevent crashes?
+                Main.harmony.Unpatch(typeof(LoadingDataModel).GetMethod(nameof(LoadingDataModel.OnTick)), HarmonyLib.HarmonyPatchType.Postfix);
             }
         }
     }
