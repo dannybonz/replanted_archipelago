@@ -205,11 +205,11 @@ class PVZRWorld(World):
 
         if hasattr(self.multiworld, "re_gen_passthrough"): #If generated through Universal Tracker passthrough
             slot_data: dict = self.multiworld.re_gen_passthrough[self.game]
-            self.minigame_unlocks = slot_data["minigame_unlocks"]
-            self.survival_unlocks = slot_data["survival_unlocks"]
-            self.vasebreaker_unlocks = slot_data["vasebreaker_unlocks"]
-            self.izombie_unlocks = slot_data["izombie_unlocks"]
-
+            self.minigame_unlocks = {int(k): v for k, v in slot_data["minigame_unlocks"].items()}
+            self.survival_unlocks = {int(k): v for k, v in slot_data["survival_unlocks"].items()}       
+            self.vasebreaker_unlocks = {int(k): v for k, v in slot_data["vasebreaker_unlocks"].items()}       
+            self.izombie_unlocks = {int(k): v for k, v in slot_data["izombie_unlocks"].items()}       
+            
     def generate_basic(self) -> None:
         # Music randomisation
         self.music_map = []
@@ -238,19 +238,26 @@ class PVZRWorld(World):
         slot_data_dict = {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_area_items": self.options.adventure_area_items.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "require_all_levels": require_all_levels, "imitater_open": imitater_open}
         return slot_data_dict
 
+    @staticmethod
+    def interpret_slot_data(slot_data: dict[str:Any]) -> dict[str:Any]:
+        return slot_data
+
     def get_filler_item_name(self) -> str:
         items = ["Silver Coin", "Gold Coin", "Diamond"]
         weights = [3, 2, 1]
         return self.random.choices(items, weights=weights, k=1)[0]
     
     def create_item(self, name: str) -> PVZRItem:
-        if name in self.progression_item_names + self.preplaced_progression:
-            item_classification = ItemClassification.progression
-        elif name in self.useful_item_names:
-            item_classification = ItemClassification.useful
-        elif name in self.trap_item_names:
-            item_classification = ItemClassification.trap
-        else:
+        try:
+            if name in self.progression_item_names + self.preplaced_progression:
+                item_classification = ItemClassification.progression
+            elif name in self.useful_item_names:
+                item_classification = ItemClassification.useful
+            elif name in self.trap_item_names:
+                item_classification = ItemClassification.trap
+            else:
+                item_classification = ItemClassification.filler
+        except:
             item_classification = ItemClassification.filler
 
         return PVZRItem(name, item_classification, item_ids[name], self.player)

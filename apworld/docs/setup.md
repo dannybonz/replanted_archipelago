@@ -14,7 +14,8 @@ Defend your lawn from hordes of undead in this Archipelago implementation of "Pl
 - If you have not already set up MelonLoader for Plants vs. Zombies Replanted, you will need to use the MelonLoader Installer. Run the Melonloader Installer, select your installation of Plants vs. Zombies Replanted and then click "Install".
 - Navigate to Plants vs. Zombies Replanted's installation directory - you can find this in Steam by clicking "Manage > Browse Local Files".
 - Extract the contents of the Replanted Archipelago mod release into this directory.
-  
+To update the mod, simply replace the mod files.
+
 ## Generating
 - To generate a game, follow [the official instructions.](https://archipelago.gg/tutorial/Archipelago/setup/en#generating-a-game)
 

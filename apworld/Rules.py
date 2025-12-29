@@ -90,27 +90,37 @@ def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roo
     elif level_data["name"] == "Roof: Dr. Zomboss":
         if (world.options.goal == 0 and not state.has("Area Clear", player, 5)):
             return False
-    elif level_data["name"] == "Minigames: Last Stand":
-        if not ((state.has("Fume-shroom", player) and state.has("Coffee Bean", player)) or (state.has("Torchwood", player) and (state.has("Threepeater", player) or state.has("Repeater", player))) or (state.has("Melon-pult", player))):
-            return False
 
     if level_data["choose"]:
+        if level_data["type"] == "survival" and not has_wall(state, player):
+            return False
         if at_night:
-            if not (state.has("Puff-shroom", player) or state.has("Scaredy-shroom", player) or state.has("Sun-shroom", player)):
+            if level_data["type"] == "survival":
+                if not (state.has("Fume-shroom", player)):
+                    return False
+                if has_pool == False and not (state.has("Grave Buster", player)):
+                    return False
+
+            night_required_plants = [state.has("Puff-shroom", player), state.has("Scaredy-shroom", player), state.has("Sun-shroom", player), state.has("Fume-shroom", player)]
+            if sum(night_required_plants) < 3:
                 return False
+
         if has_pool:
             if not state.has("Lily Pad", player):
                 return False
         if on_roof:
             if not (state.has("Flower Pot", player) and has_pult(state, player)):
                 return False
-        if (level_data["choose"] == True and (level_data["flags"] > 1 or level_data["location"] != "Day" or level_data["type"] in ["minigame", "survival", "bonus"])) and not has_sun_producer(state, player, at_night, has_pool, on_roof):
+        if (level_data["flags"] > 1 or level_data["location"] != "Day" or level_data["type"] in ["minigame", "survival", "bonus"]) and not has_sun_producer(state, player, at_night, has_pool, on_roof):
             return False
+        
         if level_data["name"] == "Bonus Levels: Unsodded" and not (state.has("Threepeater", player) or state.has("Starfruit", player)):
             return False
-        if level_data["name"] == "Bonus Levels: Grave Danger" and not state.has("Grave Buster", player):
+        elif level_data["name"] == "Bonus Levels: Grave Danger" and not state.has("Grave Buster", player):
             return False
-        if level_data["name"] == "Mini-games: Pogo Party" and not state.has("Roof Cleaners", player):
+        elif level_data["name"] == "Mini-games: Pogo Party" and not state.has("Roof Cleaners", player):
+            return False
+        elif level_data["name"] in ["Minigames: Last Stand", "Survival: Day (Hard)", "Survival: Night (Hard)", "Survival: Pool (Hard)", "Survival: Fog (Hard)", "Survival: Roof (Hard)"] and not ((state.has("Fume-shroom", player) and (at_night or state.has("Coffee Bean", player))) or (state.has("Torchwood", player) and (state.has("Threepeater", player) or state.has("Repeater", player))) or (state.has("Melon-pult", player))):
             return False
 
         for zombie in level_data["zombies"]:
