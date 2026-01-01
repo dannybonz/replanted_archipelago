@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using HarmonyPatch = HarmonyLib.HarmonyPatch;
 
-[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.0.2", "dannybonz")]
+[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.0.3", "dannybonz")]
 [assembly: MelonGame("PopCap Games", "PvZ Replanted")]
 
 namespace ReplantedArchipelago
@@ -65,19 +65,7 @@ namespace ReplantedArchipelago
             //Patch DataService getters
             var storeEntryProperty = typeof(DataService).GetProperty("StoreEntryData", BindingFlags.Instance | BindingFlags.Public);
             MethodInfo storeGetter = storeEntryProperty.GetGetMethod();
-            harmony.Patch(storeGetter, postfix: new HarmonyLib.HarmonyMethod(typeof(DataPatch).GetMethod(nameof(DataPatch.StoreEntryDataPostfix))));
-
-            var minigamesDataProperty = typeof(DataService).GetProperty("MiniGamesData", BindingFlags.Instance | BindingFlags.Public);
-            MethodInfo minigamesGetter = minigamesDataProperty.GetGetMethod();
-            harmony.Patch(minigamesGetter, postfix: new HarmonyLib.HarmonyMethod(typeof(DataPatch).GetMethod(nameof(DataPatch.MiniGamesDataPostfix))));
-
-            var survivalDataProperty = typeof(DataService).GetProperty("SurvivalEntriesData", BindingFlags.Instance | BindingFlags.Public);
-            MethodInfo survivalGetter = survivalDataProperty.GetGetMethod();
-            harmony.Patch(survivalGetter, postfix: new HarmonyLib.HarmonyMethod(typeof(DataPatch).GetMethod(nameof(DataPatch.SurvivalDataPostfix))));
-
-            var puzzleDataProperty = typeof(DataService).GetProperty("PuzzleEntryData", BindingFlags.Instance | BindingFlags.Public);
-            MethodInfo puzzleGetter = puzzleDataProperty.GetGetMethod();
-            harmony.Patch(puzzleGetter, postfix: new HarmonyLib.HarmonyMethod(typeof(DataPatch).GetMethod(nameof(DataPatch.PuzzleDataPostfix))));
+            harmony.Patch(storeGetter, postfix: new HarmonyLib.HarmonyMethod(typeof(Store).GetMethod(nameof(Store.PatchStoreEntryData))));
 
             textStyle = new GUIStyle();
             textStyle.fontSize = 18;
@@ -215,11 +203,6 @@ namespace ReplantedArchipelago
 
         public override void OnUpdate()
         {
-            if (APClient.connectionStatus == 1 && (APClient.apSession.Socket == null || !APClient.apSession.Socket.Connected))
-            {
-                APClient.HandleDisconnect();
-            }
-
             if (APClient.connectionStatus == 0 && activeField != 0) //Not connected yet
             {
                 foreach (char character in Input.inputString)

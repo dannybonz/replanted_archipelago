@@ -3,6 +3,7 @@ using Il2CppReloaded.Data;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace ReplantedArchipelago
@@ -10,7 +11,7 @@ namespace ReplantedArchipelago
     public class Data
     {
         //Version to match with generation
-        public static double GenVersion = 1.0;
+        public static double GenVersion = 1.1;
         //Whether cheat keys are enabled
         public static bool CheatKeys = false;
         //Cheat that kills zombies as soon as they spawn in
@@ -37,7 +38,8 @@ namespace ReplantedArchipelago
         }
 
         //Item IDs
-        public static long[] menuUpdateItems = { 2, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 50, 51, 52, 53, 54, 55, 56 }; //Item IDs that require a menu refresh
+        public static long[] menuUpdateItems = new long[] { 2, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 50, 51, 52, 53, 54, 55, 56 }.Concat(Enumerable.Range(200, 201).Select(i => (long)i)).ToArray(); //Item IDs that require a menu refresh
+
         public static System.Collections.Generic.Dictionary<string, long> itemIds = new System.Collections.Generic.Dictionary<string, long>
         {
             { "Crazy Dave's Car Keys", 2 },
@@ -86,7 +88,8 @@ namespace ReplantedArchipelago
         //Common Game Data
         public static SeedType[] seedTypes = { SeedType.Peashooter, SeedType.Sunflower, SeedType.Cherrybomb, SeedType.Wallnut, SeedType.Potatomine, SeedType.Snowpea, SeedType.Chomper, SeedType.Repeater, SeedType.Puffshroom, SeedType.Sunshroom, SeedType.Fumeshroom, SeedType.Gravebuster, SeedType.Hypnoshroom, SeedType.Scaredyshroom, SeedType.Iceshroom, SeedType.Doomshroom, SeedType.Lilypad, SeedType.Squash, SeedType.Threepeater, SeedType.Tanglekelp, SeedType.Jalapeno, SeedType.Spikeweed, SeedType.Torchwood, SeedType.Tallnut, SeedType.Seashroom, SeedType.Plantern, SeedType.Cactus, SeedType.Blover, SeedType.Splitpea, SeedType.Starfruit, SeedType.Pumpkinshell, SeedType.Magnetshroom, SeedType.Cabbagepult, SeedType.Flowerpot, SeedType.Kernelpult, SeedType.InstantCoffee, SeedType.Garlic, SeedType.Umbrella, SeedType.Marigold, SeedType.Melonpult, SeedType.Gatlingpea, SeedType.Twinsunflower, SeedType.Gloomshroom, SeedType.Cattail, SeedType.Wintermelon, SeedType.GoldMagnet, SeedType.Spikerock, SeedType.Cobcannon, SeedType.Imitater };
         public static MusicTune[] musicTunes = { MusicTune.DayGrasswalk, MusicTune.MinigameLoonboon, MusicTune.Conveyer, MusicTune.NightMoongrains, MusicTune.PoolWaterygraves, MusicTune.FogRigormormist, MusicTune.RoofGrazetheroof, MusicTune.FinalBossBrainiacManiac, MusicTune.PuzzleCerebrawl };
-        public static LevelEntryData[] orderedSurvivalEntries = new LevelEntryData[0];
+        public static Dictionary<string, int[]> levelOrders = new Dictionary<string, int[]>();
+        public static Dictionary<string, LevelEntryData[]> orderedLevelEntries = new Dictionary<string, LevelEntryData[]>();
 
         //Location IDs
         public static readonly Dictionary<int, LevelLocationsEntry> AllLevelLocations = new Dictionary<int, LevelLocationsEntry>

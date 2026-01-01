@@ -20,6 +20,7 @@ namespace ReplantedArchipelago
         public static string slot;
         public static string host;
         public static string password;
+        public static int reconnectAttempts = 0;
 
         public static ArchipelagoSession apSession;
         public static List<long> receivedItems = new List<long>();
@@ -35,8 +36,10 @@ namespace ReplantedArchipelago
         public static JObject vasebreakerUnlocks;
         public static JObject izombieUnlocks;
         public static bool areaLockItems;
+        public static bool openAreaItems;
         public static bool requireAllLevels;
         public static bool imitaterOpen;
+        public static bool individualLevelUnlockItems;
 
         public static int shopPages;
         public static int shopPagesVisible = 1;
@@ -103,9 +106,11 @@ namespace ReplantedArchipelago
                     survivalUnlocks = (JObject)slotData["survival_unlocks"];
                     vasebreakerUnlocks = (JObject)slotData["vasebreaker_unlocks"];
                     izombieUnlocks = (JObject)slotData["izombie_unlocks"];
-                    areaLockItems = Convert.ToBoolean(slotData["adventure_area_items"]);
+                    areaLockItems = (Convert.ToInt32(slotData["adventure_mode_progression"]) >= 1);
+                    openAreaItems = (Convert.ToInt32(slotData["adventure_mode_progression"]) == 2);
                     requireAllLevels = Convert.ToBoolean(slotData["require_all_levels"]);
                     imitaterOpen = Convert.ToBoolean(slotData["imitater_open"]);
+                    individualLevelUnlockItems = Convert.ToBoolean(slotData["individual_level_unlock_items"]);
 
                     //Scout locations and store each level's reward
                     long[] clearLocationIds = Enumerable.Range(1000, 120).Select(i => (long)i).ToArray();
@@ -152,6 +157,16 @@ namespace ReplantedArchipelago
                     clearedIZombie = apSession.DataStorage[Scope.Slot, "clearedIZombie"];
                     clearedVasebreaker = apSession.DataStorage[Scope.Slot, "clearedVasebreaker"];
 
+                    Data.levelOrders = new Dictionary<string, int[]>();
+
+                    Data.levelOrders["minigames"] = GetOrderedLevelIDs(minigameUnlocks, 20, 51);
+                    Data.levelOrders["survival"] = GetOrderedLevelIDs(survivalUnlocks, 10, 89);
+                    Data.levelOrders["puzzle"] = GetOrderedLevelIDs(vasebreakerUnlocks, 9, 71).Concat(GetOrderedLevelIDs(izombieUnlocks, 9, 80)).ToArray();
+
+                    apSession.Socket.SocketClosed += HandleDisconnect;
+                    apSession.Socket.ErrorReceived += HandleError;
+                    reconnectAttempts = 0;
+
                     connectionStatus = 1; //Connection successful!
 
                     Main.DoProfileCheck(); //Swap to correct profile
@@ -165,6 +180,33 @@ namespace ReplantedArchipelago
                     }
                 }
             }
+        }
+
+        public static int[] GetOrderedLevelIDs(JObject unlockRequirements, int levelCount, int startingLevelId) //Returns a list of Level IDs sorted in the order they will be unlocked
+        {
+            int[] levelOrder = new int[levelCount];
+            List<int> alreadyUnlocked = new List<int>();
+
+            for (int i = startingLevelId; i < startingLevelId + levelCount; i++)
+            {
+                if ((int)unlockRequirements[i.ToString()] == 0)
+                {
+                    alreadyUnlocked.Add(i);
+                }
+            }
+            for (int i = startingLevelId; i < startingLevelId + levelCount; i++)
+            {
+                if ((int)unlockRequirements[i.ToString()] > 0)
+                {
+                    levelOrder[(int)unlockRequirements[i.ToString()] + alreadyUnlocked.Count() - 1] = i;
+                }
+            }
+            for (int i = 0; i < alreadyUnlocked.Count(); i++)
+            {
+                levelOrder[i] = alreadyUnlocked[i];
+            }
+
+            return levelOrder;
         }
 
         public static void ProcessAllItems()
@@ -265,7 +307,21 @@ namespace ReplantedArchipelago
             apSession.DataStorage[Scope.Slot, "displayedIngameMessages"] = displayedIngameMessages;
         }
 
-        public static void HandleDisconnect()
+        public static void HandleDisconnect(string reason)
+        {
+            if (reconnectAttempts > 1)
+            {
+                Main.readyToConnect = true;
+                connectionStatus = 2;
+            }
+            else
+            {
+                reconnectAttempts += 1;
+                AttemptConnection(host, slot, password);
+            }
+        }
+
+        public static void HandleError(Exception e, string reason)
         {
             Main.readyToConnect = true;
             connectionStatus = 2;

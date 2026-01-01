@@ -437,6 +437,19 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
+        [HarmonyPatch(typeof(Board), nameof(Board.MouseDownButterUpZombie))]
+        public static class ButterPatch
+        {
+            private static bool Prefix(Board __instance)
+            {
+                if (!APClient.HasShovel())
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+
         [HarmonyPatch(typeof(CutScene), nameof(CutScene.ShowShovel))]
         public static class CutSceneShowShovelPatch
         {
@@ -469,6 +482,11 @@ namespace ReplantedArchipelago.Patches
                 if (__instance.m_canShovel && !APClient.HasShovel())
                 {
                     __instance.m_canShovel = false;
+                }
+
+                if (__instance.m_canButter && !APClient.HasShovel())
+                {
+                    __instance.m_canButter = false;
                 }
             }
         }

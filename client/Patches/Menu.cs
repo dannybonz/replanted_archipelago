@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using Il2CppBest.HTTP.Shared.Extensions;
 using Il2CppReloaded.Data;
 using Il2CppReloaded.DataModels;
 using Il2CppReloaded.Gameplay;
@@ -7,6 +6,7 @@ using Il2CppReloaded.UI;
 using Il2CppSource.DataModels;
 using Il2CppTekly.DataModels.Models;
 using Il2CppUI.Scripts;
+using System;
 using System.Linq;
 using UnityEngine;
 
@@ -145,60 +145,54 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
-        [HarmonyPatch(typeof(LevelDataModel), nameof(LevelDataModel.UpdateModelData))] //Used to order Survival mode level entries (not sure why they are handled differently by the game, but they are)
+        public static void ReorderLevels(LevelEntriesModel levelEntriesModel, string orderKey, int levelCount)
+        {
+
+            Il2CppSystem.Collections.Generic.List<ModelReference> levelEntries = levelEntriesModel.m_entriesModel.m_models;
+
+            if (!Data.orderedLevelEntries.ContainsKey(orderKey))
+            {
+                LevelEntryData[] orderedLevelEntries = new LevelEntryData[levelCount];
+                for (int i = 0; i < levelEntries.Count; i++)
+                {
+                    LevelEntryModel currentModel = levelEntries[i].Model.Cast<LevelEntryModel>();
+                    if (Data.GameModeLevelIDs.ContainsKey(currentModel.m_entryData.GameMode))
+                    {
+                        int levelId = Data.GameModeLevelIDs[currentModel.m_entryData.GameMode];
+                        int levelPosition = Array.FindIndex(Data.levelOrders[orderKey], order => order == levelId);
+                        orderedLevelEntries[levelPosition] = currentModel.m_entryData;
+                    }
+                }
+                Data.orderedLevelEntries[orderKey] = orderedLevelEntries;
+            }
+
+            for (int i = levelEntries.Count - 1; i >= 0; i--)
+            {
+                if (i < Data.orderedLevelEntries[orderKey].Count())
+                {
+                    LevelEntryModel currentModel = levelEntries[i].Model.Cast<LevelEntryModel>();
+                    currentModel.m_entryData = Data.orderedLevelEntries[orderKey][i];
+                }
+                else
+                {
+                    LevelEntryModel currentModel = levelEntries[i].Model.Cast<LevelEntryModel>();
+                    levelEntries.RemoveAt(i); //Remove the level entry - used for levels not present in the AP such as Endless modes
+                }
+            }
+
+            levelEntriesModel.RefreshEntries();
+        }
+
+        [HarmonyPatch(typeof(LevelDataModel), nameof(LevelDataModel.UpdateModelData))]
         public static class RefreshEntriesPatch
         {
             private static void Prefix(LevelDataModel __instance)
             {
-                Main.Log("Survival Entries A");
-                LevelEntriesModel survivalModel = __instance.m_survivalModel;
-                Il2CppSystem.Collections.Generic.List<ModelReference> survivalEntries = survivalModel.m_entriesModel.m_models;
-
-                if (Data.orderedSurvivalEntries.Count() == 0)
-                {
-                    LevelEntryData[] defaultSurvivalEntries = new LevelEntryData[10];
-                    for (int i = 0; i < survivalEntries.Count; i++)
-                    {
-                        try
-                        {
-                            defaultSurvivalEntries[i] = survivalEntries[i].Model.Cast<LevelEntryModel>().m_entryData;
-                        }
-                        catch
-                        {
-                            Main.Log($"A {i}");
-                        }
-                    }
-
-                    var sortedOrder = APClient.survivalUnlocks.Properties().OrderBy(p => (int)p.Value).ToList();
-                    Data.orderedSurvivalEntries = new LevelEntryData[10];
-                    for (int i = 0; i < survivalEntries.Count; i++)
-                    {
-                        try
-                        {
-                            Data.orderedSurvivalEntries[i] = defaultSurvivalEntries[sortedOrder[i].Name.ToInt32() - 89];
-                        }
-                        catch
-                        {
-                            Main.Log($"B {i}");
-                        }
-                    }
-                }
-
-                for (int i = 0; i < survivalEntries.Count; i++)
-                {
-                    try
-                    {
-                        LevelEntryModel currentModel = survivalEntries[i].Model.Cast<LevelEntryModel>();
-                        currentModel.m_entryData = Data.orderedSurvivalEntries[i];
-                    }
-                    catch
-                    {
-                        Main.Log($"C {i}");
-                    }
-                }
-
-                survivalModel.RefreshEntries();
-                Main.Log("Survival Entries B");
+                Main.Log("Level Entries A");
+                ReorderLevels(__instance.m_miniGamesModel, "minigames", 20);
+                ReorderLevels(__instance.m_survivalModel, "survival", 10);
+                ReorderLevels(__instance.m_puzzlesModel, "puzzle", 18);
+                Main.Log("Level Entries B");
 
             }
         }

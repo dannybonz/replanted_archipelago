@@ -480,7 +480,6 @@
     <Compile Include="APSettings.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="Main.cs" />
-    <Compile Include="Patches\DataPatch.cs" />
     <Compile Include="Patches\Gameplay.cs" />
     <Compile Include="Patches\Menu.cs" />
     <Compile Include="Patches\Profile.cs" />

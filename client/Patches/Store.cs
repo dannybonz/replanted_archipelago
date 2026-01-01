@@ -1,9 +1,13 @@
 ﻿using Archipelago.MultiClient.Net.Enums;
 using HarmonyLib;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppReloaded.Data;
 using Il2CppReloaded.DataModels;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using Il2CppTekly.DataModels.Models;
+using System;
+using System.Linq;
 using static ReplantedArchipelago.Data;
 
 namespace ReplantedArchipelago.Patches
@@ -21,7 +25,7 @@ namespace ReplantedArchipelago.Patches
 
         public static void UpdateCustomEntries()
         {
-            Main.Log("Update Shop A");
+            Main.Log("Update Store A");
             customStoreEntries = new System.Collections.Generic.Dictionary<int, CustomStoreEntry> { }; //Reset store entries
 
             int itemIndex = 0;
@@ -32,7 +36,42 @@ namespace ReplantedArchipelago.Patches
                 customStoreEntries[itemIndex] = new CustomStoreEntry { Name = scoutedLocation.ItemName, Class = itemClass, Cost = BaseCosts[itemClass] + (shopPrice * 10) };
                 itemIndex++;
             }
-            Main.Log("Update Shop B");
+            Main.Log("Update Store B");
+        }
+
+        public static void PatchStoreEntryData(ref object __result) //Patches the shop items
+        {
+            Main.Log("Store Data Patch A");
+            Il2CppSystem.Collections.Generic.List<StoreEntryData> newEntries = new Il2CppSystem.Collections.Generic.List<StoreEntryData>();
+
+            for (int i = 0; i < customStoreEntries.Count; i++)
+            {
+                var customEntry = new StoreEntryData();
+                CustomStoreEntry customEntryData = customStoreEntries[i];
+
+                var costArray = new Il2CppStructArray<int>(1);
+                costArray[0] = customEntryData.Cost;
+
+                int pageNum = i / 8;
+                int positionOnPage = i % 8;
+
+                customEntry.m_coinCost = costArray;
+                customEntry.m_entryIndex = positionOnPage;
+                customEntry.m_entryDescriptionIndex = i;
+                customEntry.m_order = positionOnPage;
+                customEntry.m_entryName = customEntryData.Name;
+                customEntry.m_pageIndex = pageNum;
+
+                newEntries.Add(customEntry);
+            }
+
+            var array = new Il2CppReferenceArray<StoreEntryData>(newEntries.Count);
+            for (int i = 0; i < newEntries.Count; i++)
+                array[i] = newEntries[i];
+
+            __result = array;
+
+            Main.Log("Store Data Patch B");
         }
 
         [HarmonyPatch(typeof(UserService), nameof(UserService.GetPurchases), new[] { typeof(int) })]
@@ -101,6 +140,11 @@ namespace ReplantedArchipelago.Patches
                 for (long i = 0; i < APClient.shopPagesVisible * 8; i++)
                 {
                     shopLocations[i] = 5000 + i;
+                }
+
+                if (shopLocations.Count() > APClient.shopPrices.Count())
+                {
+                    Array.Resize(ref shopLocations, APClient.shopPrices.Count());
                 }
                 APClient.apSession.Hints.CreateHints(locationIds: shopLocations);
             }

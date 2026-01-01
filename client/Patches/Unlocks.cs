@@ -4,6 +4,7 @@ using Il2CppReloaded.Data;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using System;
+using System.Linq;
 
 namespace ReplantedArchipelago.Patches
 {
@@ -40,14 +41,22 @@ namespace ReplantedArchipelago.Patches
                 }
                 else if (levelEntryData.EntryType == ChallengeEntryType.MiniGame)
                 {
-                    if (APClient.clearedMinigames.Count >= (int)APClient.minigameUnlocks[Data.GameModeLevelIDs[levelEntryData.GameMode].ToString()]) //Unlock requirement met
+                    if (APClient.individualLevelUnlockItems)
+                    {
+                        __result = !(Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode) && APClient.receivedItems.Contains(Data.GameModeLevelIDs[levelEntryData.GameMode] + 200));
+                    }
+                    else if (APClient.clearedMinigames.Count >= (int)APClient.minigameUnlocks[Data.GameModeLevelIDs[levelEntryData.GameMode].ToString()]) //Unlock requirement met
                     {
                         __result = false;
                     }
                 }
                 else if (levelEntryData.EntryType == ChallengeEntryType.Puzzle)
                 {
-                    if (Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode))
+                    if (APClient.individualLevelUnlockItems)
+                    {
+                        __result = !(Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode) && APClient.receivedItems.Contains(Data.GameModeLevelIDs[levelEntryData.GameMode] + 200));
+                    }
+                    else if (Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode))
                     {
                         string gameModeLevelId = Data.GameModeLevelIDs[levelEntryData.GameMode].ToString();
                         if (gameModeLevelId.ToInt32() >= 80)
@@ -68,7 +77,11 @@ namespace ReplantedArchipelago.Patches
                 }
                 else if (levelEntryData.EntryType == ChallengeEntryType.Survival && Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode))
                 {
-                    if (APClient.clearedSurvival.Count >= (int)APClient.survivalUnlocks[Data.GameModeLevelIDs[levelEntryData.GameMode].ToString()])
+                    if (APClient.individualLevelUnlockItems)
+                    {
+                        __result = !(Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode) && APClient.receivedItems.Contains(Data.GameModeLevelIDs[levelEntryData.GameMode] + 200));
+                    }
+                    else if (APClient.clearedSurvival.Count >= (int)APClient.survivalUnlocks[Data.GameModeLevelIDs[levelEntryData.GameMode].ToString()])
                     {
                         __result = false;
                     }
@@ -82,7 +95,7 @@ namespace ReplantedArchipelago.Patches
                         {
                             if (APClient.receivedItems.Contains(Data.DayId)) //Unlocked Day Access
                             {
-                                if (APClient.unlockedDayLevels >= levelNum)
+                                if (APClient.openAreaItems || APClient.unlockedDayLevels >= levelNum)
                                 {
                                     __result = false;
                                 }
@@ -92,7 +105,7 @@ namespace ReplantedArchipelago.Patches
                         {
                             if (APClient.receivedItems.Contains(Data.NightId)) //Unlocked Night Access
                             {
-                                if (APClient.unlockedNightLevels >= levelNum - 10)
+                                if (APClient.openAreaItems || APClient.unlockedNightLevels >= levelNum - 10)
                                 {
                                     __result = false;
                                 }
@@ -102,7 +115,7 @@ namespace ReplantedArchipelago.Patches
                         {
                             if (APClient.receivedItems.Contains(Data.PoolId))
                             {
-                                if (APClient.unlockedPoolLevels >= levelNum - 20)
+                                if (APClient.openAreaItems || APClient.unlockedPoolLevels >= levelNum - 20)
                                 {
                                     __result = false;
                                 }
@@ -112,7 +125,7 @@ namespace ReplantedArchipelago.Patches
                         {
                             if (APClient.receivedItems.Contains(Data.FogId))
                             {
-                                if (APClient.unlockedFogLevels >= levelNum - 30)
+                                if (APClient.openAreaItems || APClient.unlockedFogLevels >= levelNum - 30)
                                 {
                                     __result = false;
                                 }
@@ -122,7 +135,7 @@ namespace ReplantedArchipelago.Patches
                         {
                             if (APClient.receivedItems.Contains(Data.RoofId))
                             {
-                                if (APClient.unlockedRoofLevels >= levelNum - 40)
+                                if (APClient.openAreaItems || APClient.unlockedRoofLevels >= levelNum - 40)
                                 {
                                     if (!(levelNum == 50 && APClient.requireAllLevels && APClient.clearedAdventure.Count < 49))
                                     {
@@ -164,7 +177,14 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                __result = APClient.receivedItems.Contains(Data.itemIds["Puzzle Mode"]);
+                if (APClient.individualLevelUnlockItems)
+                {
+                    __result = APClient.receivedItems.Any(x => x >= 271 && x < 289);
+                }
+                else
+                {
+                    __result = APClient.receivedItems.Contains(Data.itemIds["Puzzle Mode"]);
+                }
                 return false;
             }
         }
@@ -234,7 +254,14 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                __result = APClient.receivedItems.Contains(Data.itemIds["Minigame Mode"]);
+                if (APClient.individualLevelUnlockItems)
+                {
+                    __result = APClient.receivedItems.Any(x => x >= 251 && x < 271);
+                }
+                else
+                {
+                    __result = APClient.receivedItems.Contains(Data.itemIds["Minigame Mode"]);
+                }
                 return false;
             }
         }
@@ -244,7 +271,14 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                __result = APClient.receivedItems.Contains(Data.itemIds["Survival Mode"]);
+                if (APClient.individualLevelUnlockItems)
+                {
+                    __result = APClient.receivedItems.Any(x => x >= 289 && x < 299);
+                }
+                else
+                {
+                    __result = APClient.receivedItems.Contains(Data.itemIds["Survival Mode"]);
+                }
                 return false;
             }
         }
