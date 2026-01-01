@@ -34,6 +34,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(MainMenuPanelView __instance)
             {
+                Main.Log("Main Menu A");
                 if (APClient.newSecrets)
                 {
                     APClient.newSecrets = false;
@@ -45,6 +46,7 @@ namespace ReplantedArchipelago.Patches
                 {
                     accountSign.SetActive(false);
                 }
+                Main.Log("Main Menu B");
             }
         }
 
@@ -103,6 +105,11 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Prefix(SeedChooserDataModel __instance)
             {
+                if (Main.currentScene != "Gameplay")
+                {
+                    return;
+                }
+
                 __instance.m_isImitaterUnlocked.m_value = APClient.HasSeedType(SeedType.Imitater);
 
                 if (!APClient.imitaterOpen)
@@ -143,6 +150,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Prefix(LevelDataModel __instance)
             {
+                Main.Log("Survival Entries A");
                 LevelEntriesModel survivalModel = __instance.m_survivalModel;
                 Il2CppSystem.Collections.Generic.List<ModelReference> survivalEntries = survivalModel.m_entriesModel.m_models;
 
@@ -151,24 +159,47 @@ namespace ReplantedArchipelago.Patches
                     LevelEntryData[] defaultSurvivalEntries = new LevelEntryData[10];
                     for (int i = 0; i < survivalEntries.Count; i++)
                     {
-                        defaultSurvivalEntries[i] = survivalEntries[i].Model.Cast<LevelEntryModel>().m_entryData;
+                        try
+                        {
+                            defaultSurvivalEntries[i] = survivalEntries[i].Model.Cast<LevelEntryModel>().m_entryData;
+                        }
+                        catch
+                        {
+                            Main.Log($"A {i}");
+                        }
                     }
 
                     var sortedOrder = APClient.survivalUnlocks.Properties().OrderBy(p => (int)p.Value).ToList();
                     Data.orderedSurvivalEntries = new LevelEntryData[10];
                     for (int i = 0; i < survivalEntries.Count; i++)
                     {
-                        Data.orderedSurvivalEntries[i] = defaultSurvivalEntries[sortedOrder[i].Name.ToInt32() - 89];
+                        try
+                        {
+                            Data.orderedSurvivalEntries[i] = defaultSurvivalEntries[sortedOrder[i].Name.ToInt32() - 89];
+                        }
+                        catch
+                        {
+                            Main.Log($"B {i}");
+                        }
                     }
                 }
 
                 for (int i = 0; i < survivalEntries.Count; i++)
                 {
-                    LevelEntryModel currentModel = survivalEntries[i].Model.Cast<LevelEntryModel>();
-                    currentModel.m_entryData = Data.orderedSurvivalEntries[i];
+                    try
+                    {
+                        LevelEntryModel currentModel = survivalEntries[i].Model.Cast<LevelEntryModel>();
+                        currentModel.m_entryData = Data.orderedSurvivalEntries[i];
+                    }
+                    catch
+                    {
+                        Main.Log($"C {i}");
+                    }
                 }
 
                 survivalModel.RefreshEntries();
+                Main.Log("Survival Entries B");
+
             }
         }
     }

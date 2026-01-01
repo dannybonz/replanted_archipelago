@@ -21,16 +21,18 @@ namespace ReplantedArchipelago.Patches
 
         public static void UpdateCustomEntries()
         {
+            Main.Log("Update Shop A");
             customStoreEntries = new System.Collections.Generic.Dictionary<int, CustomStoreEntry> { }; //Reset store entries
 
             int itemIndex = 0;
             foreach (int shopPrice in APClient.shopPrices)
             {
                 Archipelago.MultiClient.Net.Models.ScoutedItemInfo scoutedLocation = APClient.scoutedLocations[5000 + itemIndex];
-                ItemFlags itemClass = scoutedLocation.Flags;
+                ItemFlags itemClass = APClient.GetPrimaryItemClassification(scoutedLocation.Flags);
                 customStoreEntries[itemIndex] = new CustomStoreEntry { Name = scoutedLocation.ItemName, Class = itemClass, Cost = BaseCosts[itemClass] + (shopPrice * 10) };
                 itemIndex++;
             }
+            Main.Log("Update Shop B");
         }
 
         [HarmonyPatch(typeof(UserService), nameof(UserService.GetPurchases), new[] { typeof(int) })]
@@ -148,17 +150,17 @@ namespace ReplantedArchipelago.Patches
                 if (theCrazyDaveMessage != __instance.m_currentMessage) //If changing message index
                 {
                     Archipelago.MultiClient.Net.Models.ScoutedItemInfo scoutedLocation = APClient.scoutedLocations[5000 + theCrazyDaveMessage];
-                    ItemFlags itemClass = scoutedLocation.Flags;
+                    ItemFlags itemClass = APClient.GetPrimaryItemClassification(scoutedLocation.Flags);
 
                     string[] flavourTexts;
-                    if (!DaveFlavourTexts.TryGetValue(scoutedLocation.Flags, out flavourTexts))
+                    if (!DaveFlavourTexts.TryGetValue(itemClass, out flavourTexts))
                     {
                         flavourTexts = DaveFlavourTexts[ItemFlags.None];
                     }
                     System.Random rnd = new System.Random();
                     string flavourText = flavourTexts[rnd.Next(flavourTexts.Length)];
 
-                    string classificationName = "Other";
+                    string classificationName = "Filler";
                     if (itemClass == ItemFlags.Advancement)
                     {
                         classificationName = "Progression";
@@ -170,10 +172,6 @@ namespace ReplantedArchipelago.Patches
                     else if (itemClass == ItemFlags.Trap)
                     {
                         classificationName = "Trap";
-                    }
-                    else if (itemClass == ItemFlags.None)
-                    {
-                        classificationName = "Filler";
                     }
 
                     StringValueModel daveSaying = __instance.m_daveSaying;

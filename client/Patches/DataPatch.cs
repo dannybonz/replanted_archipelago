@@ -74,25 +74,41 @@ namespace ReplantedArchipelago.Patches
 
         public static void MiniGamesDataPostfix(ref object __result) //Patches the minigame order
         {
+            Main.Log("DataPatch: Minigames A");
+
             __result = CopyLevelEntries(__result, 32, APClient.minigameUnlocks); //This includes Bonus Levels as well!
+
+            Main.Log("DataPatch: Minigames B");
+
         }
 
         public static void SurvivalDataPostfix(ref object __result) //Removes the "Endless" survival levels - this is supposed to re-order the levels as well but for some reason it doesn't (see workaround in Menu.cs)
         {
+            Main.Log("DataPatch: Survival A");
+
             __result = CopyLevelEntries(__result, 10, APClient.survivalUnlocks);
+
+            Main.Log("DataPatch: Survival B");
+
         }
 
         public static void PuzzleDataPostfix(ref object __result) //Patches the puzzle order
         {
+            Main.Log("DataPatch: Puzzle A");
+
             var vasebreakerArray = CopyLevelEntries(__result, 9, APClient.vasebreakerUnlocks).ToArray();
             var izombieUnlocks = CopyLevelEntries(__result, 9, APClient.izombieUnlocks, startIndex: 10).ToArray();
             var combinedUnlocks = vasebreakerArray.Concat(izombieUnlocks).ToArray(); //Puzzle consists of both
 
             __result = new Il2CppReferenceArray<LevelEntryData>(combinedUnlocks);
+
+            Main.Log("DataPatch: Puzzle B");
+
         }
 
         public static void StoreEntryDataPostfix(ref object __result) //Patches the shop items
         {
+            Main.Log("DataPatch: Store A");
             Il2CppSystem.Collections.Generic.List<StoreEntryData> newEntries = new Il2CppSystem.Collections.Generic.List<StoreEntryData>();
 
             for (int i = 0; i < customStoreEntries.Count; i++)
@@ -121,6 +137,8 @@ namespace ReplantedArchipelago.Patches
                 array[i] = newEntries[i];
 
             __result = array;
+
+            Main.Log("DataPatch: Store B");
         }
     }
 }

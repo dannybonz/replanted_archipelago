@@ -5,7 +5,6 @@ using Archipelago.MultiClient.Net.Models;
 using Il2CppReloaded.Data;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
-using MelonLoader;
 using Newtonsoft.Json.Linq;
 using ReplantedArchipelago.Patches;
 using System;
@@ -322,13 +321,17 @@ namespace ReplantedArchipelago
             profileGuids.Add(theProfile.mGuid);
             apSession.DataStorage[Scope.Slot, "profileGuids"] = JArray.FromObject(profileGuids);
 
-            MelonLogger.Msg("Profile Validation: Registered new profile.");
+            Main.Log("Profile Validation: Registered new profile.");
             Main.creatingProfile = false;
         }
 
         public static bool HasSeedType(SeedType theSeedType)
         {
             if (connectionStatus == 1 && receivedItems != null && receivedItems.Contains(100 + Array.IndexOf(Data.seedTypes, theSeedType)))
+            {
+                return true;
+            }
+            else if (Main.gameplayActivity != null && Main.gameplayActivity.GameMode == GameMode.ChallengeRainingSeeds)
             {
                 return true;
             }
@@ -358,6 +361,23 @@ namespace ReplantedArchipelago
         {
             var availablePlants = receivedItems.Where(item => item >= 100 && item < 200).Union(extraPlants).Except(bannedPlants).Distinct().Count();
             return availablePlants;
+        }
+
+        public static ItemFlags GetPrimaryItemClassification(ItemFlags Flags)
+        {
+            if (Flags.HasFlag(ItemFlags.Advancement))
+            {
+                return ItemFlags.Advancement;
+            }
+            else if (Flags.HasFlag(ItemFlags.NeverExclude))
+            {
+                return ItemFlags.NeverExclude;
+            }
+            else if (Flags.HasFlag(ItemFlags.Trap))
+            {
+                return ItemFlags.Trap;
+            }
+            return ItemFlags.None;
         }
 
         public static void CompletedLevel(int levelNumber, string mode)

@@ -34,14 +34,14 @@ namespace ReplantedArchipelago.Patches
                 APClient.RegisterProfile(newProfile);
             }
         }
-    }
 
-    [HarmonyPatch(typeof(GameplayService), nameof(GameplayService.OnActiveProfileChanged))] //Triggers when changing active profile
-    public class ProfileChangedPatch
-    {
-        private static void Postfix(GameplayService __instance)
+        [HarmonyPatch(typeof(GameplayService), nameof(GameplayService.OnActiveProfileChanged))] //Triggers when changing active profile
+        public class ProfileChangedPatch
         {
-            __instance.HasWatchedIntro = true;
+            private static void Postfix(GameplayService __instance)
+            {
+                __instance.HasWatchedIntro = true;
+            }
         }
     }
 }

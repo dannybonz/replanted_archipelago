@@ -1,5 +1,6 @@
 ﻿using Archipelago.MultiClient.Net.Enums;
 using Il2CppReloaded.Services;
+using Il2CppReloaded.TreeStateActivities;
 using Il2CppSource.DataModels;
 using MelonLoader;
 using ReplantedArchipelago.Patches;
@@ -7,6 +8,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using HarmonyPatch = HarmonyLib.HarmonyPatch;
 
 [assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.0.1", "dannybonz")]
@@ -28,6 +30,7 @@ namespace ReplantedArchipelago
 
         //Init variables for profile validation
         public static UserService userService;
+        public static GameplayActivity gameplayActivity;
         public static bool creatingProfile = false;
         public static bool switchingProfile = false;
         public static bool profileValidated = false;
@@ -35,13 +38,29 @@ namespace ReplantedArchipelago
 
         public static System.Collections.Generic.Queue<Data.QueuedIngameMessage> QueuedIngameMessages = new System.Collections.Generic.Queue<Data.QueuedIngameMessage>();
         public static string currentMessage;
+        public static string currentScene;
+
+        private void OnSceneUnloaded(Scene scene)
+        {
+            currentScene = null;
+            Main.Log($"Scene Unload: {scene.name}");
+            gameplayActivity = null;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            Main.Log($"Scene Load: {scene.name}");
+            currentScene = scene.name;
+        }
 
         public override void OnInitializeMelon()
         {
-            MelonLogger.Msg("Initialising...");
+            Main.Log("Initialising...");
 
             harmony = new HarmonyLib.Harmony("com.dannybonz.pvzrandomiser");
-            harmony.PatchAll();
+
+            SceneManager.sceneUnloaded += new Action<Scene>(OnSceneUnloaded);
+            SceneManager.sceneLoaded += new Action<Scene, LoadSceneMode>(OnSceneLoaded);
 
             //Patch DataService getters
             var storeEntryProperty = typeof(DataService).GetProperty("StoreEntryData", BindingFlags.Instance | BindingFlags.Public);
@@ -260,8 +279,9 @@ namespace ReplantedArchipelago
                     }
                 }
             }
-            else if (APClient.connectionStatus == 1 && profileRefreshRequired && UnityEngine.Application.isFocused)
+            else if (APClient.connectionStatus == 1 && profileRefreshRequired && UnityEngine.Application.isFocused && userService != null)
             {
+                Main.Log("Profile refresh requested.");
                 profileRefreshRequired = false; //Clear requirement so we don't get stuck in a loop
                 RefreshProfile(); //Refresh profile
             }
@@ -269,7 +289,7 @@ namespace ReplantedArchipelago
 
         public static System.Collections.Generic.List<UserProfile> GetUserProfiles(UserService theService) //Returns a list of all UserProfile objects
         {
-            MelonLogger.Msg("Profile Validation: Checking for matching profiles...");
+            Main.Log("Profile Validation: Checking for matching profiles...");
             userService = theService; //Updates the stored userService object
             System.Collections.Generic.List<UserProfile> profiles = new System.Collections.Generic.List<UserProfile>();
 
@@ -287,7 +307,7 @@ namespace ReplantedArchipelago
                 }
             }
 
-            MelonLogger.Msg("Profile Validation: Found profiles.");
+            Main.Log("Profile Validation: Found profiles.");
             return profiles;
         }
 
@@ -306,6 +326,7 @@ namespace ReplantedArchipelago
 
         public static void RefreshProfile() //Refreshes some ingame data (e.g. menu unlocks), needs to be triggered after receiving certain items
         {
+            Main.Log("Refreshed profiles.");
             System.Collections.Generic.List<string> desiredGuids = new System.Collections.Generic.List<string>() { userService.ActiveUserProfile.mGuid };
             System.Collections.Generic.List<UserProfile> profiles = GetUserProfiles(userService);
             System.Collections.Generic.List<int> matchingProfileIndexes = GetMatchingProfiles(profiles, desiredGuids); //Finds the profile that matches the currently used profile
@@ -327,7 +348,7 @@ namespace ReplantedArchipelago
                     {
                         if (switchingProfile == true)
                         {
-                            MelonLogger.Msg("Profile Validation: Passed.");
+                            Main.Log("Profile Validation: Passed.");
 
                             switchingProfile = false;
                             profileValidated = true;
@@ -338,7 +359,7 @@ namespace ReplantedArchipelago
                         }
                         else if (profileValidated == false)
                         {
-                            MelonLogger.Msg("Profile Validation: Refreshing...");
+                            Main.Log("Profile Validation: Refreshing...");
 
                             switchingProfile = true;
                             RefreshProfile();
@@ -353,29 +374,34 @@ namespace ReplantedArchipelago
 
                         if (matchingProfileIndexes.Count == 0)
                         {
-                            MelonLogger.Msg("Profile Validation: No matching profiles found.");
+                            Main.Log("Profile Validation: No matching profiles found.");
 
                             if (userService.NumUserProfiles >= 8)
                             {
-                                MelonLogger.Msg("Profile Validation: Too many profiles.");
+                                Main.Log("Profile Validation: Too many profiles.");
                                 APClient.connectionStatus = 3;
                             }
                             else
                             {
-                                MelonLogger.Msg("Profile Validation: Creating new profile...");
+                                Main.Log("Profile Validation: Creating new profile...");
                                 creatingProfile = true;
                                 userService.CreateProfile(APClient.slot); //Create a new save file
                             }
                         }
                         else
                         {
-                            MelonLogger.Msg("Profile Validation: Auto-switching profile...");
+                            Main.Log("Profile Validation: Auto-switching profile...");
                             userService.SetActiveProfile(matchingProfileIndexes[0]); //Swap to correct save file
                             switchingProfile = true;
                         }
                     }
                 }
             }
+        }
+
+        public static void Log(string message)
+        {
+            MelonLogger.Msg(message);
         }
     }
 

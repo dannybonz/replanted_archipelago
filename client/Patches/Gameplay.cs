@@ -19,7 +19,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(GameplayActivity __instance)
             {
-                if (__instance == null || __instance.Board == null || !(__instance.GameScene == GameScenes.Playing || __instance.GameScene == GameScenes.LevelIntro))
+                if (Main.currentScene != "Gameplay" || __instance == null || __instance.Board == null || !(__instance.GameScene == GameScenes.Playing || __instance.GameScene == GameScenes.LevelIntro))
                 {
                     return;
                 }
@@ -205,7 +205,7 @@ namespace ReplantedArchipelago.Patches
         [HarmonyPatch(typeof(Board), nameof(Board.FadeOutLevel))] //Triggers on level complete
         public static class FadeOutPatch
         {
-            private static void Postfix(Board __instance)
+            private static void Prefix(Board __instance)
             {
                 if ((!__instance.mApp.IsScaryPotterLevel() || __instance.IsFinalScaryPotterStage()) && (!__instance.mApp.IsSurvivalMode() || __instance.IsFinalSurvivalStage()) && !__instance.IsLastStandStageWithRepick())
                 {
@@ -344,6 +344,28 @@ namespace ReplantedArchipelago.Patches
                 if (Data.AllZombiesDie) //Cheat to kill zombies instantly
                 {
                     __instance.TakeDamage(10000, DamageFlags.BypassesShield);
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.ActiveStarted))]
+        public class NewGameplayActivityPatch
+        {
+            private static void Postfix(GameplayActivity __instance)
+            {
+                Main.gameplayActivity = __instance;
+                Main.Log("GameplayActivity Updated");
+            }
+        }
+
+        [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.GetSeedsAvailable))]
+        public class GetSeedsAvailablePatch
+        {
+            private static void Postfix(GameplayActivity __instance, ref int __result)
+            {
+                if (__instance.GameMode == GameMode.ChallengeRainingSeeds)
+                {
+                    __result = 49;
                 }
             }
         }
