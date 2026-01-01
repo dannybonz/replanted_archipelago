@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using HarmonyPatch = HarmonyLib.HarmonyPatch;
 
-[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.0.1", "dannybonz")]
+[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.0.2", "dannybonz")]
 [assembly: MelonGame("PopCap Games", "PvZ Replanted")]
 
 namespace ReplantedArchipelago
