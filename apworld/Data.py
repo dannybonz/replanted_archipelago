@@ -3,7 +3,7 @@ GEN_VERSION = 1.0 #Version to match mod
 SEED_PACKETS = ["Peashooter", "Sunflower", "Cherry Bomb", "Wall-nut", "Potato Mine", "Snow Pea", "Chomper", "Repeater", "Puff-shroom", "Sun-shroom", "Fume-shroom", "Grave Buster", "Hypno-shroom", "Scaredy-shroom", "Ice-shroom", "Doom-shroom", "Lily Pad", "Squash", "Threepeater", "Tangle Kelp", "Jalapeno", "Spikeweed", "Torchwood", "Tall-nut", "Sea-shroom", "Plantern", "Cactus", "Blover", "Split Pea", "Starfruit", "Pumpkin", "Magnet-shroom", "Cabbage-pult", "Flower Pot", "Kernel-pult", "Coffee Bean", "Garlic", "Umbrella Leaf", "Marigold", "Melon-pult", "Gatling Pea", "Twin Sunflower", "Gloom-shroom", "Cattail", "Winter Melon", "Gold Magnet", "Spikerock", "Cob Cannon", "Imitater"]
 UPGRADE_PACKETS = ["Gatling Pea", "Twin Sunflower", "Gloom-shroom", "Cattail", "Winter Melon", "Gold Magnet", "Spikerock", "Cob Cannon"]
 ATTACKING_PLANTS = ["Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit"]
-PROGRESSION_PLANTS = ["Sunflower", "Puff-shroom", "Sun-shroom", "Lily Pad", "Flower Pot", "Wall-nut", "Tall-nut", "Pumpkin", "Cabbage-pult", "Kernel-pult", "Melon-pult", "Chomper", "Cherry Bomb", "Jalapeno", "Squash", "Potato Mine", "Magnet-shroom", "Coffee Bean", "Doom-shroom", "Fume-shroom", "Spikeweed", "Cactus", "Blover", "Cattail", "Threepeater", "Starfruit", "Split Pea", "Grave Buster", "Scaredy-shroom", "Peashooter", "Snow Pea", "Repeater"]
+PROGRESSION_PLANTS = ["Sunflower", "Puff-shroom", "Sun-shroom", "Lily Pad", "Flower Pot", "Wall-nut", "Tall-nut", "Pumpkin", "Cabbage-pult", "Kernel-pult", "Melon-pult", "Chomper", "Cherry Bomb", "Jalapeno", "Squash", "Potato Mine", "Magnet-shroom", "Coffee Bean", "Doom-shroom", "Fume-shroom", "Spikeweed", "Cactus", "Blover", "Cattail", "Threepeater", "Starfruit", "Split Pea", "Grave Buster", "Scaredy-shroom", "Peashooter", "Snow Pea", "Repeater", "Torchwood"]
 
 LEVEL_LOCATIONS = {
     "Day":  {"at_night": False, "has_pool": False, "on_roof": False},
@@ -894,7 +894,7 @@ LEVELS = {
         ],
         "name": "Mini-games: It's Raining Seeds",
         "location": "Fog",
-        "choose": True, #Not in the traditional sense, but Raining Seeds only uses plants you have unlocked
+        "choose": False,
         "flags": 4,
         "type": "minigame",
         "flag_location_ids": [
