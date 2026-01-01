@@ -46,26 +46,34 @@ class IncludeBonusLevels(Toggle):
 
 class MinigamePuzzleSurvivalOrder(Choice):
     """
-    Decides the order in which you can play each individual Mini-game, Puzzle or Survival level.
-
-    - vanilla: After unlocking a mode, the first three levels within it are unlocked (for I, Zombie and Vasebreaker, only the first level of each is unlocked). Completing any level within the mode will unlock its next one, in order.
-    - randomised: After unlocking a mode, three random levels within it are unlocked (for I, Zombie and Vasebreaker, one random level of each is unlocked). Completing any level within the mode will unlock another one at random.
-    - open: After unlocking a mode, you have instant access to all levels within it.
+    Determines the order in which you can play each individual Mini-game, Puzzle or Survival level.
+    
+    - vanilla: After receiving a mode's unlock item, the first three levels within it are unlocked (for I, Zombie and Vasebreaker, only the first level of each is unlocked). Completing any level within the mode will unlock its next one, in order.
+    - randomised: After receiving a a mode's unlock item, three random levels within it are unlocked (for I, Zombie and Vasebreaker, one random level of each is unlocked). Completing any level within the mode will unlock another one at random.
+    - open: After receiving a mode's unlock item, you have instant access to all levels within it.
+    - items: Each Mini-game, Puzzle or Survival level is individually unlocked as a separate item.
     """
     display_name = "Mini-game, Puzzle and Survival Order"
     option_vanilla = 0
     option_randomised = 1
     option_open = 2
+    option_items = 3
     default = 1
 
-class AdventureAreaItems(Toggle):
+class AdventureModeProgression(Choice):
     """
-    Locks each unique area (Night, Pool, Fog and Roof) of Adventure Mode behind a different item.
-    Once received, these can be tackled in whatever order you like.
-    This doesn't affect levels outside of Adventure Mode.
+    Determines the way in which you will progress through Adventure Mode.
+    This setting only affects levels within Adventure Mode and has no impact on the other modes.
+
+    - linear: Adventure Mode levels will be unlocked by clearing the previous level, just like in the vanilla game. Clearing an area will unlock the next one.
+    - area_unlock_items: Locks each unique area (Night, Pool, Fog and Roof) of Adventure Mode behind a different item. You can swap between unlocked areas whenever you like, but the levels within each area must be cleared in order. (e.g. You must clear 5-1 before you can play 5-2)
+    - open_area_unlock_items: After receiving an area unlock item, all levels within that area are instantly unlocked. (e.g. After unlocking Fog Access, you can instantly play 4-2 without playing 4-1)
     """
-    display_name = "Adventure Area Unlock Items"
-    default = True
+    display_name = "Adventure Mode Progression"
+    option_linear = 0
+    option_area_unlock_items = 1
+    option_open_area_unlock_items = 2
+    default = 1
 
 class Goal(Choice):
     """
@@ -185,7 +193,7 @@ class ImitaterBehaviour(Choice):
 @dataclass
 class PVZROptions(PerGameCommonOptions):
     goal: Goal
-    adventure_area_items: AdventureAreaItems
+    adventure_mode_progression: AdventureModeProgression
     huge_wave_locations: HugeWaveLocations
     shop_items: ShopItems
     include_minigames: IncludeMinigames
