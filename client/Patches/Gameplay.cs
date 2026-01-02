@@ -51,6 +51,12 @@ namespace ReplantedArchipelago.Patches
                     {
                         APClient.chooserRefreshState = "update";
                     }
+
+                    //Exit game - F4
+                    if (Input.GetKeyDown(KeyCode.F4))
+                    {
+                        StateTransitionUtils.Transition("Frontend");
+                    }
                 }
 
                 if (board.mTutorialState != TutorialState.Off)
@@ -274,7 +280,14 @@ namespace ReplantedArchipelago.Patches
                     int completedFlags = __instance.GetSurvivalFlagsCompleted();
                     if (Data.GameModeLevelIDs.ContainsKey(__instance.mApp.GameMode))
                     {
-                        APClient.SendWaveLocation(__instance.mApp.LevelData, completedFlags - 1);
+                        try
+                        {
+                            APClient.SendWaveLocation(__instance.mApp.LevelData, completedFlags - 1);
+                        }
+                        catch
+                        {
+                            Main.Log($"Unexpected Wave Number (#{completedFlags - 1})");
+                        }
                     }
                 }
             }

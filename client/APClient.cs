@@ -1,29 +1,30 @@
 ﻿using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
+using Archipelago.MultiClient.Net.MessageLog.Messages;
 using Archipelago.MultiClient.Net.Models;
 using Il2CppReloaded.Data;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
+using Il2CppSource.Utils;
 using Newtonsoft.Json.Linq;
 using ReplantedArchipelago.Patches;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace ReplantedArchipelago
 {
     public class APClient
     {
-        public static int connectionStatus = 0; //0 = not connected, 1 = connected, 2 = error, 3 = too many profiles, 4 = version mismatch
+        public static bool currentlyConnected = false;
         public static string slot;
         public static string host;
         public static string password;
-        public static int reconnectAttempts = 0;
 
         public static ArchipelagoSession apSession;
         public static List<long> receivedItems = new List<long>();
+        public static List<string> receivedMessages = new List<string>();
         public static Dictionary<long, ScoutedItemInfo> scoutedLocations;
         public static int displayedIngameMessages = 0;
         public static double genVersion;
@@ -53,6 +54,7 @@ namespace ReplantedArchipelago
         public static bool bossUnlocked = false;
         public static bool newSecrets = false;
         public static string chooserRefreshState = "none";
+        public static bool profileRefreshRequired = true;
 
         public static List<int> clearedAdventure = new List<int>();
         public static List<int> clearedMinigames = new List<int>();
@@ -65,6 +67,10 @@ namespace ReplantedArchipelago
             apSession = ArchipelagoSessionFactory.CreateSession(hostInput);
             LoginResult result;
 
+            apSession.MessageLog.OnMessageReceived += HandleMessage;
+            apSession.Socket.SocketClosed += HandleDisconnect;
+            apSession.Socket.ErrorReceived += HandleError;
+
             try
             {
                 result = apSession.TryConnectAndLogin("Plants vs. Zombies: Replanted", slotInput, ItemsHandlingFlags.AllItems, password: passwordInput, requestSlotData: true);
@@ -76,7 +82,7 @@ namespace ReplantedArchipelago
 
             if (!result.Successful) //Connection failed
             {
-                connectionStatus = 2; //Displays error on login box
+                Menu.ShowErrorPanel("Connection Failed", "Ensure your connection information is correct and try again.");
             }
             else
             {
@@ -87,7 +93,7 @@ namespace ReplantedArchipelago
 
                 if (genVersion != Data.GenVersion) //Version mismatch
                 {
-                    connectionStatus = 4;
+                    Menu.ShowErrorPanel("Version Mismatch", $"You are using version {Data.GenVersion} to connect to a world generated with version {APClient.genVersion}.");
                 }
                 else
                 {
@@ -163,20 +169,15 @@ namespace ReplantedArchipelago
                     Data.levelOrders["survival"] = GetOrderedLevelIDs(survivalUnlocks, 10, 89);
                     Data.levelOrders["puzzle"] = GetOrderedLevelIDs(vasebreakerUnlocks, 9, 71).Concat(GetOrderedLevelIDs(izombieUnlocks, 9, 80)).ToArray();
 
-                    apSession.Socket.SocketClosed += HandleDisconnect;
-                    apSession.Socket.ErrorReceived += HandleError;
-                    reconnectAttempts = 0;
-
-                    connectionStatus = 1; //Connection successful!
+                    currentlyConnected = true; //Connection successful!
 
                     Main.DoProfileCheck(); //Swap to correct profile
 
-                    if (connectionStatus == 1) //If profile swapped sucessfully..
+                    if (currentlyConnected) //If didn't disconnect due to lack of profile slots...
                     {
                         ProcessAllItems(); //Process all items received since the beginning of time
                         apSession.Items.ItemReceived += RunOnItemReceived; //Set handler for any items received in this session
-
-                        Time.timeScale = 1f; // Resume the game if paused
+                        Menu.HideConnectionPanel();
                     }
                 }
             }
@@ -297,7 +298,7 @@ namespace ReplantedArchipelago
 
             if (Data.menuUpdateItems.Contains(item.ItemId))
             {
-                Main.profileRefreshRequired = true;
+                profileRefreshRequired = true;
             }
         }
 
@@ -307,24 +308,29 @@ namespace ReplantedArchipelago
             apSession.DataStorage[Scope.Slot, "displayedIngameMessages"] = displayedIngameMessages;
         }
 
+        public static void HandleMessage(LogMessage message)
+        {
+            receivedMessages.Add(message.ToString());
+        }
+
         public static void HandleDisconnect(string reason)
         {
-            if (reconnectAttempts > 1)
+            Main.Log("Disconnected.");
+            currentlyConnected = false;
+            if (Main.currentScene != "Frontend" || Main.currentScene != null)
             {
-                Main.readyToConnect = true;
-                connectionStatus = 2;
-            }
-            else
-            {
-                reconnectAttempts += 1;
-                AttemptConnection(host, slot, password);
+                StateTransitionUtils.Transition("Frontend");
             }
         }
 
         public static void HandleError(Exception e, string reason)
         {
-            Main.readyToConnect = true;
-            connectionStatus = 2;
+            Main.Log("Connection error.");
+            currentlyConnected = false;
+            if (Main.currentScene != "Frontend" || Main.currentScene != null)
+            {
+                StateTransitionUtils.Transition("Frontend");
+            }
         }
 
         public static void SendLocation(int locationId)
@@ -383,7 +389,7 @@ namespace ReplantedArchipelago
 
         public static bool HasSeedType(SeedType theSeedType)
         {
-            if (connectionStatus == 1 && receivedItems != null && receivedItems.Contains(100 + Array.IndexOf(Data.seedTypes, theSeedType)))
+            if (currentlyConnected && receivedItems != null && receivedItems.Contains(100 + Array.IndexOf(Data.seedTypes, theSeedType)))
             {
                 return true;
             }
@@ -397,7 +403,7 @@ namespace ReplantedArchipelago
 
         public static bool HasShovel()
         {
-            if (connectionStatus == 1 && receivedItems != null && receivedItems.Contains(Data.itemIds["Shovel"]))
+            if (currentlyConnected && receivedItems != null && receivedItems.Contains(Data.itemIds["Shovel"]))
             {
                 return true;
             }

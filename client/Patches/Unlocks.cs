@@ -17,9 +17,9 @@ namespace ReplantedArchipelago.Patches
             {
                 __result = true; //Default to locked
 
-                if (levelEntryData == null)
+                if (levelEntryData == null || !APClient.currentlyConnected)
                 {
-                    return false; //Level not present in this run
+                    return false; //Level not present in this run - or we're not connected yet
                 }
                 else if (levelEntryData.IsLimboContent) //Bonus levels
                 {

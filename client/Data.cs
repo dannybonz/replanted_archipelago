@@ -17,10 +17,14 @@ namespace ReplantedArchipelago
         //Cheat that kills zombies as soon as they spawn in
         public static bool AllZombiesDie = false;
 
-        //UI templates - currently unused
+        //UI templates
         public static GameObject buttonTemplate;
         public static GameObject headerTemplate;
         public static GameObject panelTemplate;
+        public static GameObject errorTemplate;
+        public static GameObject clientTemplate;
+        public static GameObject logTemplate;
+        public static GameObject inputTemplate;
 
         //Classes
         public class LevelLocationsEntry
