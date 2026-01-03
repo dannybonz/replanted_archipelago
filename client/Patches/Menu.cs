@@ -54,19 +54,13 @@ namespace ReplantedArchipelago.Patches
                 Data.buttonTemplate = Data.buttonTemplate = __instance.transform.parent.Find("P_UsersPanel/Canvas/Layout/Center/Main/Buttons/P_BacicButton_Rename").gameObject;
 
                 foreach (var binder in Data.logTemplate.GetComponentsInChildren<InputBinder>())
-                {
                     GameObject.Destroy(binder);
-                }
 
                 foreach (var selectable in Data.logTemplate.GetComponentsInChildren<Selectable>())
-                {
                     GameObject.Destroy(selectable);
-                }
 
                 foreach (var localizer in Data.logTemplate.GetComponentsInChildren<TextLocalizer>())
-                {
                     GameObject.Destroy(localizer);
-                }
 
                 GameObject apSettingsButton = CreateButton("Text Client", __instance.transform.Find("Canvas/Layout/Center/Main/Menu"), ShowClientPanel);
                 RectTransform apSettingsRect = apSettingsButton.GetComponent<RectTransform>();
@@ -129,9 +123,14 @@ namespace ReplantedArchipelago.Patches
 
             Transform center = ConnectionPanel.transform.Find("Canvas/Layout/Center/Rename");
             center.Find("HeaderText").GetComponent<TextMeshProUGUI>().text = "Archipelago Setup";
+            foreach (var localizer in center.Find("HeaderText").GetComponentsInChildren<TextLocalizer>())
+                GameObject.Destroy(localizer);
+
             center.Find("SubheadingText").GetComponent<TextMeshProUGUI>().text = "Host:";
             GameObject originalSubheader = center.Find("SubheadingText").gameObject;
             GameObject originalInput = center.Find("NameInputField").gameObject;
+            foreach (var localizer in center.Find("SubheadingText").GetComponentsInChildren<TextLocalizer>())
+                GameObject.Destroy(localizer);
 
             hostInput = GameObject.Instantiate(Data.inputTemplate, center);
             hostInput.name = "hostInput";
@@ -160,6 +159,8 @@ namespace ReplantedArchipelago.Patches
             Button okButton = center.Find("Buttons/P_BacicButton_OK").GetComponent<Button>();
             okButton.onClick.RemoveAllListeners();
             okButton.onClick.AddListener((Action)ConnectButtonPressed);
+            foreach (var localizer in center.Find("Buttons/P_BacicButton_OK").GetComponentsInChildren<TextLocalizer>())
+                GameObject.Destroy(localizer);
 
             GameObject.Destroy(center.Find("Buttons/P_BacicButton_Cancel").gameObject);
             GameObject.Destroy(originalInput);
@@ -218,6 +219,8 @@ namespace ReplantedArchipelago.Patches
 
             Transform main = ClientPanel.transform.Find("Canvas/Layout/Center/Main");
             main.Find("HeaderText").GetComponent<TextMeshProUGUI>().text = "Text Client";
+            foreach (var localizer in main.Find("HeaderText").GetComponentsInChildren<TextLocalizer>())
+                GameObject.Destroy(localizer);
 
             //Delete old entries
             Transform insetWindow = main.Find("InsetWindow");

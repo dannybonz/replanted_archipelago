@@ -278,15 +278,16 @@ namespace ReplantedArchipelago.Patches
                 else if (__instance.mApp.IsSurvivalMode() && !__instance.IsFinalSurvivalStage())
                 {
                     int completedFlags = __instance.GetSurvivalFlagsCompleted();
+                    Main.Log($"Survival Flag {completedFlags}");
                     if (Data.GameModeLevelIDs.ContainsKey(__instance.mApp.GameMode))
                     {
                         try
                         {
-                            APClient.SendWaveLocation(__instance.mApp.LevelData, completedFlags - 1);
+                            APClient.SendWaveLocation(__instance.mApp.LevelData, completedFlags);
                         }
                         catch
                         {
-                            Main.Log($"Unexpected Wave Number (#{completedFlags - 1})");
+                            Main.Log($"Unexpected Wave Number (#{completedFlags})");
                         }
                     }
                 }

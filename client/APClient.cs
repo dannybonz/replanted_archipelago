@@ -370,7 +370,7 @@ namespace ReplantedArchipelago
             }
             else if (Data.GameModeLevelIDs.ContainsKey(levelData.GameMode))
             {
-                if (Data.AllLevelLocations[Data.GameModeLevelIDs[levelData.GameMode]].FlagLocations.Length > hugeWaveNumber)
+                if (Data.AllLevelLocations[Data.GameModeLevelIDs[levelData.GameMode]].FlagLocations.Length > hugeWaveNumber && hugeWaveNumber >= 0)
                 {
                     SendLocation(Data.AllLevelLocations[Data.GameModeLevelIDs[levelData.GameMode]].FlagLocations[hugeWaveNumber]);
                 }
