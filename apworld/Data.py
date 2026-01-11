@@ -1,4 +1,4 @@
-GEN_VERSION = 1.1 #Version to match mod
+GEN_VERSION = 1.2 #Version to match mod
 
 SEED_PACKETS = ["Peashooter", "Sunflower", "Cherry Bomb", "Wall-nut", "Potato Mine", "Snow Pea", "Chomper", "Repeater", "Puff-shroom", "Sun-shroom", "Fume-shroom", "Grave Buster", "Hypno-shroom", "Scaredy-shroom", "Ice-shroom", "Doom-shroom", "Lily Pad", "Squash", "Threepeater", "Tangle Kelp", "Jalapeno", "Spikeweed", "Torchwood", "Tall-nut", "Sea-shroom", "Plantern", "Cactus", "Blover", "Split Pea", "Starfruit", "Pumpkin", "Magnet-shroom", "Cabbage-pult", "Flower Pot", "Kernel-pult", "Coffee Bean", "Garlic", "Umbrella Leaf", "Marigold", "Melon-pult", "Gatling Pea", "Twin Sunflower", "Gloom-shroom", "Cattail", "Winter Melon", "Gold Magnet", "Spikerock", "Cob Cannon", "Imitater"]
 UPGRADE_PACKETS = ["Gatling Pea", "Twin Sunflower", "Gloom-shroom", "Cattail", "Winter Melon", "Gold Magnet", "Spikerock", "Cob Cannon"]
@@ -2078,7 +2078,10 @@ LEVELS = {
 
 level_id = 1 
 for level in LEVELS:
-    LEVELS[level]["unlock_item_name"] = f"{LEVEL_TYPE_NAMES[LEVELS[level]["type"]]} Unlock: {(LEVELS[level]["name"].split(": ")[-1])}"
+    if LEVELS[level]["type"] == "adventure":
+        type_name = LEVELS[level]["location"]
+    else:
+        type_name = LEVEL_TYPE_NAMES[LEVELS[level]["type"]]
+    LEVELS[level]["unlock_item_name"] = f"{type_name} Unlock: {(LEVELS[level]["name"].split(": ")[-1])}"
     LEVELS[level]["id"] = level_id
     level_id += 1
-

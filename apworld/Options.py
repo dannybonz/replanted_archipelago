@@ -1,6 +1,23 @@
 from dataclasses import dataclass
 from Options import Choice, Range, Toggle, PerGameCommonOptions, DeathLink
 
+class AdventureModeProgression(Choice):
+    """
+    Determines the way in which you will progress through Adventure Mode.
+    This setting only affects levels within Adventure Mode and has no impact on the other modes.
+
+    - linear: Adventure Mode levels will be unlocked by clearing the previous level, just like in the vanilla game. Clearing an area will unlock the next one.
+    - area_unlock_items: Locks each unique area (Night, Pool, Fog and Roof) of Adventure Mode behind a different item. You can swap between unlocked areas whenever you like, but the levels within each area must be cleared in order. (e.g. You must clear 5-1 before you can play 5-2)
+    - open_area_unlock_items: After receiving an area unlock item, all levels within that area are instantly unlocked. (e.g. After unlocking Fog Access, you can instantly play 4-2 without playing 4-1)
+    - level_items: You will start with the first five levels unlocked. Other levels are individually unlocked as separate items. If this option is enabled without enabling enough additional locations to place these items in, you will not be able to generate a world.
+    """
+    display_name = "Adventure Mode Progression"
+    option_linear = 0
+    option_area_unlock_items = 1
+    option_open_area_unlock_items = 2
+    option_level_items = 3
+    default = 1    
+
 class HugeWaveLocations(Toggle):
     """
     Include locations for defeating Huge Waves prior to each level's Final Wave.
@@ -29,6 +46,22 @@ class IncludeSurvivalLevels(Toggle):
     display_name = "Include Survival Levels"
     default = True   
 
+class MinigamePuzzleSurvivalOrder(Choice):
+    """
+    Determines the order in which you can play each individual Mini-game, Puzzle or Survival level.
+    
+    - vanilla: After receiving a mode's unlock item, the first three levels within it are unlocked (for I, Zombie and Vasebreaker, only the first level of each is unlocked). Completing any level within the mode will unlock its next one, in order.
+    - randomised: After receiving a a mode's unlock item, three random levels within it are unlocked (for I, Zombie and Vasebreaker, one random level of each is unlocked). Completing any level within the mode will unlock another one at random.
+    - open: After receiving a mode's unlock item, you have instant access to all levels within it.
+    - level_items: Every individual Mini-game, Puzzle and Survival level is a separate item.
+    """
+    display_name = "Mini-game, Puzzle and Survival Order"
+    option_vanilla = 0
+    option_randomised = 1
+    option_open = 2
+    option_items = 3
+    default = 1
+
 class IncludeCloudyDayLevels(Toggle):
     """
     Include levels found on the Cloudy Day page. 
@@ -44,58 +77,61 @@ class IncludeBonusLevels(Toggle):
     display_name = "Include Bonus Levels"
     default = False
 
-class MinigamePuzzleSurvivalOrder(Choice):
+class AdventureLevelsGoal(Range):
     """
-    Determines the order in which you can play each individual Mini-game, Puzzle or Survival level.
-    
-    - vanilla: After receiving a mode's unlock item, the first three levels within it are unlocked (for I, Zombie and Vasebreaker, only the first level of each is unlocked). Completing any level within the mode will unlock its next one, in order.
-    - randomised: After receiving a a mode's unlock item, three random levels within it are unlocked (for I, Zombie and Vasebreaker, one random level of each is unlocked). Completing any level within the mode will unlock another one at random.
-    - open: After receiving a mode's unlock item, you have instant access to all levels within it.
-    - items: Each Mini-game, Puzzle or Survival level is individually unlocked as a separate item.
+    Determines how many unique levels of Adventure Mode (if any) must be cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
     """
-    display_name = "Mini-game, Puzzle and Survival Order"
-    option_vanilla = 0
-    option_randomised = 1
-    option_open = 2
-    option_items = 3
-    default = 1
+    display_name = "Adventure Levels Goal"
+    range_start = 0
+    range_end = 49
+    default = 49
 
-class AdventureModeProgression(Choice):
+class AdventureAreasGoal(Range):
     """
-    Determines the way in which you will progress through Adventure Mode.
-    This setting only affects levels within Adventure Mode and has no impact on the other modes.
-
-    - linear: Adventure Mode levels will be unlocked by clearing the previous level, just like in the vanilla game. Clearing an area will unlock the next one.
-    - area_unlock_items: Locks each unique area (Night, Pool, Fog and Roof) of Adventure Mode behind a different item. You can swap between unlocked areas whenever you like, but the levels within each area must be cleared in order. (e.g. You must clear 5-1 before you can play 5-2)
-    - open_area_unlock_items: After receiving an area unlock item, all levels within that area are instantly unlocked. (e.g. After unlocking Fog Access, you can instantly play 4-2 without playing 4-1)
+    Determines how many unique areas of Adventure Mode (if any) must be fully cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
     """
-    display_name = "Adventure Mode Progression"
-    option_linear = 0
-    option_area_unlock_items = 1
-    option_open_area_unlock_items = 2
-    default = 1
-
-class Goal(Choice):
-    """
-    Determines the unlock condition for the final battle with Dr. Zomboss in 5-10.
-    Clearing this level completes the game.
-
-    - adventure: The final battle will unlock after all 49 levels of Adventure Mode have been cleared.
-    - roof_only: The final battle will unlock after 5-9 has been cleared.
-    """
-    display_name = "Goal"
-    option_adventure = 0
-    option_roof_only = 1
+    display_name = "Adventure Areas Goal"
+    range_start = 0
+    range_end = 5
     default = 0
 
-class StartingSeedSlots(Range):
+class MinigameLevelsGoal(Range):
     """
-    How many seed slots to begin the game with.
+    Determines how many unique Mini-game levels (if any) must be cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
+    Mini-games must be enabled in order for this setting to have any effect.
     """
-    display_name = "Starting Seed Slots"
-    range_start = 6
+    display_name = "Mini-game Levels Goal"
+    range_start = 0
+    range_end = 20
+    default = 0
+
+class PuzzleLevelsGoal(Range):
+    """
+    Determines how many unique Puzzle levels (if any) must be cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
+    Puzzle Levels must be enabled in order for this setting to have any effect.
+    """
+    display_name = "Puzzle Levels Goal"
+    range_start = 0
+    range_end = 18
+    default = 0
+
+class SurvivalLevelsGoal(Range):
+    """
+    Determines how many unique Survival levels (if any) must be cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
+    Survival Levels must be enabled in order for this setting to have any effect.
+    """
+    display_name = "Survival Levels Goal"
+    range_start = 0
     range_end = 10
-    default = 6
+    default = 0
+
+class FastGoal(Toggle):
+    """
+    If this option is enabled, you can instantly play Roof: Level 5-10 as soon as your chosen goal requirements are met.
+    If this option is disabled, you will have to obtain access to the level by clearing the prior levels or receiving an Area Access item (depending on your Adventure Mode progression setting). This will be in addition to any goal requirements you have set.
+    """
+    display_name = "Fast Goal"
+    default = False
 
 class ShopItems(Range):
     """
@@ -120,7 +156,50 @@ class StartingPlants(Range):
     display_name = "Starting Plants"
     range_start = 1
     range_end = 49
-    default = 1
+    default = 1    
+
+class StartingSeedSlots(Range):
+    """
+    How many seed slots to begin the game with.
+    """
+    display_name = "Starting Seed Slots"
+    range_start = 6
+    range_end = 10
+    default = 6
+
+class EarlySunflower(Toggle):
+    """
+    Attempts to place Sunflower, Sun-shroom and Coffee Bean in the first sphere, making for a more beginner-friendly game.
+    """
+    display_name = "Early Sunflower"
+    default = False
+
+class EarlyShovel(Toggle):
+    """
+    Attempts to place the Shovel in the first sphere.
+    """
+    display_name = "Early Shovel"
+    default = False    
+
+class EasyUpgradePlants(Toggle):
+    """
+    Allows you to place upgrade plants without requiring their base form.
+    For example, Gatling Pea could be placed straight onto the lawn without requiring a Repeater first. 
+    """
+    display_name = "Easy Upgrade Plants"
+    default = False
+
+class ImitaterBehaviour(Choice):
+    """
+    Determines which seeds can be copied by Imitater.
+
+    - normal: Imitater can copy the seeds of plants you have already unlocked.
+    - open: Imitater can copy any seed in the game - even the seeds of plants you haven't unlocked yet.
+    """
+    display_name = "Imitater Behaviour"
+    option_normal = 0
+    option_open = 1
+    default = 0
 
 class MusicShuffle(Choice):
     """
@@ -132,11 +211,11 @@ class MusicShuffle(Choice):
     option_by_level = 2
     default = 0
 
-class EarlySunflower(Toggle):
+class DisableStormFlashes(Toggle):
     """
-    Attempts to place Sunflower, Sun-shroom and Coffee Bean in the first sphere, making for a more beginner-friendly game.
+    Disables the storm flashes in "Fog: Level 4-10" and "Dark Stormy Night".
     """
-    display_name = "Early Sunflower"
+    display_name = "Disable Storm Flashes"
     default = False
 
 class TrapPercentage(Range):
@@ -178,35 +257,32 @@ class ZombieAmbushTrapWeight(Range):
     range_end = 100
     default = 50
 
-class ImitaterBehaviour(Choice):
-    """
-    Determines which seeds can be copied by Imitater.
-
-    - normal: Imitater can copy the seeds of plants you have already unlocked.
-    - open: Imitater can copy any seed in the game - even the seeds of plants you haven't unlocked yet.
-    """
-    display_name = "Imitater Behaviour"
-    option_normal = 0
-    option_open = 1
-    default = 0
-
 @dataclass
 class PVZROptions(PerGameCommonOptions):
-    goal: Goal
     adventure_mode_progression: AdventureModeProgression
     huge_wave_locations: HugeWaveLocations
-    shop_items: ShopItems
     include_minigames: IncludeMinigames
     include_puzzle_levels: IncludePuzzleLevels
     include_survival_levels: IncludeSurvivalLevels
     minigame_puzzle_survival_order: MinigamePuzzleSurvivalOrder
     include_cloudy_day_levels: IncludeCloudyDayLevels
     include_bonus_levels: IncludeBonusLevels
-    music_shuffle: MusicShuffle
-    early_sunflower: EarlySunflower
-    starting_seed_slots: StartingSeedSlots
+    adventure_levels_goal: AdventureLevelsGoal
+    adventure_areas_goal: AdventureAreasGoal
+    minigame_levels_goal: MinigameLevelsGoal
+    puzzle_levels_goal: PuzzleLevelsGoal
+    survival_levels_goal: SurvivalLevelsGoal
+    fast_goal: FastGoal
+    shop_items: ShopItems
     starting_plants: StartingPlants
+    starting_seed_slots: StartingSeedSlots
+    early_sunflower: EarlySunflower
+    early_shovel: EarlyShovel
+#    easy_upgrade_plants: EasyUpgradePlants (Not fully implemented yet)
     imitater_behaviour: ImitaterBehaviour
+    music_shuffle: MusicShuffle
+    disable_storm_flashes: DisableStormFlashes
+    death_link: DeathLink
     trap_percentage: TrapPercentage
     mower_deploy_trap_weight: MowerDeployTrapWeight
     seed_packet_cooldown_trap_weight: SeedPacketCooldownTrapWeight

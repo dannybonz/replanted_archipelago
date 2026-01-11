@@ -58,10 +58,10 @@ class PVZRWorld(World):
             restocks = max(0, number_of_pages - 1)
             progression_items += ["Twiddydinkies Restock"] * restocks
 
-        if self.options.minigame_puzzle_survival_order.value == 3:
-            permitted_types = {"minigame": self.options.include_minigames.value, "puzzle": self.options.include_puzzle_levels.value, "survival": self.options.include_survival_levels.value}
+        if self.options.minigame_puzzle_survival_order.value == 3 or self.options.adventure_mode_progression.value == 3:
+            permitted_types = {"adventure": self.options.adventure_mode_progression.value == 3, "minigame": self.options.include_minigames.value and self.options.minigame_puzzle_survival_order.value == 3, "puzzle": self.options.include_puzzle_levels.value and self.options.minigame_puzzle_survival_order.value == 3, "survival": self.options.include_survival_levels.value and self.options.minigame_puzzle_survival_order.value == 3}
             for level in LEVELS:
-                if LEVELS[level]["type"] in permitted_types and permitted_types[LEVELS[level]["type"]]:
+                if LEVELS[level]["type"] in permitted_types and permitted_types[LEVELS[level]["type"]] and not level in self.starting_levels + ["5-10"]:
                     progression_items.append(LEVELS[level]["unlock_item_name"])
 
         if self.options.shop_items.value > 0:
@@ -122,13 +122,21 @@ class PVZRWorld(World):
 
         self.starting_items = self.starting_plants + self.starting_slots
         
+        self.starting_levels = []
+
         if self.options.adventure_mode_progression.value in [1, 2]:
             self.starting_items.append("Day Access")
+        elif self.options.adventure_mode_progression.value == 3:
+            self.starting_levels = ["1-1", "1-2", "1-3", "1-4", "1-5"]
+            for level in self.starting_levels:
+                self.starting_items.append(LEVELS[level]["unlock_item_name"])
 
         if self.options.early_sunflower.value:
             self.multiworld.early_items[self.player]["Sunflower"] = 1
             self.multiworld.early_items[self.player]["Coffee Bean"] = 1
             self.multiworld.early_items[self.player]["Sun-shroom"] = 1
+        if self.options.early_shovel.value:
+            self.multiworld.early_items[self.player]["Shovel"] = 1
 
         if self.options.shop_items.value > 16:
             self.multiworld.early_items[self.player]["Crazy Dave's Car Keys"] = 1
@@ -157,7 +165,8 @@ class PVZRWorld(World):
         self.useful_item_names = self.pick_useful_items(total_locations - len(self.progression_item_names))
 
         if len(self.progression_item_names + self.useful_item_names) > total_locations:
-            raise OptionError(f"Not enough locations are available. Adjust your options to include more locations, then generate again.")
+            overflowing_item_count = len(self.progression_item_names + self.useful_item_names) - total_locations
+            raise OptionError(f"Not enough locations are available. Adjust your options to include {overflowing_item_count} more locations/fewer items, then generate again.")
         
         remaining_locations = total_locations - len(self.progression_item_names + self.useful_item_names)
 
@@ -175,7 +184,7 @@ class PVZRWorld(World):
         self.multiworld.itempool += item_pool
 
     def generate_early(self) -> None:
-        # Minigame unlock order randomisation
+        #Setup level unlock order randomisation
         self.minigame_unlocks = { 51: 0, 52: 0, 53: 0, 54: 1, 55: 2, 56: 3, 57: 4, 58: 5, 59: 6, 60: 7, 61: 8, 62: 9, 63: 10, 64: 11, 65: 12, 66: 13, 67: 14, 68: 15, 69: 16, 70: 17}
         self.survival_unlocks = { 89: 0, 90: 0, 91: 0, 92: 1, 93: 2, 94: 3, 95: 4, 96: 5, 97: 6, 98: 7 } 
         self.vasebreaker_unlocks =  { 71: 0, 72: 1, 73: 2, 74: 3, 75: 4, 76: 5, 77: 6, 78: 7, 79: 8 }
@@ -209,6 +218,20 @@ class PVZRWorld(World):
             for key in self.izombie_unlocks:
                 self.izombie_unlocks[key] = 0
         
+        #Setup goal
+        self.adventure_levels_goal = self.options.adventure_levels_goal.value
+        self.adventure_areas_goal = self.options.adventure_areas_goal.value
+        self.fast_goal = self.options.fast_goal.value
+        self.minigame_levels_goal = 0
+        self.puzzle_levels_goal = 0
+        self.survival_levels_goal = 0
+        if (self.options.minigame_levels_goal.value > 0 and self.options.include_minigames):
+            self.minigame_levels_goal = self.options.minigame_levels_goal.value
+        if (self.options.puzzle_levels_goal.value > 0 and self.options.include_puzzle_levels):
+            self.puzzle_levels_goal = self.options.puzzle_levels_goal.value
+        if (self.options.survival_levels_goal.value > 0 and self.options.include_survival_levels):
+            self.survival_levels_goal = self.options.survival_levels_goal.value
+
         if hasattr(self.multiworld, "re_gen_passthrough"): #If generated through Universal Tracker passthrough
             slot_data: dict = self.multiworld.re_gen_passthrough[self.game]
             self.minigame_unlocks = {int(k): v for k, v in slot_data["minigame_unlocks"].items()}
@@ -219,7 +242,7 @@ class PVZRWorld(World):
     def generate_basic(self) -> None:
         # Music randomisation
         self.music_map = []
-        if self.options.music_shuffle.value == 2:            
+        if self.options.music_shuffle.value == 2:
             for level in LEVELS:
                 self.music_map.append(self.random.randint(0, 8))
         elif self.options.music_shuffle.value == 1:            
@@ -232,20 +255,7 @@ class PVZRWorld(World):
             self.shop_prices.append(self.random.randint(0, 40))
 
     def fill_slot_data(self) -> dict[str, Any]:
-        if (self.options.goal == 0):
-            require_all_levels = True
-        else:
-            require_all_levels = False
-
-        imitater_open = False
-        if (self.options.imitater_behaviour.value == 1):
-            imitater_open = True
-
-        individual_level_unlock_items = False
-        if (self.options.minigame_puzzle_survival_order.value == 3):
-            individual_level_unlock_items = True
-
-        slot_data_dict = {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "require_all_levels": require_all_levels, "imitater_open": imitater_open, "individual_level_unlock_items": individual_level_unlock_items}
+        slot_data_dict = {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "minigame_puzzle_survival_order": self.options.minigame_puzzle_survival_order.value, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal}
         return slot_data_dict
 
     @staticmethod

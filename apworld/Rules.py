@@ -58,6 +58,12 @@ def can_counter_wallnut(state, player, at_night, has_pool, on_roof):
 def has_sun_producer(state, player, at_night, has_pool, on_roof):
     return state.has("Sunflower", player) or (state.has("Sun-shroom", player) and at_night)
 
+def get_cleared_adventure_areas(state, player):
+    return state.has("Adventure Level Cleared (Area: Day)", player, 10) + state.has("Adventure Level Cleared (Area: Night)", player, 10) + state.has("Adventure Level Cleared (Area: Pool)", player, 10) + state.has("Adventure Level Cleared (Area: Fog)",  player, 10) + state.has("Adventure Level Cleared (Area: Roof)",  player, 9)
+
+def get_cleared_adventure_levels(state, player):
+    return state.count("Adventure Level Cleared (Area: Day)", player) + state.count("Adventure Level Cleared (Area: Night)", player) + state.count("Adventure Level Cleared (Area: Pool)", player) + state.count("Adventure Level Cleared (Area: Fog)",  player) + state.count("Adventure Level Cleared (Area: Roof)",  player)
+
 ZOMBIE_COUNTERS = {
     "ZOMBIE_BALLOON": can_counter_balloon,
     "ZOMBIE_DOOR": can_counter_screen_door,
@@ -76,19 +82,29 @@ ZOMBIE_COUNTERS = {
 def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roof):
 
     if level_data["type"] == "minigame" and world.minigame_unlocks[level_data["id"]] > 0:
-        if not state.has("Progressive Minigame Unlock", player, world.minigame_unlocks[level_data["id"]]):
+        if not state.has("Mini-game Level Cleared", player, world.minigame_unlocks[level_data["id"]]):
             return False
     elif level_data["type"] == "survival" and world.survival_unlocks[level_data["id"]] > 0:
-        if not state.has("Progressive Survival Unlock", player, world.survival_unlocks[level_data["id"]]):
+        if not state.has("Survival Level Cleared", player, world.survival_unlocks[level_data["id"]]):
             return False
     elif level_data["type"] == "puzzle" and level_data["id"] < 80:
-        if not state.has("Progressive Vasebreaker Unlock", player, world.vasebreaker_unlocks[level_data["id"]]):
+        if not state.has("Vasebreaker Level Cleared", player, world.vasebreaker_unlocks[level_data["id"]]):
             return False
     elif level_data["type"] == "puzzle":
-        if not state.has("Progressive I, Zombie Unlock", player, world.izombie_unlocks[level_data["id"]]):
+        if not state.has("I, Zombie Level Cleared", player, world.izombie_unlocks[level_data["id"]]):
             return False
     elif level_data["name"] == "Roof: Dr. Zomboss":
-        if (world.options.goal == 0 and not state.has("Area Clear", player, 5)):
+        if world.fast_goal == False and not state.can_reach_location("Roof: Level 5-9 (Clear)", player):
+            return False
+        if get_cleared_adventure_levels(state, player) < world.adventure_levels_goal:
+            return False
+        if get_cleared_adventure_areas(state, player) < world.adventure_areas_goal:
+            return False
+        if state.has("Survival Level Cleared", player, world.survival_levels_goal) == False:
+            return False
+        if state.has("Mini-game Level Cleared", player, world.minigame_levels_goal) == False:
+            return False
+        if state.count("Vasebreaker Level Cleared", player) + state.count("I, Zombie Level Cleared", player) < world.puzzle_levels_goal:
             return False
 
     if level_data["choose"]:
@@ -122,7 +138,9 @@ def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roo
             return False
         elif level_data["name"] in ["Minigames: Last Stand", "Survival: Day (Hard)", "Survival: Night (Hard)", "Survival: Pool (Hard)", "Survival: Fog (Hard)", "Survival: Roof (Hard)"] and not ((state.has("Fume-shroom", player) and (at_night or state.has("Coffee Bean", player))) or (state.has("Torchwood", player) and (state.has("Threepeater", player) or state.has("Repeater", player))) or (state.has("Melon-pult", player))):
             return False
-
+        elif level_data["name"] == "Mini-games: Bobsled Bonanza" and not state.has("Spikeweed", player):
+            return False
+            
         for zombie in level_data["zombies"]:
             if zombie in ZOMBIE_COUNTERS:
                 if not ZOMBIE_COUNTERS[zombie](state, player, at_night, has_pool, on_roof):
