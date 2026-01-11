@@ -83,7 +83,8 @@ namespace ReplantedArchipelago.Patches
                     (index == 22 && APClient.receivedItems.Contains(Data.itemIds["Pool Cleaners"])) ||
                     (index == 23 && APClient.receivedItems.Contains(Data.itemIds["Roof Cleaners"])) ||
                     (index == 29 && APClient.receivedItems.Contains(Data.itemIds["Wall-nut First Aid"])) ||
-                    (index == 8 && APClient.receivedItems.Contains(Data.itemIds["Imitater"]))
+                    (index == 8 && APClient.receivedItems.Contains(Data.itemIds["Imitater"])) ||
+                    (index == 14)
                     )
                 {
                     __result = 1;
@@ -105,7 +106,8 @@ namespace ReplantedArchipelago.Patches
                     (item == StoreItem.PoolCleaner && APClient.receivedItems.Contains(Data.itemIds["Pool Cleaners"])) ||
                     (item == StoreItem.RoofCleaner && APClient.receivedItems.Contains(Data.itemIds["Roof Cleaners"])) ||
                     (item == StoreItem.Firstaid && APClient.receivedItems.Contains(Data.itemIds["Wall-nut First Aid"])) ||
-                    (item == StoreItem.PlantImitater && APClient.receivedItems.Contains(Data.itemIds["Imitater"]))
+                    (item == StoreItem.PlantImitater && APClient.receivedItems.Contains(Data.itemIds["Imitater"])) ||
+                    item == StoreItem.Fertilizer
                     )
                 {
                     __result = 1;
@@ -176,7 +178,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(StoreModel __instance)
             {
-                APClient.SendLocation(5000 + __instance.m_purchaseData.m_entryDescriptionIndex); //Send out location when purchasing a shop item
+                APClient.SendLocation(5000 + __instance.m_purchaseData.m_entryDescriptionIndex, false); //Send out location when purchasing a shop item
                 return true;
             }
         }

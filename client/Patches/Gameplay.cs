@@ -1,11 +1,12 @@
-﻿using Archipelago.MultiClient.Net.Enums;
+﻿using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
+using Archipelago.MultiClient.Net.Models;
 using HarmonyLib;
+using Il2Cpp;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using Il2CppReloaded.TreeStateActivities;
 using Il2CppSource.Controllers;
 using Il2CppSource.Utils;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -19,7 +20,12 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(GameplayActivity __instance)
             {
-                if (Main.currentScene != "Gameplay" || __instance == null || __instance.Board == null || !(__instance.GameScene == GameScenes.Playing || __instance.GameScene == GameScenes.LevelIntro))
+                if (Main.currentScene == "Gameplay" && __instance != null && Menu.showAwardScreen && __instance.m_board == null)
+                {
+                    AwardScreen.EditAwardScreen(__instance);
+                }
+
+                if (Main.currentScene != "Gameplay" || __instance == null || __instance.m_board == null || !(__instance.GameScene == GameScenes.Playing || __instance.GameScene == GameScenes.LevelIntro))
                 {
                     return;
                 }
@@ -30,8 +36,24 @@ namespace ReplantedArchipelago.Patches
                     APClient.chooserRefreshState = "none";
                 }
 
+                if (APClient.deathlinkEnabled && APClient.receivedDeathLink != null)
+                {
+                    string deathMessage = $"DeathLink sent by {APClient.receivedDeathLink.Source}";
+                    Main.Log(deathMessage);
+                    if (APClient.receivedDeathLink.Cause != "")
+                    {
+                        deathMessage = $"DeathLink: {APClient.receivedDeathLink.Cause}";
+                    }
+                    __instance.m_board.mCutScene.StartZombiesLost(deathMessage);
+                    TimeUtil.SetFlowingTimeScale(0f);
+                    APClient.receivedDeathLink = null;
+                    return;
+                }
+
+                Profile.ProcessIUserService(__instance.m_userService);
+
                 //Cheat keys
-                var board = __instance.Board; //Represents the lawn and its contents
+                var board = __instance.m_board; //Represents the lawn and its contents
                 if (Data.CheatKeys)
                 {
                     //Instant Level Win - F1
@@ -56,6 +78,49 @@ namespace ReplantedArchipelago.Patches
                     if (Input.GetKeyDown(KeyCode.F4))
                     {
                         StateTransitionUtils.Transition("Frontend");
+                    }
+
+                    //Refresh all packets - F5
+                    if (Input.GetKeyDown(KeyCode.F5))
+                    {
+                        board.SeedBanks[0].RefreshAllPackets();
+                    }
+
+                    //Instant death - F6
+                    if (Input.GetKeyDown(KeyCode.F6))
+                    {
+                        board.mCutScene.StartZombiesLost("Death Triggered");
+                        TimeUtil.SetFlowingTimeScale(0f);
+                    }
+
+                    //Spawn wave - F7
+                    if (Input.GetKeyDown(KeyCode.F7))
+                    {
+                        board.SpawnZombieWave();
+                    }
+
+                    //Bombs - F8
+                    if (Input.GetKeyDown(KeyCode.F8))
+                    {
+                        board.AddPlant(1, 0, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(1, 2, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(1, 4, SeedType.Cherrybomb, SeedType.Cherrybomb);
+
+                        board.AddPlant(2, 0, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(2, 2, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(2, 4, SeedType.Cherrybomb, SeedType.Cherrybomb);
+
+                        board.AddPlant(4, 0, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(4, 2, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(4, 4, SeedType.Cherrybomb, SeedType.Cherrybomb);
+
+                        board.AddPlant(6, 0, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(6, 2, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(6, 4, SeedType.Cherrybomb, SeedType.Cherrybomb);
+
+                        board.AddPlant(8, 0, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(8, 2, SeedType.Cherrybomb, SeedType.Cherrybomb);
+                        board.AddPlant(8, 4, SeedType.Cherrybomb, SeedType.Cherrybomb);
                     }
                 }
 
@@ -195,16 +260,59 @@ namespace ReplantedArchipelago.Patches
                     theCoinType == CoinType.Trophy ||
                     theCoinType == CoinType.Note)
                 {
+                    Menu.showAwardScreen = false;
+                    int levelId = Data.GetLevelIdFromGameplayActivity(__instance.mApp);
+                    if (levelId != -1 && APClient.scoutedLocations != null && Data.AllLevelLocations.ContainsKey(levelId) && !APClient.apSession.Locations.AllLocationsChecked.Contains(Data.AllLevelLocations[levelId].ClearLocation))
+                    {
+                        ItemInfo itemInfo = APClient.scoutedLocations[Data.AllLevelLocations[levelId].ClearLocation];
+                        if (itemInfo.Player.Name == APClient.slot && Data.itemIdSpriteName.ContainsKey(itemInfo.ItemId))
+                        {
+                            theCoinType = CoinType.FinalSeedPacket;
+                            Menu.showAwardScreen = true;
+                            return true;
+                        }
+                    }
                     __instance.FadeOutLevel();
                     return false;
                 }
-                else if (theCoinType == CoinType.PresentMinigames ||
-                        theCoinType == CoinType.PresentPuzzleMode ||
-                        theCoinType == CoinType.PresentSurvivalMode)
+                else if (theCoinType == CoinType.PresentMinigames || theCoinType == CoinType.PresentPuzzleMode || theCoinType == CoinType.PresentSurvivalMode)
                 {
                     return false;
                 }
                 return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Coin), nameof(Coin.Draw))] //Change the image drawn for FinalSeedPacket
+        public static class CoinDrawPatch
+        {
+            private static void Prefix(Coin __instance)
+            {
+                if (__instance.mType == CoinType.FinalSeedPacket)
+                {
+                    ItemInfo itemInfo = APClient.GetLevelCompleteAward(__instance.mApp);
+
+                    if (itemInfo.ItemId == Data.itemIds["Shovel"])
+                    {
+                        __instance.mType = CoinType.Shovel;
+                    }
+                    else if (itemInfo.ItemId == Data.itemIds["Almanac"])
+                    {
+                        __instance.mType = CoinType.Almanac;
+                    }
+                    else if (itemInfo.ItemId == Data.itemIds["Crazy Dave's Car Keys"])
+                    {
+                        __instance.mType = CoinType.CarKeys;
+                    }
+                    else if (itemInfo.ItemId == Data.itemIds["Zen Garden"])
+                    {
+                        __instance.mType = CoinType.WateringCan;
+                    }
+                    else if (Data.itemIdSpriteName.ContainsKey(itemInfo.ItemId))
+                    {
+                        __instance.mController.m_plantImage.sprite = Data.FindSpriteByName(Data.itemIdSpriteName[itemInfo.ItemId]);
+                    }
+                }
             }
         }
 
@@ -215,65 +323,7 @@ namespace ReplantedArchipelago.Patches
             {
                 if ((!__instance.mApp.IsScaryPotterLevel() || __instance.IsFinalScaryPotterStage()) && (!__instance.mApp.IsSurvivalMode() || __instance.IsFinalSurvivalStage()) && !__instance.IsLastStandStageWithRepick())
                 {
-                    if (__instance.mApp.ReloadedGameMode == ReloadedGameMode.CloudyDay)
-                    {
-                        int cloudyNumber = __instance.mApp.LevelData.m_subIndex;
-                        APClient.CompletedLevel(cloudyNumber, "Cloudy Day");
-                        APClient.SendLocation(Data.AllLevelLocations[110 + cloudyNumber].ClearLocation);
-                    }
-                    else if (__instance.mApp.GameMode == GameMode.Adventure)
-                    {
-                        int levelNumber = __instance.mLevel;
-
-                        if (!APClient.clearedAdventure.Contains(levelNumber))
-                        {
-                            APClient.clearedAdventure.Add(levelNumber);
-                            APClient.apSession.DataStorage[Scope.Slot, "clearedAdventure"] = JArray.FromObject(APClient.clearedAdventure);
-                        }
-
-                        APClient.CompletedLevel(__instance.mLevel, "Adventure");
-                        APClient.SendLocation(Data.AllLevelLocations[levelNumber].ClearLocation);
-                    }
-                    else if (Data.GameModeLevelIDs.ContainsKey(__instance.mApp.GameMode))
-                    {
-                        if (!(__instance.mApp.GameMode == GameMode.ChallengeLastStand && __instance.GetSurvivalFlagsCompleted() < 5))
-                        {
-                            int gameModeLevelId = Data.GameModeLevelIDs[__instance.mApp.GameMode];
-                            APClient.SendLocation(Data.AllLevelLocations[gameModeLevelId].ClearLocation);
-                            if (gameModeLevelId >= 51 && gameModeLevelId <= 70)
-                            {
-                                if (!APClient.clearedMinigames.Contains(gameModeLevelId))
-                                {
-                                    APClient.clearedMinigames.Add(gameModeLevelId);
-                                    APClient.apSession.DataStorage[Scope.Slot, "clearedMinigames"] = JArray.FromObject(APClient.clearedMinigames);
-                                }
-                            }
-                            else if (gameModeLevelId >= 89 && gameModeLevelId <= 98)
-                            {
-                                if (!APClient.clearedSurvival.Contains(gameModeLevelId))
-                                {
-                                    APClient.clearedSurvival.Add(gameModeLevelId);
-                                    APClient.apSession.DataStorage[Scope.Slot, "clearedSurvival"] = JArray.FromObject(APClient.clearedSurvival);
-                                }
-                            }
-                            else if (gameModeLevelId >= 71 && gameModeLevelId <= 79)
-                            {
-                                if (!APClient.clearedVasebreaker.Contains(gameModeLevelId))
-                                {
-                                    APClient.clearedVasebreaker.Add(gameModeLevelId);
-                                    APClient.apSession.DataStorage[Scope.Slot, "clearedVasebreaker"] = JArray.FromObject(APClient.clearedVasebreaker);
-                                }
-                            }
-                            else if (gameModeLevelId >= 80 && gameModeLevelId <= 88)
-                            {
-                                if (!APClient.clearedIZombie.Contains(gameModeLevelId))
-                                {
-                                    APClient.clearedIZombie.Add(gameModeLevelId);
-                                    APClient.apSession.DataStorage[Scope.Slot, "clearedIZombie"] = JArray.FromObject(APClient.clearedIZombie);
-                                }
-                            }
-                        }
-                    }
+                    APClient.CompletedLevel(Data.GetLevelIdFromGameplayActivity(__instance.mApp));
                 }
                 else if (__instance.mApp.IsSurvivalMode() && !__instance.IsFinalSurvivalStage())
                 {
@@ -355,10 +405,6 @@ namespace ReplantedArchipelago.Patches
                         }
                     }
                 }
-                if (Data.AllZombiesDie) //Cheat to kill zombies instantly
-                {
-                    __instance.TakeDamage(10000, DamageFlags.BypassesShield);
-                }
             }
         }
 
@@ -367,8 +413,9 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(GameplayActivity __instance)
             {
-                Main.gameplayActivity = __instance;
-                Main.Log("GameplayActivity Updated");
+                Main.cachedGameplayActivity = __instance;
+                Menu.showAwardScreen = false;
+                Main.Log("Re-cached GameplayActivity.");
             }
         }
 
@@ -551,17 +598,116 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
-        [HarmonyPatch(typeof(AwardScreenActivity), nameof(AwardScreenActivity.ActiveStarted))] //Disable the award screen for puzzles
-        public static class ShowAwardScreenPatch
+        [HarmonyPatch(typeof(StormyNightLightningController), nameof(StormyNightLightningController._setAlpha))] //Disable the award screen for puzzles
+        public static class DrawStormPatch
         {
-            private static bool Prefix(AwardScreenActivity __instance)
+            private static bool Prefix()
             {
-                if (Data.GameModeLevelIDs.ContainsKey(__instance.m_gameplayActivity.GameMode) && Data.GameModeLevelIDs[__instance.m_gameplayActivity.GameMode] >= 71 && Data.GameModeLevelIDs[__instance.m_gameplayActivity.GameMode] < 89)
+                return !APClient.disableStormFlashes;
+            }
+        }
+
+        [HarmonyPatch(typeof(Plant), nameof(Plant.IsUpgrade))]
+        public static class PlantUpgradePatch
+        {
+            private static bool Prefix(SeedType theSeedtype, ref bool __result)
+            {
+                if (APClient.easyUpgradePlants)
                 {
-                    StateTransitionUtils.Transition("Puzzle");
+                    __result = false;
                     return false;
                 }
                 return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Plant), nameof(Plant.IsUpgradableTo))]
+        public static class PlantIsUpgradableToPatch
+        {
+            private static bool Prefix(SeedType aUpdatedType, ref bool __result)
+            {
+                if (APClient.easyUpgradePlants)
+                {
+                    __result = false;
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Plant), nameof(Plant.IsPartOfUpgradableTo))]
+        public static class PlantIsPartOfUpgradableToPatch
+        {
+            private static bool Prefix(SeedType aUpdatedType, ref bool __result)
+            {
+                if (APClient.easyUpgradePlants)
+                {
+                    __result = false;
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Board), nameof(Board.PlantingRequirementsMet))]
+        public static class RequirementsMetPatch
+        {
+            private static bool Prefix(SeedType theSeedType, ref bool __result)
+            {
+                if (APClient.easyUpgradePlants)
+                {
+                    __result = true;
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(CutScene), nameof(CutScene.StartZombiesLost))]
+        public static class ZombiesLostPatch
+        {
+            private static void Postfix()
+            {
+                if (APClient.deathlinkEnabled && APClient.deathLinkService != null && APClient.receivedDeathLink == null)
+                {
+                    DeathLink deathLink = new DeathLink(APClient.slot);
+                    APClient.deathLinkService.SendDeathLink(deathLink);
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Zombie), nameof(Zombie.WalkIntoHouse))]
+        public static class ZombieWalkIntoHousePatch
+        {
+            private static void Postfix(Zombie __instance)
+            {
+                if (APClient.deathlinkEnabled && APClient.deathLinkService != null)
+                {
+                    string messageEnding = "";
+                    if (Data.zombieTypeNames.ContainsKey(__instance.mZombieType))
+                    {
+                        messageEnding = $" to a {Data.zombieTypeNames[__instance.mZombieType]}";
+                    }
+                    DeathLink deathLink = new DeathLink(APClient.slot, $"{APClient.slot} lost their brains{messageEnding}!");
+                    APClient.deathLinkService.SendDeathLink(deathLink);
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.GetAwardSeedForLevel))]
+        public static class GetAwardSeedPatch
+        {
+            private static void Postfix(GameplayActivity __instance, ref SeedType __result)
+            {
+                ItemInfo itemInfo = APClient.GetLevelCompleteAward(__instance);
+                if (itemInfo != null)
+                {
+                    long itemId = itemInfo.ItemId;
+                    if (itemId >= 100 && itemId < 200)
+                    {
+                        __result = Data.seedTypes[itemId - 100];
+                    }
+                }
             }
         }
     }

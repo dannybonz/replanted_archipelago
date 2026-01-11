@@ -1,11 +1,13 @@
 ﻿using Archipelago.MultiClient.Net;
+using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
 using Archipelago.MultiClient.Net.Models;
+using Il2Cpp;
 using Il2CppReloaded.Data;
 using Il2CppReloaded.Gameplay;
-using Il2CppReloaded.Services;
+using Il2CppReloaded.TreeStateActivities;
 using Il2CppSource.Utils;
 using Newtonsoft.Json.Linq;
 using ReplantedArchipelago.Patches;
@@ -28,6 +30,7 @@ namespace ReplantedArchipelago
         public static Dictionary<long, ScoutedItemInfo> scoutedLocations;
         public static int displayedIngameMessages = 0;
         public static double genVersion;
+        public static DeathLinkService deathLinkService;
 
         public static Dictionary<string, object> slotData;
         public static JArray musicMap;
@@ -38,29 +41,26 @@ namespace ReplantedArchipelago
         public static JObject izombieUnlocks;
         public static bool areaLockItems;
         public static bool openAreaItems;
-        public static bool requireAllLevels;
         public static bool imitaterOpen;
-        public static bool individualLevelUnlockItems;
+        public static bool easyUpgradePlants = false; //Not implemented yet
+        public static bool individualMinigameUnlockItems;
+        public static bool disableStormFlashes;
+        public static int adventureLevelsGoal;
+        public static int adventureAreasGoal;
+        public static int minigameLevelsGoal;
+        public static int puzzleLevelsGoal;
+        public static int survivalLevelsGoal;
+        public static bool deathlinkEnabled;
+        public static bool fastGoal;
+        public static bool individualAdventureUnlockItems;
 
         public static int shopPages;
         public static int shopPagesVisible = 1;
-        public static int unlockedAdventureLevels = 1;
-        public static int unlockedDayLevels = 1;
-        public static int unlockedNightLevels = 1;
-        public static int unlockedPoolLevels = 1;
-        public static int unlockedFogLevels = 1;
-        public static int unlockedRoofLevels = 1;
-        public static int unlockedCloudyDayLevels = 0;
-        public static bool bossUnlocked = false;
-        public static bool newSecrets = false;
+        public static List<int> clearedLevels = new List<int>();
         public static string chooserRefreshState = "none";
-        public static bool profileRefreshRequired = true;
-
-        public static List<int> clearedAdventure = new List<int>();
-        public static List<int> clearedMinigames = new List<int>();
-        public static List<int> clearedSurvival = new List<int>();
-        public static List<int> clearedIZombie = new List<int>();
-        public static List<int> clearedVasebreaker = new List<int>();
+        public static int queuedUpCoins = 0;
+        public static List<int> queuedUpPurchases = new List<int>();
+        public static DeathLink receivedDeathLink = null;
 
         public static void AttemptConnection(string hostInput, string slotInput, string passwordInput)
         {
@@ -99,6 +99,7 @@ namespace ReplantedArchipelago
                 {
                     //Reset received items
                     receivedItems = new List<long>();
+                    queuedUpCoins = 0;
 
                     //Update server values
                     slot = apSession.Players.ActivePlayer.Name;
@@ -114,9 +115,18 @@ namespace ReplantedArchipelago
                     izombieUnlocks = (JObject)slotData["izombie_unlocks"];
                     areaLockItems = (Convert.ToInt32(slotData["adventure_mode_progression"]) >= 1);
                     openAreaItems = (Convert.ToInt32(slotData["adventure_mode_progression"]) == 2);
-                    requireAllLevels = Convert.ToBoolean(slotData["require_all_levels"]);
                     imitaterOpen = Convert.ToBoolean(slotData["imitater_open"]);
-                    individualLevelUnlockItems = Convert.ToBoolean(slotData["individual_level_unlock_items"]);
+                    //                    easyUpgradePlants = Convert.ToBoolean(slotData["easy_upgrade_plants"]);
+                    disableStormFlashes = Convert.ToBoolean(slotData["disable_storm_flashes"]);
+                    individualAdventureUnlockItems = (Convert.ToInt32(slotData["adventure_mode_progression"]) == 3);
+                    individualMinigameUnlockItems = (Convert.ToInt32(slotData["minigame_puzzle_survival_order"]) == 3);
+                    adventureAreasGoal = Convert.ToInt32(slotData["adventure_areas_goal"]);
+                    adventureLevelsGoal = Convert.ToInt32(slotData["adventure_levels_goal"]);
+                    minigameLevelsGoal = Convert.ToInt32(slotData["minigame_levels_goal"]);
+                    puzzleLevelsGoal = Convert.ToInt32(slotData["puzzle_levels_goal"]);
+                    survivalLevelsGoal = Convert.ToInt32(slotData["survival_levels_goal"]);
+                    deathlinkEnabled = Convert.ToBoolean(slotData["deathlink_enabled"]);
+                    fastGoal = Convert.ToBoolean(slotData["fast_goal"]);
 
                     //Scout locations and store each level's reward
                     long[] clearLocationIds = Enumerable.Range(1000, 120).Select(i => (long)i).ToArray();
@@ -134,34 +144,8 @@ namespace ReplantedArchipelago
                     int startingInvCount = Convert.ToInt32(slotData["starting_inv_count"]); //Don't send messages for starting inventory items
                     apSession.DataStorage[Scope.Slot, "displayedIngameMessages"].Initialize(startingInvCount); //Store the amount of displayed messages in DataStorage so we don't re-show the same messages
                     apSession.DataStorage[Scope.Slot, "profileGuids"].Initialize(JArray.FromObject(new List<string>())); //Used to validate profile
-
-                    //Initialise DataStorage
-                    if (areaLockItems)
-                    {
-                        apSession.DataStorage[Scope.Slot, "unlockedDayLevels"].Initialize(1);
-                        apSession.DataStorage[Scope.Slot, "unlockedNightLevels"].Initialize(1);
-                        apSession.DataStorage[Scope.Slot, "unlockedPoolLevels"].Initialize(1);
-                        apSession.DataStorage[Scope.Slot, "unlockedFogLevels"].Initialize(1);
-                        apSession.DataStorage[Scope.Slot, "unlockedRoofLevels"].Initialize(1);
-                    }
-                    else
-                    {
-                        apSession.DataStorage[Scope.Slot, "unlockedAdventureLevels"].Initialize(1);
-                    }
-                    apSession.DataStorage[Scope.Slot, "unlockedCloudyDayLevels"].Initialize(0);
-
-                    //Stores completed minigames (used for unlocking the next one)
-                    apSession.DataStorage[Scope.Slot, "clearedAdventure"].Initialize(JArray.FromObject(new List<int>()));
-                    apSession.DataStorage[Scope.Slot, "clearedMinigames"].Initialize(JArray.FromObject(new List<int>()));
-                    apSession.DataStorage[Scope.Slot, "clearedSurvival"].Initialize(JArray.FromObject(new List<int>()));
-                    apSession.DataStorage[Scope.Slot, "clearedIZombie"].Initialize(JArray.FromObject(new List<int>()));
-                    apSession.DataStorage[Scope.Slot, "clearedVasebreaker"].Initialize(JArray.FromObject(new List<int>()));
-
-                    clearedAdventure = apSession.DataStorage[Scope.Slot, "clearedAdventure"];
-                    clearedMinigames = apSession.DataStorage[Scope.Slot, "clearedMinigames"];
-                    clearedSurvival = apSession.DataStorage[Scope.Slot, "clearedSurvival"];
-                    clearedIZombie = apSession.DataStorage[Scope.Slot, "clearedIZombie"];
-                    clearedVasebreaker = apSession.DataStorage[Scope.Slot, "clearedVasebreaker"];
+                    apSession.DataStorage[Scope.Slot, "clearedLevels"].Initialize(JArray.FromObject(new List<int>()));
+                    clearedLevels = apSession.DataStorage[Scope.Slot, "clearedLevels"];
 
                     Data.levelOrders = new Dictionary<string, int[]>();
 
@@ -169,15 +153,26 @@ namespace ReplantedArchipelago
                     Data.levelOrders["survival"] = GetOrderedLevelIDs(survivalUnlocks, 10, 89);
                     Data.levelOrders["puzzle"] = GetOrderedLevelIDs(vasebreakerUnlocks, 9, 71).Concat(GetOrderedLevelIDs(izombieUnlocks, 9, 80)).ToArray();
 
+                    if (deathlinkEnabled)
+                    {
+                        Main.Log("Deathlink enabled.");
+                        deathLinkService = apSession.CreateDeathLinkService();
+                        deathLinkService.OnDeathLinkReceived += HandleDeathLink;
+                        deathLinkService.EnableDeathLink();
+                    }
+
                     currentlyConnected = true; //Connection successful!
 
-                    Main.DoProfileCheck(); //Swap to correct profile
+                    Profile.DoProfileCheck();
 
                     if (currentlyConnected) //If didn't disconnect due to lack of profile slots...
                     {
                         ProcessAllItems(); //Process all items received since the beginning of time
                         apSession.Items.ItemReceived += RunOnItemReceived; //Set handler for any items received in this session
                         Menu.HideConnectionPanel();
+
+                        Profile.refreshRequired = true;
+                        Profile.ProcessIUserService();
                     }
                 }
             }
@@ -212,20 +207,7 @@ namespace ReplantedArchipelago
 
         public static void ProcessAllItems()
         {
-            if (areaLockItems)
-            {
-                unlockedDayLevels = apSession.DataStorage[Scope.Slot, "unlockedDayLevels"];
-                unlockedNightLevels = apSession.DataStorage[Scope.Slot, "unlockedNightLevels"];
-                unlockedPoolLevels = apSession.DataStorage[Scope.Slot, "unlockedPoolLevels"];
-                unlockedFogLevels = apSession.DataStorage[Scope.Slot, "unlockedFogLevels"];
-                unlockedRoofLevels = apSession.DataStorage[Scope.Slot, "unlockedRoofLevels"];
-            }
-            else
-            {
-                unlockedAdventureLevels = apSession.DataStorage[Scope.Slot, "unlockedAdventureLevels"];
-            }
-            unlockedCloudyDayLevels = apSession.DataStorage[Scope.Slot, "unlockedCloudyDayLevels"];
-
+            clearedLevels = apSession.DataStorage[Scope.Slot, "clearedLevels"];
 
             displayedIngameMessages = apSession.DataStorage[Scope.Slot, "displayedIngameMessages"];
 
@@ -250,15 +232,15 @@ namespace ReplantedArchipelago
                 //Add coins
                 if (item.ItemId == 60)
                 {
-                    Main.userService.AddCoins(1);
+                    queuedUpCoins += 1;
                 }
                 else if (item.ItemId == 61)
                 {
-                    Main.userService.AddCoins(5);
+                    queuedUpCoins += 5;
                 }
                 else if (item.ItemId == 62)
                 {
-                    Main.userService.AddCoins(100);
+                    queuedUpCoins += 100;
                 }
 
                 //Increase counter for displayed messages (to prevent messages being displayed multiple times)
@@ -277,19 +259,15 @@ namespace ReplantedArchipelago
             }
             else if (item.ItemId == Data.itemIds["Wall-nut First Aid"])
             {
-                Main.userService.ActiveUserProfile.mPurchases[(int)StoreItem.Firstaid] = 1;
+                queuedUpPurchases.Add((int)StoreItem.Firstaid);
             }
             else if (item.ItemId == Data.itemIds["Pool Cleaners"])
             {
-                Main.userService.ActiveUserProfile.mPurchases[(int)StoreItem.PoolCleaner] = 1;
+                queuedUpPurchases.Add((int)StoreItem.PoolCleaner);
             }
             else if (item.ItemId == Data.itemIds["Roof Cleaners"])
             {
-                Main.userService.ActiveUserProfile.mPurchases[(int)StoreItem.RoofCleaner] = 1;
-            }
-            else if (item.ItemId >= 50 && item.ItemId < 60)
-            {
-                newSecrets = true;
+                queuedUpPurchases.Add((int)StoreItem.RoofCleaner);
             }
             else if (item.ItemId >= 100 && item.ItemId < 200)
             {
@@ -298,7 +276,12 @@ namespace ReplantedArchipelago
 
             if (Data.menuUpdateItems.Contains(item.ItemId))
             {
-                profileRefreshRequired = true;
+                Profile.refreshRequired = true;
+            }
+
+            if (item.ItemId > 205 && item.ItemId < 250)
+            {
+                Profile.userLevelNumber = (int)item.ItemId - 200;
             }
         }
 
@@ -323,6 +306,19 @@ namespace ReplantedArchipelago
             }
         }
 
+        public static void HandleDeathLink(DeathLink deathLink)
+        {
+            Main.Log("Deathlink received.");
+            if (Main.currentScene == "Gameplay" && Main.cachedGameplayActivity != null && Main.cachedGameplayActivity.GameScene == GameScenes.Playing)
+            {
+                receivedDeathLink = deathLink;
+            }
+            else
+            {
+                Main.Log("Deathlink dodged!");
+            }
+        }
+
         public static void HandleError(Exception e, string reason)
         {
             Main.Log("Connection error.");
@@ -333,19 +329,22 @@ namespace ReplantedArchipelago
             }
         }
 
-        public static void SendLocation(int locationId)
+        public static void SendLocation(int locationId, bool queueMessage)
         {
             if (!apSession.Locations.AllLocationsChecked.Contains(locationId)) //Don't waste time re-sending already sent checks
             {
                 if (scoutedLocations != null && scoutedLocations.ContainsKey(locationId)) //If the location has been scouted, queue an ingame message
                 {
-                    if (scoutedLocations[locationId].Player.Name.Equals(slot) == false)
+                    if (queueMessage)
                     {
-                        Main.QueuedIngameMessages.Enqueue(new Data.QueuedIngameMessage { MessageLabel = $"Sent {scoutedLocations[locationId].ItemName} to {scoutedLocations[locationId].Player.Name}", ItemId = -1, WasReceived = false });
-                    }
-                    else
-                    {
-                        Main.QueuedIngameMessages.Enqueue(new Data.QueuedIngameMessage { MessageLabel = $"You found your {scoutedLocations[locationId].ItemName}", ItemId = scoutedLocations[locationId].ItemId, WasReceived = true });
+                        if (scoutedLocations[locationId].Player.Name.Equals(slot) == false)
+                        {
+                            Main.QueuedIngameMessages.Enqueue(new Data.QueuedIngameMessage { MessageLabel = $"Sent {scoutedLocations[locationId].ItemName} to {scoutedLocations[locationId].Player.Name}", ItemId = -1, WasReceived = false });
+                        }
+                        else
+                        {
+                            Main.QueuedIngameMessages.Enqueue(new Data.QueuedIngameMessage { MessageLabel = $"You found your {scoutedLocations[locationId].ItemName}", ItemId = scoutedLocations[locationId].ItemId, WasReceived = true });
+                        }
                     }
                 }
                 apSession.Locations.CompleteLocationChecks(locationId);
@@ -356,35 +355,25 @@ namespace ReplantedArchipelago
         {
             if (levelData.ReloadedGameMode == ReloadedGameMode.CloudyDay)
             {
-                if (Data.AllLevelLocations[110 + levelData.m_subIndex].FlagLocations.Length > hugeWaveNumber)
+                if (Data.AllLevelLocations[109 + levelData.m_subIndex].FlagLocations.Length > hugeWaveNumber)
                 {
-                    SendLocation(Data.AllLevelLocations[110 + levelData.m_subIndex].FlagLocations[hugeWaveNumber]);
+                    SendLocation(Data.AllLevelLocations[109 + levelData.m_subIndex].FlagLocations[hugeWaveNumber], true);
                 }
             }
             else if (levelData.GameMode == GameMode.Adventure)
             {
                 if (Data.AllLevelLocations[levelData.m_levelNumber].FlagLocations.Length > hugeWaveNumber)
                 {
-                    SendLocation(Data.AllLevelLocations[levelData.m_levelNumber].FlagLocations[hugeWaveNumber]);
+                    SendLocation(Data.AllLevelLocations[levelData.m_levelNumber].FlagLocations[hugeWaveNumber], true);
                 }
             }
             else if (Data.GameModeLevelIDs.ContainsKey(levelData.GameMode))
             {
                 if (Data.AllLevelLocations[Data.GameModeLevelIDs[levelData.GameMode]].FlagLocations.Length > hugeWaveNumber && hugeWaveNumber >= 0)
                 {
-                    SendLocation(Data.AllLevelLocations[Data.GameModeLevelIDs[levelData.GameMode]].FlagLocations[hugeWaveNumber]);
+                    SendLocation(Data.AllLevelLocations[Data.GameModeLevelIDs[levelData.GameMode]].FlagLocations[hugeWaveNumber], true);
                 }
             }
-        }
-
-        public static void RegisterProfile(UserProfile theProfile)
-        {
-            List<string> profileGuids = apSession.DataStorage[Scope.Slot, "profileGuids"];
-            profileGuids.Add(theProfile.mGuid);
-            apSession.DataStorage[Scope.Slot, "profileGuids"] = JArray.FromObject(profileGuids);
-
-            Main.Log("Profile Validation: Registered new profile.");
-            Main.creatingProfile = false;
         }
 
         public static bool HasSeedType(SeedType theSeedType)
@@ -393,7 +382,7 @@ namespace ReplantedArchipelago
             {
                 return true;
             }
-            else if (Main.gameplayActivity != null && Main.gameplayActivity.GameMode == GameMode.ChallengeRainingSeeds)
+            else if (Main.cachedGameplayActivity != null && Main.cachedGameplayActivity.GameMode == GameMode.ChallengeRainingSeeds)
             {
                 return true;
             }
@@ -419,6 +408,132 @@ namespace ReplantedArchipelago
             return Math.Min(numberOfPlants, numberOfSlots);
         }
 
+        public static bool HasBoss()
+        {
+            if (!fastGoal)
+            {
+                if (areaLockItems && openAreaItems)
+                {
+                    if (!receivedItems.Contains(24)) //No Roof Access
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (!clearedLevels.Contains(49)) //If you haven't beaten 5-9
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            int clearedAreas = Enumerable.Range(1, 5).Count(area => Enumerable.Range((area - 1) * 10 + 1, 10).All(level => clearedLevels.Contains(level)));
+            return clearedAreas >= adventureAreasGoal && clearedLevels.Count(levelId => levelId < 51) >= adventureLevelsGoal && clearedLevels.Count(levelId => levelId >= 51 && levelId < 71) >= minigameLevelsGoal && (clearedLevels.Count(levelId => levelId >= 71 && levelId < 80) + clearedLevels.Count(levelId => levelId >= 80 && levelId < 89)) >= puzzleLevelsGoal && clearedLevels.Count(levelId => levelId >= 89 && levelId < 99) >= survivalLevelsGoal;
+        }
+
+        public static int GetAreaUnlockItemId(int levelNumber)
+        {
+            return 20 + (levelNumber - 1) / 10;
+        }
+
+        public static bool CanPlayLevel(int levelId)
+        {
+            if (levelId == 50) //Dr. Zomboss
+            {
+                return HasBoss();
+            }
+            else if (levelId < 50) //Adventure Mode
+            {
+                if (individualAdventureUnlockItems)
+                {
+                    return receivedItems.Contains(200 + levelId);
+                }
+                else if (areaLockItems)
+                {
+                    if (receivedItems.Contains(GetAreaUnlockItemId(levelId)))
+                    {
+                        if (openAreaItems)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            int[] startingLevel = { 1, 11, 21, 31, 41 };
+                            if (startingLevel.Contains(levelId) || clearedLevels.Contains(levelId - 1))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                else if (levelId == 1 || clearedLevels.Contains(levelId - 1))
+                {
+                    return true;
+                }
+            }
+            else if (levelId < 71) //Mini-games
+            {
+                if (individualMinigameUnlockItems)
+                {
+                    return receivedItems.Contains(levelId + 200);
+                }
+                else
+                {
+                    return (clearedLevels.Count(clearedLevelId => clearedLevelId >= 51 && clearedLevelId < 71) >= (int)minigameUnlocks[levelId.ToString()]);
+                }
+            }
+            else if (levelId < 80) //Vasebreaker
+            {
+                if (individualMinigameUnlockItems)
+                {
+                    return receivedItems.Contains(levelId + 200);
+                }
+                else
+                {
+                    return (clearedLevels.Count(clearedLevelId => clearedLevelId >= 71 && clearedLevelId < 80) >= (int)vasebreakerUnlocks[levelId.ToString()]);
+                }
+            }
+            else if (levelId < 89) //I, Zombie
+            {
+                if (individualMinigameUnlockItems)
+                {
+                    return receivedItems.Contains(levelId + 200);
+                }
+                else
+                {
+                    return (clearedLevels.Count(clearedLevelId => clearedLevelId >= 80 && clearedLevelId < 89) >= (int)izombieUnlocks[levelId.ToString()]);
+                }
+            }
+            else if (levelId < 99) //Survival
+            {
+                if (individualMinigameUnlockItems)
+                {
+                    return receivedItems.Contains(levelId + 200);
+                }
+                else
+                {
+                    return (clearedLevels.Count(clearedLevelId => clearedLevelId >= 89 && clearedLevelId < 99) >= (int)survivalUnlocks[levelId.ToString()]);
+                }
+            }
+            else if (levelId < 109) //Bonus Levels
+            {
+                return receivedItems.Contains(11);
+            }
+            else if (levelId < 121) //Cloudy Day
+            {
+                if (levelId == 109)
+                {
+                    return receivedItems.Contains(10);
+                }
+                else
+                {
+                    return clearedLevels.Contains(levelId - 1);
+                }
+            }
+            return false; //Level not playable
+        }
+
         public static int GetHowManyPlants(long[] extraPlants, long[] bannedPlants)
         {
             var availablePlants = receivedItems.Where(item => item >= 100 && item < 200).Union(extraPlants).Except(bannedPlants).Distinct().Count();
@@ -442,66 +557,45 @@ namespace ReplantedArchipelago
             return ItemFlags.None;
         }
 
-        public static void CompletedLevel(int levelNumber, string mode)
+        public static void CompletedLevel(int levelId)
         {
-            if (mode == "Adventure")
+            if (!clearedLevels.Contains(levelId))
             {
-                if (levelNumber == 50)
-                {
-                    apSession.SetGoalAchieved();
-                }
+                clearedLevels.Add(levelId);
+                Main.Log($"Cleared Levels: {clearedLevels.Count()}");
+                apSession.DataStorage[Scope.Slot, "clearedLevels"] = clearedLevels;
+            }
 
-                if (areaLockItems)
-                {
-                    if (levelNumber <= 10 && levelNumber >= unlockedDayLevels)
-                    {
-                        unlockedDayLevels = levelNumber + 1;
-                        apSession.DataStorage[Scope.Slot, "unlockedDayLevels"] = unlockedDayLevels;
-                        Main.userService.SetLevel(levelNumber + 1);
-                    }
-                    else if (levelNumber <= 20 && levelNumber > 10 && (levelNumber - 9) > unlockedNightLevels)
-                    {
-                        unlockedNightLevels = levelNumber - 9;
-                        apSession.DataStorage[Scope.Slot, "unlockedNightLevels"] = unlockedNightLevels;
-                        Main.userService.SetLevel(levelNumber + 1);
-                    }
-                    else if (levelNumber <= 30 && levelNumber > 20 && (levelNumber - 19) > unlockedPoolLevels)
-                    {
-                        unlockedPoolLevels = levelNumber - 19;
-                        apSession.DataStorage[Scope.Slot, "unlockedPoolLevels"] = unlockedPoolLevels;
-                        Main.userService.SetLevel(levelNumber + 1);
-                    }
-                    else if (levelNumber <= 40 && levelNumber > 30 && (levelNumber - 29) > unlockedFogLevels)
-                    {
-                        unlockedFogLevels = levelNumber - 29;
-                        apSession.DataStorage[Scope.Slot, "unlockedFogLevels"] = unlockedFogLevels;
-                        Main.userService.SetLevel(levelNumber + 1);
-                    }
-                    else if (levelNumber <= 50 && levelNumber > 40 && (levelNumber - 39) > unlockedRoofLevels)
-                    {
-                        unlockedRoofLevels = levelNumber - 39;
-                        apSession.DataStorage[Scope.Slot, "unlockedRoofLevels"] = unlockedRoofLevels;
-                        Main.userService.SetLevel(levelNumber + 1);
-                    }
-                }
-                else if (levelNumber >= unlockedAdventureLevels)
-                {
-                    if (levelNumber != 50)
-                    {
-                        unlockedAdventureLevels = levelNumber + 1;
-                        apSession.DataStorage[Scope.Slot, "unlockedAdventureLevels"] = unlockedAdventureLevels;
-                        Main.userService.SetLevel(levelNumber + 1);
-                    }
-                }
-            }
-            else if (mode == "Cloudy Day")
+            if (levelId == 50)
             {
-                if (levelNumber >= unlockedCloudyDayLevels)
+                apSession.SetGoalAchieved();
+            }
+            if (levelId < 50)
+            {
+                if (individualAdventureUnlockItems)
                 {
-                    unlockedCloudyDayLevels = levelNumber + 1;
-                    apSession.DataStorage[Scope.Slot, "unlockedCloudyDayLevels"] = unlockedCloudyDayLevels;
+                    Profile.userLevelNumber = levelId;
+                }
+                else
+                {
+                    Profile.userLevelNumber = levelId + 1;
                 }
             }
+            APClient.SendLocation(Data.AllLevelLocations[levelId].ClearLocation, !Menu.showAwardScreen);
+        }
+
+        public static ItemInfo GetLevelCompleteAward(GameplayActivity gameplayActivity)
+        {
+            int levelId = Data.GetLevelIdFromGameplayActivity(gameplayActivity);
+            if (levelId != -1)
+            {
+                int clearLocationId = Data.AllLevelLocations[levelId].ClearLocation;
+                if (clearLocationId != -1 && APClient.scoutedLocations != null && APClient.scoutedLocations.ContainsKey(clearLocationId))
+                {
+                    return APClient.scoutedLocations[clearLocationId];
+                }
+            }
+            return null;
         }
     }
 }

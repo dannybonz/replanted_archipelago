@@ -1,46 +1,200 @@
-﻿using HarmonyLib;
+﻿using Archipelago.MultiClient.Net.Enums;
+using HarmonyLib;
+using Il2CppReloaded.Data;
+using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
+using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ReplantedArchipelago.Patches
 {
     public class Profile
     {
-        [HarmonyPatch(typeof(UserService), nameof(UserService.LoadProfileData))] //Triggers when you boot up the game to get default profile data
-        public class LoadProfilePatch
+        public static IUserService cachedUserService;
+        public static bool profileValidated = false;
+        public static bool refreshRequired = true;
+        public static int userLevelNumber = -1;
+
+        public static void ProcessIUserService(IUserService userService = null) //Checks with APClient to see if anything has to be done related to the given userService
         {
-            private static void Postfix(UserService __instance)
+            if (userService == null)
             {
-                Main.GetUserProfiles(__instance);
+                if (cachedUserService == null)
+                {
+                    Main.Log("No User Service has been found.");
+                    return;
+                }
+                Main.Log("Using cached User Service.");
+                userService = cachedUserService;
+            }
+            else
+            {
+                cachedUserService = userService;
+            }
+
+            if (profileValidated == false)
+            {
+                DoProfileCheck(userService);
+            }
+
+            if (APClient.queuedUpCoins > 0)
+            {
+                userService.AddCoins(APClient.queuedUpCoins);
+                APClient.queuedUpCoins = 0;
+            }
+
+            if (APClient.queuedUpPurchases.Count > 0)
+            {
+                foreach (int purchaseId in APClient.queuedUpPurchases)
+                {
+                    userService.ActiveUserProfile.mPurchases[purchaseId] = 1;
+                }
+                APClient.queuedUpPurchases = new List<int>();
+            }
+
+            if (userLevelNumber != -1)
+            {
+                Main.Log("Adjusted user level.");
+                userService.ActiveUserProfile.mLevel = userLevelNumber;
+                userLevelNumber = -1;
+            }
+
+            if (refreshRequired)
+            {
+                Main.Log("Refreshing profile...");
+                userService.SetActiveProfile(userService.ActiveUserIndex);
+                refreshRequired = false;
             }
         }
 
-        [HarmonyPatch(typeof(UserService), nameof(UserService.SetActiveProfile))] //Changes profile
-        public class ChangeProfilePatch
+        public static void DoProfileCheck(IUserService userService = null) //Profile validation - ensures you are using the correct profile for AP
         {
-            private static void Postfix(UserService __instance, ref bool __result)
+            if (APClient.currentlyConnected)
             {
-                Main.DoProfileCheck();
+                if (userService == null)
+                {
+                    if (cachedUserService == null)
+                    {
+                        Main.Log("No user service has been found.");
+                        return;
+                    }
+                    userService = cachedUserService;
+                }
+
+                List<string> desiredGuids = APClient.apSession.DataStorage[Scope.Slot, "profileGuids"]; //Previously used profiles in this run
+
+                if (desiredGuids.Contains(userService.ActiveUserProfile.mGuid)) //If currently playing as an acceptable profile
+                {
+                    Main.Log("Profile Validation: Passed.");
+                    profileValidated = true;
+                    userService.ActiveUserProfile.mZenGardenTutorialCompleted = true; //Skip Zen Garden tutorial
+                }
+                else //Current profile does not match desired guids
+                {
+                    profileValidated = false;
+
+                    List<UserProfile> profiles = GetUserProfiles(userService); //Get all profiles
+                    List<int> matchingProfileIndexes = GetMatchingProfiles(profiles, desiredGuids); //Of the previously accessed profiles, get any profiles that have been previously used in this AP
+
+                    if (matchingProfileIndexes.Count == 0)
+                    {
+                        Main.Log("Profile Validation: No matching profiles found.");
+
+                        if (userService.NumUserProfiles >= 8)
+                        {
+                            Main.Log("Profile Validation: Too many profiles.");
+                            APClient.currentlyConnected = false;
+                            Menu.ShowErrorPanel("Too Many Profiles", "There is no space to create a new profile. Please load the game with the Archipelago mod removed and delete one of your current saved profiles before trying again.");
+                        }
+                        else
+                        {
+                            Main.Log("Profile Validation: Creating new profile...");
+                            userService.CreateProfile(APClient.slot); //Create a new save file
+                            profiles = GetUserProfiles(userService); //Update profile list
+                            RegisterNewestProfile(profiles.Last());
+                            userService.SetActiveProfile(profiles.IndexOf(profiles.Last()));
+                            profileValidated = true;
+                        }
+                    }
+                    else
+                    {
+                        Main.Log("Profile Validation: Found profile. Auto-switching...");
+                        userService.SetActiveProfile(matchingProfileIndexes[0]); //Swap to correct save file
+                    }
+                }
             }
         }
 
-        [HarmonyPatch(typeof(UserService), nameof(UserService.CreateProfile))] //Triggers when you create a profile
-        public class CreateProfilePatch
+        public static List<UserProfile> GetUserProfiles(IUserService theService) //Returns a list of all UserProfile objects
         {
-            private static void Postfix(UserService __instance, ref bool __result)
+            Main.Log("Profile Validation: Checking for matching profiles...");
+            List<UserProfile> profiles = new List<UserProfile>();
+
+            int index = 0;
+            while (true) //Can't Count UserProfiles, so we loop until we run out of profiles to examine
             {
-                System.Collections.Generic.List<UserProfile> profiles = Main.GetUserProfiles(__instance);
-                UserProfile newProfile = profiles.Last();
-                APClient.RegisterProfile(newProfile);
+                try
+                {
+                    profiles.Add(theService.UserProfiles[index]);
+                    index += 1;
+                }
+                catch
+                {
+                    break;
+                }
             }
+            Main.Log("Profile Validation: Found profiles.");
+            return profiles;
         }
 
-        [HarmonyPatch(typeof(GameplayService), nameof(GameplayService.OnActiveProfileChanged))] //Triggers when changing active profile
-        public class ProfileChangedPatch
+        public static void RegisterNewestProfile(UserProfile profile)
         {
-            private static void Postfix(GameplayService __instance)
+            List<string> profileGuids = APClient.apSession.DataStorage[Scope.Slot, "profileGuids"];
+            profileGuids.Add(profile.mGuid);
+            APClient.apSession.DataStorage[Scope.Slot, "profileGuids"] = JArray.FromObject(profileGuids);
+            Main.Log("Profile Validation: Registered new profile.");
+        }
+
+        public static List<int> GetMatchingProfiles(List<UserProfile> profiles, List<string> profileGuids) //Returns a list of profiles that have a guid that match one of the guids in a given list
+        {
+            List<int> matchingGuids = new List<int>();
+            foreach (UserProfile profile in profiles)
             {
-                __instance.HasWatchedIntro = true;
+                if (profileGuids.Contains(profile.mGuid))
+                {
+                    matchingGuids.Add(profiles.IndexOf(profile));
+                }
+            }
+            return matchingGuids;
+        }
+
+        [HarmonyPatch(typeof(UserService), nameof(UserService.IsCompleted))] //Checks if a level is completed or not
+        public static class LevelIsCompletedPatch
+        {
+            private static bool Prefix(UserService __instance, LevelEntryData levelEntryData, ref bool __result)
+            {
+                int levelId = -1;
+                if (levelEntryData.ReloadedGameMode == ReloadedGameMode.CloudyDay)
+                {
+                    levelId = 109 + levelEntryData.m_subIndex;
+                }
+                else if (levelEntryData.GameMode == GameMode.Adventure)
+                {
+                    levelId = levelEntryData.m_levelNumber;
+                }
+                else if (Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode))
+                {
+                    levelId = Data.GameModeLevelIDs[levelEntryData.GameMode];
+                }
+
+                __result = false;
+                if (APClient.clearedLevels.Contains(levelId))
+                {
+                    __result = true;
+                }
+
+                return false;
             }
         }
     }

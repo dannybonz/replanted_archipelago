@@ -2,6 +2,7 @@
 using Il2CppReloaded.Data;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
+using Il2CppReloaded.TreeStateActivities;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -11,11 +12,9 @@ namespace ReplantedArchipelago
     public class Data
     {
         //Version to match with generation
-        public static double GenVersion = 1.1;
+        public static double GenVersion = 1.2;
         //Whether cheat keys are enabled
         public static bool CheatKeys = false;
-        //Cheat that kills zombies as soon as they spawn in
-        public static bool AllZombiesDie = false;
 
         //UI templates
         public static GameObject buttonTemplate;
@@ -44,7 +43,7 @@ namespace ReplantedArchipelago
         //Item IDs
         public static long[] menuUpdateItems = new long[] { 2, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 50, 51, 52, 53, 54, 55, 56 }.Concat(Enumerable.Range(200, 201).Select(i => (long)i)).ToArray(); //Item IDs that require a menu refresh
 
-        public static System.Collections.Generic.Dictionary<string, long> itemIds = new System.Collections.Generic.Dictionary<string, long>
+        public static Dictionary<string, long> itemIds = new Dictionary<string, long>
         {
             { "Crazy Dave's Car Keys", 2 },
             { "Extra Seed Slot", 3 },
@@ -83,17 +82,121 @@ namespace ReplantedArchipelago
             { "Imitater", 148 }
         };
 
-        public static readonly long DayId = itemIds["Day"];
-        public static readonly long NightId = itemIds["Night"];
-        public static readonly long PoolId = itemIds["Pool"];
-        public static readonly long FogId = itemIds["Fog"];
-        public static readonly long RoofId = itemIds["Roof"];
+        public static Dictionary<long, string> itemIdDefaultTooltips = new Dictionary<long, string>
+        {
+            { 2, "KEYS_DESCRIPTION" },
+            { 4, "SHOVEL_DESCRIPTION" },
+            { 5, "SUBURBAN_ALMANAC_DESCRIPTION" }
+        };
+
+        public static Dictionary<long, string> itemIdSpriteName = new Dictionary<long, string>
+        {
+            { 2, "SPR_CarKeys" },
+            { 4, "SPR_ShovelHiRes" },
+            { 5, "SPR_Almanac" },
+
+            { 100, "SPR_Almanac_Seedpackets_PeaShooter"},
+            { 101, "SPR_Almanac_Seedpackets_Sunflower"},
+            { 102, "SPR_Almanac_Seedpackets_CherryBomb"},
+            { 103, "SPR_Almanac_Seedpackets_Wall-Nut"},
+            { 104, "SPR_Almanac_Seedpackets_PotatoMine"},
+            { 105, "SPR_Almanac_Seedpackets_SnowPea"},
+            { 106, "SPR_Almanac_Seedpackets_Chomper"},
+            { 107, "SPR_Almanac_Seedpackets_Repeater"},
+            { 108, "SPR_Almanac_Seedpackets_Puff-shroom"},
+            { 109, "SPR_Almanac_Seedpackets_Sun-shroom"},
+            { 110, "SPR_Almanac_Seedpackets_Fume-shroom"},
+            { 111, "SPR_Almanac_Seedpackets_GraveBuster"},
+            { 112, "SPR_Almanac_Seedpackets_Hypno-shroom"},
+            { 113, "SPR_Almanac_Seedpackets_Scaredy-shroom"},
+            { 114, "SPR_Almanac_Seedpackets_Ice-shroom"},
+            { 115, "SPR_Almanac_Seedpackets_Doom-shroom"},
+            { 116, "SPR_Almanac_Seedpackets_LilyPad"},
+            { 117, "SPR_Almanac_Seedpackets_Squash"},
+            { 118, "SPR_Almanac_Seedpackets_Threepeater"},
+            { 119, "SPR_Almanac_Seedpackets_TangleKelp"},
+            { 120, "SPR_Almanac_Seedpackets_Jalapeno"},
+            { 121, "SPR_Almanac_Seedpackets_Spikeweed"},
+            { 122, "SPR_Almanac_Seedpackets_Torchwood"},
+            { 123, "SPR_Almanac_Seedpackets_Tall-nut"},
+            { 124, "SPR_Almanac_Seedpackets_Sea-shroom"},
+            { 125, "SPR_Almanac_Seedpackets_Plantern"},
+            { 126, "SPR_Almanac_Seedpackets_Cactus"},
+            { 127, "SPR_Almanac_Seedpackets_Blover"},
+            { 128, "SPR_Almanac_Seedpackets_SplitPea"},
+            { 129, "SPR_Almanac_Seedpackets_Starfruit"},
+            { 130, "SPR_Almanac_Seedpackets_Pumpkin"},
+            { 131, "SPR_Almanac_Seedpackets_Magnet-shroom"},
+            { 132, "SPR_Almanac_Seedpackets_Cabbage-pult"},
+            { 133, "SPR_Almanac_Seedpackets_FlowerPot"},
+            { 134, "SPR_Almanac_Seedpackets_Kernel-pult"},
+            { 135, "SPR_Almanac_Seedpackets_CoffeeBean"},
+            { 136, "SPR_Almanac_Seedpackets_Garlic"},
+            { 137, "SPR_Almanac_Seedpackets_UmbrellaLeaf"},
+            { 138, "SPR_Almanac_Seedpackets_Marigold"},
+            { 139, "SPR_Almanac_Seedpackets_Melon-pult"},
+            { 140, "SPR_Almanac_Seedpackets_GatlingPea"},
+            { 141, "SPR_Almanac_Seedpackets_TwinSunflower"},
+            { 142, "SPR_Almanac_Seedpackets_Gloom-shroom"},
+            { 143, "SPR_Almanac_Seedpackets_Cattail"},
+            { 144, "SPR_Almanac_Seedpackets_WinterMelon"},
+            { 145, "SPR_Almanac_Seedpackets_GoldMagnet"},
+            { 146, "SPR_Almanac_Seedpackets_Spikerock"},
+            { 147, "SPR_Almanac_Seedpackets_CobCannon"},
+            { 148, "SPR_Almanac_Seedpackets_Imitater"}
+        };
+
+        public static Dictionary<long, CoinType> awardCoinTypes = new Dictionary<long, CoinType>
+        {
+            { 2, CoinType.CarKeys },
+            { 4, CoinType.Shovel },
+            { 5, CoinType.Almanac }
+        };
 
         //Common Game Data
         public static SeedType[] seedTypes = { SeedType.Peashooter, SeedType.Sunflower, SeedType.Cherrybomb, SeedType.Wallnut, SeedType.Potatomine, SeedType.Snowpea, SeedType.Chomper, SeedType.Repeater, SeedType.Puffshroom, SeedType.Sunshroom, SeedType.Fumeshroom, SeedType.Gravebuster, SeedType.Hypnoshroom, SeedType.Scaredyshroom, SeedType.Iceshroom, SeedType.Doomshroom, SeedType.Lilypad, SeedType.Squash, SeedType.Threepeater, SeedType.Tanglekelp, SeedType.Jalapeno, SeedType.Spikeweed, SeedType.Torchwood, SeedType.Tallnut, SeedType.Seashroom, SeedType.Plantern, SeedType.Cactus, SeedType.Blover, SeedType.Splitpea, SeedType.Starfruit, SeedType.Pumpkinshell, SeedType.Magnetshroom, SeedType.Cabbagepult, SeedType.Flowerpot, SeedType.Kernelpult, SeedType.InstantCoffee, SeedType.Garlic, SeedType.Umbrella, SeedType.Marigold, SeedType.Melonpult, SeedType.Gatlingpea, SeedType.Twinsunflower, SeedType.Gloomshroom, SeedType.Cattail, SeedType.Wintermelon, SeedType.GoldMagnet, SeedType.Spikerock, SeedType.Cobcannon, SeedType.Imitater };
         public static MusicTune[] musicTunes = { MusicTune.DayGrasswalk, MusicTune.MinigameLoonboon, MusicTune.Conveyer, MusicTune.NightMoongrains, MusicTune.PoolWaterygraves, MusicTune.FogRigormormist, MusicTune.RoofGrazetheroof, MusicTune.FinalBossBrainiacManiac, MusicTune.PuzzleCerebrawl };
         public static Dictionary<string, int[]> levelOrders = new Dictionary<string, int[]>();
         public static Dictionary<string, LevelEntryData[]> orderedLevelEntries = new Dictionary<string, LevelEntryData[]>();
+
+        public static System.Collections.Generic.Dictionary<ZombieType, string> zombieTypeNames = new System.Collections.Generic.Dictionary<ZombieType, string>
+        {
+            { ZombieType.BackupDancer, "Backup Dancer Zombie" },
+            { ZombieType.Balloon, "Balloon Zombie" },
+            { ZombieType.Bobsled, "Zombie Bobsled Team" },
+            { ZombieType.Boss, "Dr. Zomboss" },
+            { ZombieType.Bungee, "Bungee Zombie" },
+            { ZombieType.Catapult, "Catapult Zombie" },
+            { ZombieType.Dancer, "Dancing Zombie" },
+            { ZombieType.Digger, "Digger Zombie" },
+            { ZombieType.DolphinRider, "Dolphin Rider Zombie" },
+            { ZombieType.Door, "Screen Door Zombie Zombie" },
+            { ZombieType.DuckyTube, "Ducky Tube Zombie" },
+            { ZombieType.Flag, "Flag Zombie" },
+            { ZombieType.Football, "Football Zombie" },
+            { ZombieType.Gargantuar, "Gargantuar" },
+            { ZombieType.GatlingHead, "Gatling Pea Zombie" },
+            { ZombieType.Imp, "Imp" },
+            { ZombieType.JackInTheBox, "Jack-in-the-Box Zombie" },
+            { ZombieType.JalapenoHead, "Jalapeno Zombie" },
+            { ZombieType.Ladder, "Ladder Zombie" },
+            { ZombieType.Newspaper, "Newspaper Zombie" },
+            { ZombieType.Normal, "Zombie" },
+            { ZombieType.Pail, "Buckethead Zombie" },
+            { ZombieType.PeaHead, "Peashooter Zombie" },
+            { ZombieType.Pogo, "Pogo Zombie" },
+            { ZombieType.Polevaulter, "Pole Vaulting Zombie" },
+            { ZombieType.RedeyeGargantuar, "Giga Gargantuar" },
+            { ZombieType.Snorkel, "Snorkel Zombie" },
+            { ZombieType.SquashHead, "Squash Zombie" },
+            { ZombieType.TallnutHead, "Tall-nut Zombie" },
+            { ZombieType.TrafficCone, "Conehead Zombie" },
+            { ZombieType.TrashCan, "Trash Can Zombie" },
+            { ZombieType.WallnutHead, "Wall-nut Zombie" },
+            { ZombieType.Yeti, "Yeti Zombie" },
+            { ZombieType.Zamboni, "Zomboni" },
+        };
+
 
         //Location IDs
         public static readonly Dictionary<int, LevelLocationsEntry> AllLevelLocations = new Dictionary<int, LevelLocationsEntry>
@@ -206,18 +309,18 @@ namespace ReplantedArchipelago
             { 106, new LevelLocationsEntry { Name = "Bonus Levels: Grave Danger", ClearLocation = 1105, FlagLocations = new int[] { 2140 } } },
             { 107, new LevelLocationsEntry { Name = "Bonus Levels: Can You Dig It?", ClearLocation = 1106, FlagLocations = new int[] { 2141, 2142 } } },
             { 108, new LevelLocationsEntry { Name = "Bonus Levels: Dark Stormy Night", ClearLocation = 1107, FlagLocations = new int[] { 2143, 2144 } } },
-            { 110, new LevelLocationsEntry { Name = "Cloudy Day: Level 1", ClearLocation = 1108, FlagLocations = new int[0] } },
-            { 111, new LevelLocationsEntry { Name = "Cloudy Day: Level 2", ClearLocation = 1109, FlagLocations = new int[] { 2145 } } },
-            { 112, new LevelLocationsEntry { Name = "Cloudy Day: Level 3", ClearLocation = 1110, FlagLocations = new int[0] } },
-            { 113, new LevelLocationsEntry { Name = "Cloudy Day: Level 4", ClearLocation = 1111, FlagLocations = new int[] { 2146, 2147 } } },
-            { 114, new LevelLocationsEntry { Name = "Cloudy Day: Level 5", ClearLocation = 1112, FlagLocations = new int[] { 2148 } } },
-            { 115, new LevelLocationsEntry { Name = "Cloudy Day: Level 6", ClearLocation = 1113, FlagLocations = new int[] { 2149, 2150 } } },
-            { 116, new LevelLocationsEntry { Name = "Cloudy Day: Level 7", ClearLocation = 1114, FlagLocations = new int[] { 2151 } } },
-            { 117, new LevelLocationsEntry { Name = "Cloudy Day: Level 8", ClearLocation = 1115, FlagLocations = new int[] { 2152, 2153 } } },
-            { 118, new LevelLocationsEntry { Name = "Cloudy Day: Level 9", ClearLocation = 1116, FlagLocations = new int[] { 2154 } } },
-            { 119, new LevelLocationsEntry { Name = "Cloudy Day: Level 10", ClearLocation = 1117, FlagLocations = new int[] { 2155, 2156 } } },
-            { 120, new LevelLocationsEntry { Name = "Cloudy Day: Level 11", ClearLocation = 1118, FlagLocations = new int[] { 2157 } } },
-            { 121, new LevelLocationsEntry { Name = "Cloudy Day: Level 12", ClearLocation = 1119, FlagLocations = new int[] { 2158, 2159 } } }
+            { 109, new LevelLocationsEntry { Name = "Cloudy Day: Level 1", ClearLocation = 1108, FlagLocations = new int[0] } },
+            { 110, new LevelLocationsEntry { Name = "Cloudy Day: Level 2", ClearLocation = 1109, FlagLocations = new int[] { 2145 } } },
+            { 111, new LevelLocationsEntry { Name = "Cloudy Day: Level 3", ClearLocation = 1110, FlagLocations = new int[0] } },
+            { 112, new LevelLocationsEntry { Name = "Cloudy Day: Level 4", ClearLocation = 1111, FlagLocations = new int[] { 2146, 2147 } } },
+            { 113, new LevelLocationsEntry { Name = "Cloudy Day: Level 5", ClearLocation = 1112, FlagLocations = new int[] { 2148 } } },
+            { 114, new LevelLocationsEntry { Name = "Cloudy Day: Level 6", ClearLocation = 1113, FlagLocations = new int[] { 2149, 2150 } } },
+            { 115, new LevelLocationsEntry { Name = "Cloudy Day: Level 7", ClearLocation = 1114, FlagLocations = new int[] { 2151 } } },
+            { 116, new LevelLocationsEntry { Name = "Cloudy Day: Level 8", ClearLocation = 1115, FlagLocations = new int[] { 2152, 2153 } } },
+            { 117, new LevelLocationsEntry { Name = "Cloudy Day: Level 9", ClearLocation = 1116, FlagLocations = new int[] { 2154 } } },
+            { 118, new LevelLocationsEntry { Name = "Cloudy Day: Level 10", ClearLocation = 1117, FlagLocations = new int[] { 2155, 2156 } } },
+            { 119, new LevelLocationsEntry { Name = "Cloudy Day: Level 11", ClearLocation = 1118, FlagLocations = new int[] { 2157 } } },
+            { 120, new LevelLocationsEntry { Name = "Cloudy Day: Level 12", ClearLocation = 1119, FlagLocations = new int[] { 2158, 2159 } } }
         };
 
         //Matches GameMode to Level Locations dict
@@ -327,5 +430,64 @@ namespace ReplantedArchipelago
                 "It's about as useful as a Wall-nut is against a Zomboni.",
             }
         };
+
+        public static int GetLevelIdFromGameplayActivity(GameplayActivity gameplayActivity)
+        {
+            int levelId = -1;
+            try
+            {
+                if (gameplayActivity.ReloadedGameMode == ReloadedGameMode.CloudyDay)
+                {
+                    levelId = 109 + gameplayActivity.m_levelData.m_subIndex;
+                }
+                else if (gameplayActivity.GameMode == GameMode.Adventure)
+                {
+                    levelId = gameplayActivity.m_levelData.m_levelNumber;
+                }
+                else if (GameModeLevelIDs.ContainsKey(gameplayActivity.GameMode))
+                {
+                    levelId = GameModeLevelIDs[gameplayActivity.GameMode];
+                }
+            }
+            catch
+            {
+                return -1;
+            }
+            return levelId;
+        }
+
+        public static Sprite FindSpriteByName(string spriteName)
+        {
+            foreach (var sprite in Resources.FindObjectsOfTypeAll<Sprite>())
+            {
+                if (sprite.name == spriteName)
+                {
+                    return sprite;
+                }
+            }
+            return null;
+        }
+
+        public static string GetTransitionNameFromLevelId(int levelId)
+        {
+            string result = "LevelSelect";
+            if (levelId == 50)
+            {
+                result = "Credits";
+            }
+            if (levelId >= 71 && levelId <= 88)
+            {
+                result = "Puzzle";
+            }
+            else if (levelId >= 51 && levelId <= 70)
+            {
+                result = "MiniGames";
+            }
+            else if (levelId >= 89 && levelId <= 98)
+            {
+                result = "Survival";
+            }
+            return result;
+        }
     }
-};
+}

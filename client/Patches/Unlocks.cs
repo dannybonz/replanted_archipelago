@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using Il2CppBest.HTTP.Shared.Extensions;
 using Il2CppReloaded.Data;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
@@ -15,148 +14,27 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(LevelEntryData levelEntryData, bool isRipMode, ref bool __result)
             {
-                __result = true; //Default to locked
+                __result = true; //Default to unlocked
+                if (!(levelEntryData == null || !APClient.currentlyConnected))
+                {
+                    int levelId = -1;
 
-                if (levelEntryData == null || !APClient.currentlyConnected)
-                {
-                    return false; //Level not present in this run - or we're not connected yet
-                }
-                else if (levelEntryData.IsLimboContent) //Bonus levels
-                {
-                    if (APClient.receivedItems.Contains(Data.itemIds["Bonus Levels"]))
+                    if (levelEntryData.ReloadedGameMode == ReloadedGameMode.CloudyDay)
                     {
-                        __result = false; //Unlocked!
+                        levelId = 109 + levelEntryData.m_subIndex;
                     }
-                }
-                else if (levelEntryData.ReloadedGameMode == ReloadedGameMode.CloudyDay)
-                {
-                    if (APClient.receivedItems.Contains(Data.itemIds["Cloudy Day"]))
+                    else if (levelEntryData.GameMode == GameMode.Adventure)
                     {
-                        int levelNum = levelEntryData.m_subIndex;
-                        if (APClient.unlockedCloudyDayLevels >= levelNum)
-                        {
-                            __result = false;
-                        }
-                    }
-                }
-                else if (levelEntryData.EntryType == ChallengeEntryType.MiniGame)
-                {
-                    if (APClient.individualLevelUnlockItems)
-                    {
-                        __result = !(Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode) && APClient.receivedItems.Contains(Data.GameModeLevelIDs[levelEntryData.GameMode] + 200));
-                    }
-                    else if (APClient.clearedMinigames.Count >= (int)APClient.minigameUnlocks[Data.GameModeLevelIDs[levelEntryData.GameMode].ToString()]) //Unlock requirement met
-                    {
-                        __result = false;
-                    }
-                }
-                else if (levelEntryData.EntryType == ChallengeEntryType.Puzzle)
-                {
-                    if (APClient.individualLevelUnlockItems)
-                    {
-                        __result = !(Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode) && APClient.receivedItems.Contains(Data.GameModeLevelIDs[levelEntryData.GameMode] + 200));
+                        levelId = levelEntryData.m_levelNumber;
                     }
                     else if (Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode))
                     {
-                        string gameModeLevelId = Data.GameModeLevelIDs[levelEntryData.GameMode].ToString();
-                        if (gameModeLevelId.ToInt32() >= 80)
-                        {
-                            if (APClient.clearedIZombie.Count >= (int)APClient.izombieUnlocks[gameModeLevelId])
-                            {
-                                __result = false;
-                            }
-                        }
-                        else
-                        {
-                            if (APClient.clearedVasebreaker.Count >= (int)APClient.vasebreakerUnlocks[gameModeLevelId])
-                            {
-                                __result = false;
-                            }
-                        }
+                        levelId = Data.GameModeLevelIDs[levelEntryData.GameMode];
                     }
-                }
-                else if (levelEntryData.EntryType == ChallengeEntryType.Survival && Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode))
-                {
-                    if (APClient.individualLevelUnlockItems)
-                    {
-                        __result = !(Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode) && APClient.receivedItems.Contains(Data.GameModeLevelIDs[levelEntryData.GameMode] + 200));
-                    }
-                    else if (APClient.clearedSurvival.Count >= (int)APClient.survivalUnlocks[Data.GameModeLevelIDs[levelEntryData.GameMode].ToString()])
-                    {
-                        __result = false;
-                    }
-                }
-                else if (levelEntryData.GameMode == GameMode.Adventure)
-                {
-                    int levelNum = levelEntryData.m_levelNumber;
-                    if (APClient.areaLockItems)
-                    {
-                        if (levelNum <= 10) //Day level
-                        {
-                            if (APClient.receivedItems.Contains(Data.DayId)) //Unlocked Day Access
-                            {
-                                if (APClient.openAreaItems || APClient.unlockedDayLevels >= levelNum)
-                                {
-                                    __result = false;
-                                }
-                            }
-                        }
-                        else if (levelNum >= 11 && levelNum <= 20) //Night level
-                        {
-                            if (APClient.receivedItems.Contains(Data.NightId)) //Unlocked Night Access
-                            {
-                                if (APClient.openAreaItems || APClient.unlockedNightLevels >= levelNum - 10)
-                                {
-                                    __result = false;
-                                }
-                            }
-                        }
-                        else if (levelNum >= 21 && levelNum <= 30)
-                        {
-                            if (APClient.receivedItems.Contains(Data.PoolId))
-                            {
-                                if (APClient.openAreaItems || APClient.unlockedPoolLevels >= levelNum - 20)
-                                {
-                                    __result = false;
-                                }
-                            }
-                        }
-                        else if (levelNum >= 31 && levelNum <= 40)
-                        {
-                            if (APClient.receivedItems.Contains(Data.FogId))
-                            {
-                                if (APClient.openAreaItems || APClient.unlockedFogLevels >= levelNum - 30)
-                                {
-                                    __result = false;
-                                }
-                            }
-                        }
-                        else if (levelNum >= 41 && levelNum <= 50)
-                        {
-                            if (APClient.receivedItems.Contains(Data.RoofId))
-                            {
-                                if (APClient.openAreaItems || APClient.unlockedRoofLevels >= levelNum - 40)
-                                {
-                                    if (!(levelNum == 50 && APClient.requireAllLevels && APClient.clearedAdventure.Count < 49))
-                                    {
-                                        if (levelNum == 50)
-                                        {
-                                            APClient.bossUnlocked = true;
-                                            Main.userService.ActiveUserProfile.mLevel = 50;
-                                        }
-                                        __result = false;
-                                    }
-                                }
-                            }
-                        }
 
-                    }
-                    else //Area lock items disabled
+                    if (levelId != -1)
                     {
-                        if (levelNum <= APClient.unlockedAdventureLevels)
-                        {
-                            __result = false;
-                        }
+                        __result = !APClient.CanPlayLevel(levelId);
                     }
                 }
                 return false; //Don't run default method
@@ -177,7 +55,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                if (APClient.individualLevelUnlockItems)
+                if (APClient.individualMinigameUnlockItems)
                 {
                     __result = APClient.receivedItems.Any(x => x >= 271 && x < 289);
                 }
@@ -254,7 +132,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                if (APClient.individualLevelUnlockItems)
+                if (APClient.individualMinigameUnlockItems)
                 {
                     __result = APClient.receivedItems.Any(x => x >= 251 && x < 271);
                 }
@@ -271,7 +149,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                if (APClient.individualLevelUnlockItems)
+                if (APClient.individualMinigameUnlockItems)
                 {
                     __result = APClient.receivedItems.Any(x => x >= 289 && x < 299);
                 }
