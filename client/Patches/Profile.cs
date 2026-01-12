@@ -114,6 +114,7 @@ namespace ReplantedArchipelago.Patches
                             profiles = GetUserProfiles(userService); //Update profile list
                             RegisterNewestProfile(profiles.Last());
                             userService.SetActiveProfile(profiles.IndexOf(profiles.Last()));
+                            userService.ActiveUserProfile.mZenGardenTutorialCompleted = true; //Skip Zen Garden tutorial
                             profileValidated = true;
                         }
                     }

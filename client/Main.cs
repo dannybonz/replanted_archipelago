@@ -8,7 +8,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.2.0", "dannybonz")]
+[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.2.1", "dannybonz")]
 [assembly: MelonGame("PopCap Games", "PvZ Replanted")]
 
 namespace ReplantedArchipelago
