@@ -127,8 +127,12 @@ class SurvivalLevelsGoal(Range):
 
 class FastGoal(Toggle):
     """
-    If this option is enabled, you can instantly play Roof: Level 5-10 as soon as your chosen goal requirements are met.
-    If this option is disabled, you will have to obtain access to the level by clearing the prior levels or receiving an Area Access item (depending on your Adventure Mode progression setting). This will be in addition to any goal requirements you have set.
+    If this option is enabled, you can instantly fight Dr. Zomboss in Roof: Level 5-10 as soon as your custom goal requirements are met.
+    If this option is disabled, your custom goal requirements will be needed in addition to how your chosen adventure_mode_progression setting would typically lead to 5-10. (i.e. "linear" requires 5-9 to be completed; "area_unlock_items" requires Roof Access and 5-9 to be completed; "open area unlock_items" requires Roof Access)
+
+    This option is forced on if adventure_mode_progression is set to "level_items".
+    If you are playing with adventure_mode_progression set to "level_items", make sure you set at least one goal.
+    If you have adventure_mode_progression set to "level_items" without setting any goals, you will be able to complete the game immediately!
     """
     display_name = "Fast Goal"
     default = False
@@ -259,6 +263,7 @@ class ZombieAmbushTrapWeight(Range):
 
 @dataclass
 class PVZROptions(PerGameCommonOptions):
+    death_link: DeathLink
     adventure_mode_progression: AdventureModeProgression
     huge_wave_locations: HugeWaveLocations
     include_minigames: IncludeMinigames
@@ -282,7 +287,6 @@ class PVZROptions(PerGameCommonOptions):
     imitater_behaviour: ImitaterBehaviour
     music_shuffle: MusicShuffle
     disable_storm_flashes: DisableStormFlashes
-    death_link: DeathLink
     trap_percentage: TrapPercentage
     mower_deploy_trap_weight: MowerDeployTrapWeight
     seed_packet_cooldown_trap_weight: SeedPacketCooldownTrapWeight
