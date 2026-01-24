@@ -158,10 +158,6 @@ class PVZRWorld(World):
 
         total_locations = len(self.multiworld.get_unfilled_locations(self.player))
 
-        from Utils import visualize_regions
-
-        visualize_regions(self.multiworld.get_region("Menu", self.player), "region_uml")
-
         self.progression_item_names = self.pick_progression_items()
         self.useful_item_names = self.pick_useful_items(total_locations - len(self.progression_item_names))
 
