@@ -64,7 +64,7 @@ def get_cleared_adventure_levels(state, player):
     return state.count("Adventure Level Cleared (Area: Day)", player) + state.count("Adventure Level Cleared (Area: Night)", player) + state.count("Adventure Level Cleared (Area: Pool)", player) + state.count("Adventure Level Cleared (Area: Fog)",  player) + state.count("Adventure Level Cleared (Area: Roof)",  player)
 
 def get_total_cleared_levels(state, player):
-    return get_cleared_adventure_levels(state, player) + state.count("Mini-game Level Cleared", player) + state.count("I, Zombie Level Cleared", player) + state.count("Vasebreaker Level Cleared", player) + state.count("Survival Level Cleared",  player) + state.count("Cloudy Day Level Cleared",  player) + state.count("Bonus Level Cleared",  player)
+    return get_cleared_adventure_levels(state, player) + state.count("Mini-game Level Cleared", player) + state.count("I, Zombie Level Cleared", player) + state.count("Vasebreaker Level Cleared", player) + state.count("Survival Level Cleared",  player) + state.count("Cloudy Day Level Cleared",  player) + state.count("Bonus Levels Level Cleared",  player)
     
 ZOMBIE_COUNTERS = {
     "Balloon": can_counter_balloon,
@@ -110,7 +110,7 @@ def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roo
             return False
         if world.cloudy_day_levels_goal > 0 and state.has("Cloudy Day Level Cleared", player, world.cloudy_day_levels_goal) == False:
             return False
-        if world.bonus_levels_goal > 0 and state.has("Bonus Level Cleared", player, world.bonus_levels_goal) == False:
+        if world.bonus_levels_goal > 0 and state.has("Bonus Levels Level Cleared", player, world.bonus_levels_goal) == False:
             return False
         if world.overall_levels_goal > 0 and get_total_cleared_levels(state, player) < world.overall_levels_goal:
             return False
