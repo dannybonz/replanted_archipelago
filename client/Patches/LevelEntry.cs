@@ -14,14 +14,19 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Prefix(LevelDataModel __instance)
             {
-                Main.Log("Modifying level entries...");
                 if (APClient.currentlyConnected)
                 {
+                    Main.Log("Modifying level entries...");
                     ReorderLevels(__instance.m_miniGamesModel, "minigames", 20);
                     ReorderLevels(__instance.m_survivalModel, "survival", 10);
                     ReorderLevels(__instance.m_puzzlesModel, "puzzle", 18);
+                    ReorderLevels(__instance.m_cloudyDayModel, "cloudy", 12);
+                    Main.Log("Modified level entries.");
                 }
-                Main.Log("Modified level entries.");
+                else
+                {
+                    Main.cachedLevelDataModel = __instance;
+                }
             }
         }
 
@@ -36,15 +41,16 @@ namespace ReplantedArchipelago.Patches
                 for (int i = 0; i < levelEntries.Count; i++)
                 {
                     LevelEntryModel currentModel = levelEntries[i].Model.Cast<LevelEntryModel>();
-                    if (Data.GameModeLevelIDs.ContainsKey(currentModel.m_entryData.GameMode))
+                    int levelId = Data.GetLevelIdFromEntryData(currentModel.m_entryData);
+                    if (levelId != -1 && Data.levelOrders[orderKey].Contains(levelId))
                     {
-                        int levelId = Data.GameModeLevelIDs[currentModel.m_entryData.GameMode];
                         int levelPosition = Array.FindIndex(Data.levelOrders[orderKey], order => order == levelId);
                         orderedLevelEntries[levelPosition] = currentModel.m_entryData;
                     }
                 }
                 Data.orderedLevelEntries[orderKey] = orderedLevelEntries;
             }
+
 
             for (int i = levelEntries.Count - 1; i >= 0; i--)
             {
@@ -55,7 +61,6 @@ namespace ReplantedArchipelago.Patches
                 }
                 else
                 {
-                    LevelEntryModel currentModel = levelEntries[i].Model.Cast<LevelEntryModel>();
                     levelEntries.RemoveAt(i); //Remove the level entry - used for levels not present in the AP such as Endless modes
                 }
             }

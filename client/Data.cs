@@ -12,7 +12,7 @@ namespace ReplantedArchipelago
     public class Data
     {
         //Version to match with generation
-        public static double GenVersion = 1.2;
+        public static string GenVersion = "1.3";
         //Whether cheat keys are enabled
         public static bool CheatKeys = false;
 
@@ -153,6 +153,18 @@ namespace ReplantedArchipelago
             { 5, CoinType.Almanac }
         };
 
+        public static Dictionary<SeedType, int> easyUpgradeCostAddons = new Dictionary<SeedType, int> //Costs of each upgrade's base form to be added on for "easy upgrade" mode
+        {
+            { SeedType.Gatlingpea, 200 },
+            { SeedType.Twinsunflower, 50 },
+            { SeedType.Gloomshroom, 75 },
+            { SeedType.Cattail, 25 },
+            { SeedType.Wintermelon, 300 },
+            { SeedType.GoldMagnet, 100 },
+            { SeedType.Spikerock, 100 },
+            { SeedType.Cobcannon, 200 },
+        };
+
         //Common Game Data
         public static SeedType[] seedTypes = { SeedType.Peashooter, SeedType.Sunflower, SeedType.Cherrybomb, SeedType.Wallnut, SeedType.Potatomine, SeedType.Snowpea, SeedType.Chomper, SeedType.Repeater, SeedType.Puffshroom, SeedType.Sunshroom, SeedType.Fumeshroom, SeedType.Gravebuster, SeedType.Hypnoshroom, SeedType.Scaredyshroom, SeedType.Iceshroom, SeedType.Doomshroom, SeedType.Lilypad, SeedType.Squash, SeedType.Threepeater, SeedType.Tanglekelp, SeedType.Jalapeno, SeedType.Spikeweed, SeedType.Torchwood, SeedType.Tallnut, SeedType.Seashroom, SeedType.Plantern, SeedType.Cactus, SeedType.Blover, SeedType.Splitpea, SeedType.Starfruit, SeedType.Pumpkinshell, SeedType.Magnetshroom, SeedType.Cabbagepult, SeedType.Flowerpot, SeedType.Kernelpult, SeedType.InstantCoffee, SeedType.Garlic, SeedType.Umbrella, SeedType.Marigold, SeedType.Melonpult, SeedType.Gatlingpea, SeedType.Twinsunflower, SeedType.Gloomshroom, SeedType.Cattail, SeedType.Wintermelon, SeedType.GoldMagnet, SeedType.Spikerock, SeedType.Cobcannon, SeedType.Imitater };
         public static MusicTune[] musicTunes = { MusicTune.DayGrasswalk, MusicTune.MinigameLoonboon, MusicTune.Conveyer, MusicTune.NightMoongrains, MusicTune.PoolWaterygraves, MusicTune.FogRigormormist, MusicTune.RoofGrazetheroof, MusicTune.FinalBossBrainiacManiac, MusicTune.PuzzleCerebrawl };
@@ -197,6 +209,45 @@ namespace ReplantedArchipelago
             { ZombieType.Zamboni, "Zomboni" },
         };
 
+        public static ZombieType[] zombieTypes =
+        {
+            ZombieType.Normal,
+            ZombieType.Flag,
+            ZombieType.TrafficCone,
+            ZombieType.Polevaulter,
+            ZombieType.Pail,
+            ZombieType.Newspaper,
+            ZombieType.Door,
+            ZombieType.Football,
+            ZombieType.Dancer,
+            ZombieType.BackupDancer,
+            ZombieType.DuckyTube,
+            ZombieType.Snorkel,
+            ZombieType.Zamboni,
+            ZombieType.Bobsled,
+            ZombieType.DolphinRider,
+            ZombieType.JackInTheBox,
+            ZombieType.Balloon,
+            ZombieType.Digger,
+            ZombieType.Pogo,
+            ZombieType.Yeti,
+            ZombieType.Bungee,
+            ZombieType.Ladder,
+            ZombieType.Catapult,
+            ZombieType.Gargantuar,
+            ZombieType.Imp,
+            ZombieType.Boss,
+            ZombieType.PeaHead,
+            ZombieType.WallnutHead,
+            ZombieType.JalapenoHead,
+            ZombieType.GatlingHead,
+            ZombieType.SquashHead,
+            ZombieType.TallnutHead,
+            ZombieType.RedeyeGargantuar,
+            ZombieType.Zombatar,
+            ZombieType.Target,
+            ZombieType.TrashCan
+        };
 
         //Location IDs
         public static readonly Dictionary<int, LevelLocationsEntry> AllLevelLocations = new Dictionary<int, LevelLocationsEntry>
@@ -452,6 +503,27 @@ namespace ReplantedArchipelago
             catch
             {
                 return -1;
+            }
+            return levelId;
+        }
+
+        public static int GetLevelIdFromEntryData(LevelEntryData levelEntryData)
+        {
+            int levelId = -1;
+            if (levelEntryData != null)
+            {
+                if (levelEntryData.ReloadedGameMode == ReloadedGameMode.CloudyDay)
+                {
+                    levelId = 109 + levelEntryData.m_subIndex;
+                }
+                else if (levelEntryData.GameMode == GameMode.Adventure)
+                {
+                    levelId = levelEntryData.m_levelNumber;
+                }
+                else if (GameModeLevelIDs.ContainsKey(levelEntryData.GameMode))
+                {
+                    levelId = GameModeLevelIDs[levelEntryData.GameMode];
+                }
             }
             return levelId;
         }

@@ -2,11 +2,13 @@
 using Archipelago.MultiClient.Net.Models;
 using HarmonyLib;
 using Il2Cpp;
+using Il2CppReloaded.DataModels;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using Il2CppReloaded.TreeStateActivities;
 using Il2CppSource.Controllers;
 using Il2CppSource.Utils;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -149,7 +151,7 @@ namespace ReplantedArchipelago.Patches
                     //Activate traps
                     if (message.ItemId == Data.itemIds["Seed Packet Cooldown Trap"]) //Seed Packet Cooldown Trap
                     {
-                        if (board.HasConveyorBeltSeedBank() == false) //Don't trigger if playing a conveyor belt level (causes weird issues)
+                        if (board.HasConveyorBeltSeedBank() == false && __instance.GameMode != GameMode.ChallengeBeghouled && __instance.GameMode != GameMode.ChallengeBeghouledTwist) //Don't trigger if playing a conveyor belt level (causes weird issues)
                         {
                             foreach (SeedPacket seedPacket in board.SeedBanks[0].SeedPackets)
                             {
@@ -436,7 +438,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(Board __instance, ref int __result)
             {
-                if (!__instance.mApp.IsCoopMode() && !__instance.mApp.IsVersusMode() && !__instance.mApp.IsIZombieLevel() && !__instance.mApp.IsScaryPotterLevel() && !__instance.mApp.IsWhackAZombieLevel() && !__instance.mApp.IsChallengeWithoutSeedBank() && !__instance.HasConveyorBeltSeedBank() && __instance.mApp.GameMode != GameMode.ChallengeBeghouled && __instance.mApp.GameMode != GameMode.ChallengeBeghouledTwist && __instance.mApp.GameMode != GameMode.ChallengeZombiquarium)
+                if (!__instance.mApp.IsCoopMode() && !__instance.mApp.IsVersusMode() && !__instance.mApp.IsIZombieLevel() && !__instance.mApp.IsScaryPotterLevel() && !__instance.mApp.IsWhackAZombieLevel() && !__instance.mApp.IsChallengeWithoutSeedBank() && !__instance.HasConveyorBeltSeedBank() && __instance.mApp.GameMode != GameMode.ChallengeBeghouled && __instance.mApp.GameMode != GameMode.ChallengeBeghouledTwist && __instance.mApp.GameMode != GameMode.ChallengeZombiquarium && __instance.mApp.GameMode != GameMode.ChallengeSlotMachine)
                 {
                     long[] forcedPlants = Array.Empty<long>();
                     long[] bannedPlants = Array.Empty<long>();
@@ -607,6 +609,20 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
+        [HarmonyPatch(typeof(SeedBankEntryModel), nameof(SeedBankEntryModel.HasUpgradeablePlants))]
+        public static class HasUpgradeablePlantsPatch
+        {
+            private static bool Prefix(SeedBankEntryModel __instance, ref bool __result)
+            {
+                if (APClient.easyUpgradePlants)
+                {
+                    __result = true;
+                    return false;
+                }
+                return true;
+            }
+        }
+
         [HarmonyPatch(typeof(Plant), nameof(Plant.IsUpgrade))]
         public static class PlantUpgradePatch
         {
@@ -652,7 +668,7 @@ namespace ReplantedArchipelago.Patches
         [HarmonyPatch(typeof(Board), nameof(Board.PlantingRequirementsMet))]
         public static class RequirementsMetPatch
         {
-            private static bool Prefix(SeedType theSeedType, ref bool __result)
+            private static bool Prefix(Board __instance, SeedType theSeedType, ref bool __result)
             {
                 if (APClient.easyUpgradePlants)
                 {
@@ -660,6 +676,54 @@ namespace ReplantedArchipelago.Patches
                     return false;
                 }
                 return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Board), nameof(Board.CanPlantAt))] //The final check before letting you plop a plant down
+        public static class CanPlantAtPatch
+        {
+            private static void Postfix(Board __instance, int theGridX, int theGridY, SeedType theType, ref PlantingReason __result)
+            {
+                if (APClient.easyUpgradePlants && __result == PlantingReason.Ok)
+                {
+                    if (theType == SeedType.Cobcannon)
+                    {
+                        if ((__instance.CanPlantAt(theGridX + 1, theGridY, SeedType.Kernelpult) != PlantingReason.Ok) ||
+                            (__instance.GetPlantsOnLawn(theGridX, theGridY).PumpkinPlant != null) ||
+                            (__instance.GetPlantsOnLawn(theGridX + 1, theGridY).PumpkinPlant != null))
+                        {
+                            __result = PlantingReason.NotHere;
+                        }
+                    }
+                    else if (theType == SeedType.Cattail)
+                    {
+                        __result = __instance.CanPlantAt(theGridX, theGridY, SeedType.Lilypad);
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(SeedPacket), nameof(SeedPacket.GetCost))]
+        public static class PacketCostPatch
+        {
+            private static void Postfix(SeedPacket __instance, ref int __result)
+            {
+                if (APClient.easyUpgradePlants && Data.easyUpgradeCostAddons.ContainsKey(__instance.mPacketType))
+                {
+                    __result += Data.easyUpgradeCostAddons[__instance.mPacketType];
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Plant), nameof(Plant.GetCost))]
+        public static class PlantCostPatch
+        {
+            private static void Postfix(Plant __instance, GameplayActivity gLawnApp, SeedType theSeedType, SeedType theImitaterType, ref int __result)
+            {
+                if (APClient.easyUpgradePlants && Data.easyUpgradeCostAddons.ContainsKey(theSeedType))
+                {
+                    __result += Data.easyUpgradeCostAddons[theSeedType];
+                }
             }
         }
 
@@ -707,6 +771,25 @@ namespace ReplantedArchipelago.Patches
                     {
                         __result = Data.seedTypes[itemId - 100];
                     }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Board), nameof(Board.CanZombieSpawnOnLevel))]
+        public static class CanZombieSpawnOnLevelPatch
+        {
+            private static bool Prefix(Board __instance, ZombieType theZombieType, int theLevel, ref bool __result)
+            {
+                int levelId = Data.GetLevelIdFromGameplayActivity(__instance.mApp);
+                if (levelId != -1 && APClient.zombieMap.ContainsKey(levelId.ToString()))
+                {
+                    int zombieIndex = Array.FindIndex(Data.zombieTypes, zombieType => zombieType == theZombieType);
+                    __result = APClient.zombieMap[levelId.ToString()].Any(includedZombie => includedZombie.Value<int>() == zombieIndex);
+                    return false;
+                }
+                else
+                {
+                    return true;
                 }
             }
         }

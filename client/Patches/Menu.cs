@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Il2Cpp;
+using Il2CppBest.HTTP.Shared.Extensions;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using Il2CppReloaded.TreeStateActivities;
@@ -11,7 +12,9 @@ using Il2CppTekly.DataModels.Binders;
 using Il2CppTekly.DataModels.Models;
 using Il2CppTekly.Localizations;
 using Il2CppTMPro;
+using Il2CppUI.Scripts;
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,6 +33,20 @@ namespace ReplantedArchipelago.Patches
         private static bool darkerLog = false; // keep track of odd/even entries
         public static bool showAwardScreen = true;
 
+        public static GameObject RemoveUnwantedComponents(GameObject gameObject, bool aggressive)
+        {
+            foreach (var localizer in gameObject.GetComponentsInChildren<TextLocalizer>())
+                GameObject.Destroy(localizer);
+            if (aggressive)
+            {
+                foreach (var binder in gameObject.GetComponentsInChildren<InputBinder>())
+                    GameObject.Destroy(binder);
+                foreach (var selectable in gameObject.GetComponentsInChildren<Selectable>())
+                    GameObject.Destroy(selectable);
+            }
+            return gameObject;
+        }
+
         [HarmonyPatch(typeof(MainMenuPanelView), nameof(MainMenuPanelView.Start))]
         public class MainMenuStartPatch
         {
@@ -46,20 +63,11 @@ namespace ReplantedArchipelago.Patches
                 }
 
                 Data.panelTemplate = __instance.transform.parent.Find("P_UsersPanel_Rename").gameObject;
-                Data.errorTemplate = __instance.transform.parent.Find("P_UsersPanel_InvalidName").gameObject;
+                Data.errorTemplate = RemoveUnwantedComponents(__instance.transform.parent.Find("P_UsersPanel_InvalidName").gameObject, false);
                 Data.clientTemplate = __instance.transform.parent.Find("P_UsersPanel").gameObject;
                 Data.inputTemplate = __instance.transform.parent.Find("P_UsersPanel_Rename/Canvas/Layout/Center/Rename/NameInputField").gameObject;
-                Data.logTemplate = __instance.transform.parent.Find("P_UsersPanel/Canvas/Layout/Center/Main/InsetWindow/P_UsersPanel_UserEntry").gameObject;
-                Data.buttonTemplate = Data.buttonTemplate = __instance.transform.parent.Find("P_UsersPanel/Canvas/Layout/Center/Main/Buttons/P_BacicButton_Rename").gameObject;
-
-                foreach (var binder in Data.logTemplate.GetComponentsInChildren<InputBinder>())
-                    GameObject.Destroy(binder);
-
-                foreach (var selectable in Data.logTemplate.GetComponentsInChildren<Selectable>())
-                    GameObject.Destroy(selectable);
-
-                foreach (var localizer in Data.logTemplate.GetComponentsInChildren<TextLocalizer>())
-                    GameObject.Destroy(localizer);
+                Data.logTemplate = RemoveUnwantedComponents(__instance.transform.parent.Find("P_UsersPanel/Canvas/Layout/Center/Main/InsetWindow/P_UsersPanel_UserEntry").gameObject, true);
+                Data.buttonTemplate = RemoveUnwantedComponents(__instance.transform.parent.Find("P_UsersPanel/Canvas/Layout/Center/Main/Buttons/P_BacicButton_Rename").gameObject, false);
 
                 GameObject apSettingsButton = CreateButton("Text Client", __instance.transform.Find("Canvas/Layout/Center/Main/Menu"), ShowClientPanel);
                 RectTransform apSettingsRect = apSettingsButton.GetComponent<RectTransform>();
@@ -68,11 +76,18 @@ namespace ReplantedArchipelago.Patches
                 apSettingsRect.pivot = new Vector2(0, 1);
                 apSettingsRect.anchoredPosition = new Vector2(310f, -20f);
 
+                GameObject apGoalButton = CreateButton("View Goal", __instance.transform.Find("Canvas/Layout/Center/Main/Menu"), ShowGoalPanel);
+                RectTransform apGoalRect = apGoalButton.GetComponent<RectTransform>();
+                apGoalRect.anchorMin = new Vector2(0, 1);
+                apGoalRect.anchorMax = new Vector2(0, 1);
+                apGoalRect.pivot = new Vector2(0, 1);
+                apGoalRect.anchoredPosition = new Vector2(310f, -200f);
+
                 if (!APClient.currentlyConnected)
                 {
                     ShowConnectionPanel();
                 }
-                else if (APClient.HasBoss())
+                else if (APClient.HasBoss() && !APClient.clearedLevels.Contains(50))
                 {
                     ShowErrorPanel("Goal Unlocked", "You have unlocked the final battle with Dr. Zomboss! Go fight him to complete your game!");
                 }
@@ -132,14 +147,11 @@ namespace ReplantedArchipelago.Patches
 
             Transform center = ConnectionPanel.transform.Find("Canvas/Layout/Center/Rename");
             center.Find("HeaderText").GetComponent<TextMeshProUGUI>().text = "Archipelago Setup";
-            foreach (var localizer in center.Find("HeaderText").GetComponentsInChildren<TextLocalizer>())
-                GameObject.Destroy(localizer);
+            RemoveUnwantedComponents(center.Find("HeaderText").gameObject, true);
 
             center.Find("SubheadingText").GetComponent<TextMeshProUGUI>().text = "Host:";
-            GameObject originalSubheader = center.Find("SubheadingText").gameObject;
+            GameObject originalSubheader = RemoveUnwantedComponents(center.Find("SubheadingText").gameObject, true);
             GameObject originalInput = center.Find("NameInputField").gameObject;
-            foreach (var localizer in center.Find("SubheadingText").GetComponentsInChildren<TextLocalizer>())
-                GameObject.Destroy(localizer);
 
             hostInput = GameObject.Instantiate(Data.inputTemplate, center);
             hostInput.name = "hostInput";
@@ -196,6 +208,72 @@ namespace ReplantedArchipelago.Patches
             APClient.AttemptConnection(host, slot, password);
         }
 
+        public static void ShowGoalPanel()
+        {
+            string goalText = "";
+            if (APClient.adventureLevelsGoal > 0)
+            {
+                goalText += $"Adventure Levels: {APClient.clearedLevels.Count(levelId => levelId < 51)}/{APClient.adventureLevelsGoal}<br>";
+            }
+            if (APClient.adventureAreasGoal > 0)
+            {
+                goalText += $"Adventure Areas: {APClient.GetClearedAreaCount()}/{APClient.adventureAreasGoal}<br>";
+            }
+            if (APClient.minigameLevelsGoal > 0)
+            {
+                goalText += $"Mini-Game Levels: {APClient.clearedLevels.Count(levelId => levelId >= 51 && levelId < 71)}/{APClient.minigameLevelsGoal}<br>";
+            }
+            if (APClient.puzzleLevelsGoal > 0)
+            {
+                goalText += $"Puzzle Levels: {APClient.clearedLevels.Count(levelId => levelId >= 71 && levelId < 89)}/{APClient.puzzleLevelsGoal}<br>";
+            }
+            if (APClient.survivalLevelsGoal > 0)
+            {
+                goalText += $"Survival Levels: {APClient.clearedLevels.Count(levelId => levelId >= 89 && levelId < 99)}/{APClient.survivalLevelsGoal}<br>";
+            }
+            if (APClient.cloudyDayLevelsGoal > 0)
+            {
+                goalText += $"Cloudy Day Levels: {APClient.clearedLevels.Count(levelId => levelId >= 109 && levelId < 121)}/{APClient.cloudyDayLevelsGoal}<br>";
+            }
+            if (APClient.bonusLevelsGoal > 0)
+            {
+                goalText += $"Bonus Levels: {APClient.clearedLevels.Count(levelId => levelId >= 99 && levelId < 109)}/{APClient.bonusLevelsGoal}<br>";
+            }
+            if (APClient.overallLevelsGoal > 0)
+            {
+                goalText += $"Total Levels: {APClient.clearedLevels.Count()}/{APClient.overallLevelsGoal}<br>";
+            }
+
+            if (APClient.fastGoal == false)
+            {
+                if (APClient.adventureProgression == 0 || APClient.adventureProgression == 1)
+                {
+                    if (APClient.clearedLevels.Contains(49))
+                    {
+                        goalText += $"Roof: Level 5-9 Cleared";
+                    }
+                    else
+                    {
+                        goalText += $"Roof: Level 5-9 Uncleared";
+                    }
+                }
+                else if (APClient.adventureProgression == 2)
+                {
+                    if (APClient.receivedItems.Contains(24)) //Roof access
+                    {
+                        goalText += $"Roof Access Obtained";
+                    }
+                    else
+                    {
+                        goalText += $"Roof Access Needed";
+                    }
+                }
+            }
+
+            ShowErrorPanel("Goal", goalText);
+        }
+
+
         public static void ShowErrorPanel(string header, string text)
         {
             ErrorPanel = GameObject.Instantiate(Data.errorTemplate, Data.errorTemplate.transform.parent);
@@ -227,9 +305,8 @@ namespace ReplantedArchipelago.Patches
             ClientPanel.SetActive(true);
 
             Transform main = ClientPanel.transform.Find("Canvas/Layout/Center/Main");
-            main.Find("HeaderText").GetComponent<TextMeshProUGUI>().text = "Text Client";
-            foreach (var localizer in main.Find("HeaderText").GetComponentsInChildren<TextLocalizer>())
-                GameObject.Destroy(localizer);
+            GameObject headerObject = RemoveUnwantedComponents(main.Find("HeaderText").gameObject, true);
+            headerObject.GetComponent<TextMeshProUGUI>().text = "Text Client";
 
             //Delete old entries
             Transform insetWindow = main.Find("InsetWindow");
@@ -382,13 +459,6 @@ namespace ReplantedArchipelago.Patches
             button.name = label;
             button.GetComponentInChildren<TextMeshProUGUI>().text = label;
 
-            if (button.TryGetComponent<TextLocalizer>(out var localiser))
-                GameObject.Destroy(localiser);
-            foreach (var local in button.GetComponentsInChildren<TextLocalizer>())
-                GameObject.Destroy(local);
-            if (button.TryGetComponent<UnityButtonBinder>(out var binder))
-                GameObject.Destroy(binder);
-
             var buttonComponent = button.GetComponent<Button>();
             buttonComponent.onClick.RemoveAllListeners();
             buttonComponent.onClick.AddListener(onClick);
@@ -411,6 +481,8 @@ namespace ReplantedArchipelago.Patches
             {
                 if (__instance.m_board != null && __instance.m_board.mLevelComplete)
                 {
+                    APClient.CompletedLevel(Data.GetLevelIdFromGameplayActivity(__instance)); //Re-send the completion check in case it was somehow missed until now (might help fix the Last Stand problem people are facing?)
+
                     if (__instance.IsSurvivalMode() && !__instance.m_board.IsFinalSurvivalStage())
                     {
                         return true;
@@ -439,20 +511,27 @@ namespace ReplantedArchipelago.Patches
                     return;
                 }
 
-                __instance.m_isImitaterUnlocked.m_value = APClient.HasSeedType(SeedType.Imitater);
-
-                if (!APClient.imitaterOpen)
+                if (APClient.HasSeedType(SeedType.Imitater))
                 {
-                    Il2CppSystem.Collections.Generic.List<ModelReference> imitaterEntries = __instance.m_imitaterEntriesModel.m_models;
-                    for (int i = imitaterEntries.Count - 1; i >= 0; i--)
-                    {
-                        var entry = imitaterEntries[i].Model.Cast<SeedChooserEntryModel>();
+                    __instance.m_isImitaterUnlocked.m_value = true;
 
-                        if (!APClient.HasSeedType(entry.m_chosenSeed.mSeedType))
+                    if (!APClient.imitaterOpen)
+                    {
+                        Il2CppSystem.Collections.Generic.List<ModelReference> imitaterEntries = __instance.m_imitaterEntriesModel.m_models;
+                        for (int i = imitaterEntries.Count - 1; i >= 0; i--)
                         {
-                            imitaterEntries.RemoveAt(i);
+                            var entry = imitaterEntries[i].Model.Cast<SeedChooserEntryModel>();
+
+                            if (!APClient.HasSeedType(entry.m_chosenSeed.mSeedType))
+                            {
+                                imitaterEntries.RemoveAt(i);
+                            }
                         }
                     }
+                }
+                else
+                {
+                    __instance.m_isImitaterUnlocked.m_value = false;
                 }
 
                 if (APClient.chooserRefreshState == "update" && __instance.m_isVisibleModel.Value)
@@ -460,6 +539,18 @@ namespace ReplantedArchipelago.Patches
                     __instance.m_entriesUnlockedModel.Clear();
                     __instance.UpdateEntries();
                     APClient.chooserRefreshState = "toggle";
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(SeedChooserEntryModel), nameof(SeedChooserEntryModel.UpdateModelData))]
+        public static class SeedChooserEntryUpdateModelDataPatch
+        {
+            private static void Postfix(SeedChooserEntryModel __instance)
+            {
+                if (Data.easyUpgradeCostAddons.ContainsKey(__instance.m_chosenSeed.mSeedType))
+                {
+                    __instance.m_sunCostModel.Value += Data.easyUpgradeCostAddons[__instance.m_chosenSeed.mSeedType];
                 }
             }
         }
@@ -482,6 +573,105 @@ namespace ReplantedArchipelago.Patches
             private static bool Prefix()
             {
                 return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(LevelSelectScreen), nameof(LevelSelectScreen.ShowReachedCarouselIfInLevelSelect))]
+        public class ShowReachedCarouselPatch
+        {
+            private static bool Prefix(LevelSelectScreen __instance)
+            {
+                return false;
+            }
+        }
+
+
+        [HarmonyPatch(typeof(LevelSelectScreen), nameof(LevelSelectScreen.OnEnterLevelSelect))]
+        public class LevelSelectEnterPatch
+        {
+            private static void Postfix(LevelSelectScreen __instance)
+            {
+                Main.Log("LevelSelectScreen found.");
+
+                string[] areaCarousels = new string[] { "LevelList/P_LevelSelect_Carousel_Day/Viewport/Content", "LevelList/P_LevelSelect_Carousel_Night/Viewport/Content", "LevelList/P_LevelSelect_Carousel_Pool/Viewport/Content", "LevelList/P_LevelSelect_Carousel_Fog/Viewport/Content", "LevelList/P_LevelSelect_Carousel_Roof/Viewport/Content", "LevelList/P_LevelSelect_Carousel_CloudyDay/Viewport/Content", "LevelList/P_LevelSelect_Carousel_LimboContent/Viewport/Content" };
+                int levelPosition = 1;
+
+                for (int x = 0; x < areaCarousels.Length; x++)
+                {
+
+                    Transform carouselLevels = __instance.transform.Find(areaCarousels[x]);
+                    if (x == 5) //Cloudy Day levels
+                    {
+                        levelPosition = 109;
+                    }
+                    else if (x == 6) //Bonus levels
+                    {
+                        levelPosition = 99;
+                    }
+
+                    for (int i = 0; i < carouselLevels.childCount; i++)
+                    {
+                        Transform child = carouselLevels.GetChild(i);
+                        if (child.name == "P_LevelSelect_ListItem(Clone)")
+                        {
+                            int levelId = levelPosition;
+                            if (x == 5 && APClient.cloudyDayLevels == 2)
+                            {
+                                foreach (var property in APClient.cloudyDayUnlocks.Properties())
+                                {
+                                    if ((int)property.Value == levelId - 109)
+                                    {
+                                        levelId = property.Name.ToInt32();
+                                        break;
+                                    }
+                                }
+                            }
+                            if (APClient.clearedLevels.Contains(levelId) && child.Find("ClearIndicator") == null)
+                            {
+                                GameObject clearIndicator = new GameObject("ClearIndicator");
+                                clearIndicator.transform.SetParent(child, false);
+
+                                Image clearIndicatorImage = clearIndicator.AddComponent<Image>();
+                                Sprite clearIndicatorSprite = Data.FindSpriteByName("SPR_Challenges_ItemWindow_Trophy");
+                                clearIndicatorImage.sprite = clearIndicatorSprite;
+                                if (x >= 5) //For some reason, Cloudy Day and Bonus levels have their frames at a different offset
+                                {
+                                    clearIndicator.transform.localPosition = new Vector3(-145, 208, 0);
+                                }
+                                else
+                                {
+                                    clearIndicator.transform.localPosition = new Vector3(-145, -227, 0);
+                                }
+                                clearIndicator.transform.localScale = new Vector3((float)2.28, (float)2.28, (float)2.28);
+
+                                clearIndicator.transform.SetSiblingIndex(4);
+                            }
+                            levelPosition += 1;
+                        }
+                    }
+                }
+
+                Main.Log("Added custom clear indicators.");
+
+                //Automatically focus what the user (probably) wants to see
+                int carouselNumber = (Profile.focusedLevelId - 1) / 10;
+                int positionInCarousel = (Profile.focusedLevelId - 1) % 10;
+                if (Profile.focusedLevelId >= 109 && Profile.focusedLevelId < 121) //Cloudy Day
+                {
+                    carouselNumber = 5;
+                    int requiredUnlocks = (int)APClient.cloudyDayUnlocks[Profile.focusedLevelId.ToString()];
+                    positionInCarousel = requiredUnlocks;
+                    Main.Log($"{positionInCarousel}");
+                }
+                else if (Profile.focusedLevelId >= 99 && Profile.focusedLevelId < 109) //Bonus Levels
+                {
+                    carouselNumber = 6;
+                    positionInCarousel = Profile.focusedLevelId - 99;
+                }
+
+                __instance.ShowCarousel(__instance.CarouselGroups[carouselNumber]);
+                __instance.SelectLevel(positionInCarousel, true);
+
             }
         }
     }

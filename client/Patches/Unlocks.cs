@@ -17,20 +17,7 @@ namespace ReplantedArchipelago.Patches
                 __result = true; //Default to unlocked
                 if (!(levelEntryData == null || !APClient.currentlyConnected))
                 {
-                    int levelId = -1;
-
-                    if (levelEntryData.ReloadedGameMode == ReloadedGameMode.CloudyDay)
-                    {
-                        levelId = 109 + levelEntryData.m_subIndex;
-                    }
-                    else if (levelEntryData.GameMode == GameMode.Adventure)
-                    {
-                        levelId = levelEntryData.m_levelNumber;
-                    }
-                    else if (Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode))
-                    {
-                        levelId = Data.GameModeLevelIDs[levelEntryData.GameMode];
-                    }
+                    int levelId = Data.GetLevelIdFromEntryData(levelEntryData);
 
                     if (levelId != -1)
                     {
@@ -55,7 +42,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                if (APClient.individualMinigameUnlockItems)
+                if (APClient.puzzleLevels == 4)
                 {
                     __result = APClient.receivedItems.Any(x => x >= 271 && x < 289);
                 }
@@ -112,7 +99,14 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                __result = APClient.receivedItems.Contains(Data.itemIds["Cloudy Day"]);
+                if (APClient.cloudyDayLevels == 4)
+                {
+                    __result = APClient.receivedItems.Any(x => x >= 309 && x < 321);
+                }
+                else
+                {
+                    __result = APClient.receivedItems.Contains(Data.itemIds["Cloudy Day"]);
+                }
                 return false;
             }
         }
@@ -122,7 +116,14 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                __result = APClient.receivedItems.Contains(Data.itemIds["Bonus Levels"]);
+                if (APClient.bonusLevels == 2)
+                {
+                    __result = APClient.receivedItems.Any(x => x >= 299 && x < 309);
+                }
+                else
+                {
+                    __result = APClient.receivedItems.Contains(Data.itemIds["Bonus Levels"]);
+                }
                 return false;
             }
         }
@@ -132,7 +133,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                if (APClient.individualMinigameUnlockItems)
+                if (APClient.minigameLevels == 4)
                 {
                     __result = APClient.receivedItems.Any(x => x >= 251 && x < 271);
                 }
@@ -149,7 +150,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                if (APClient.individualMinigameUnlockItems)
+                if (APClient.survivalLevels == 4)
                 {
                     __result = APClient.receivedItems.Any(x => x >= 289 && x < 299);
                 }

@@ -1,7 +1,6 @@
 ﻿using Archipelago.MultiClient.Net.Enums;
 using HarmonyLib;
 using Il2CppReloaded.Data;
-using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ namespace ReplantedArchipelago.Patches
         public static IUserService cachedUserService;
         public static bool profileValidated = false;
         public static bool refreshRequired = true;
-        public static int userLevelNumber = -1;
+        public static int focusedLevelId = 1;
 
         public static void ProcessIUserService(IUserService userService = null) //Checks with APClient to see if anything has to be done related to the given userService
         {
@@ -53,13 +52,6 @@ namespace ReplantedArchipelago.Patches
                 APClient.queuedUpPurchases = new List<int>();
             }
 
-            if (userLevelNumber != -1)
-            {
-                Main.Log("Adjusted user level.");
-                userService.ActiveUserProfile.mLevel = userLevelNumber;
-                userLevelNumber = -1;
-            }
-
             if (refreshRequired)
             {
                 Main.Log("Refreshing profile...");
@@ -89,6 +81,7 @@ namespace ReplantedArchipelago.Patches
                     Main.Log("Profile Validation: Passed.");
                     profileValidated = true;
                     userService.ActiveUserProfile.mZenGardenTutorialCompleted = true; //Skip Zen Garden tutorial
+                    userService.ActiveUserProfile.mLevel = 50; //Set level to 50
                 }
                 else //Current profile does not match desired guids
                 {
@@ -175,24 +168,16 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(UserService __instance, LevelEntryData levelEntryData, ref bool __result)
             {
-                int levelId = -1;
-                if (levelEntryData.ReloadedGameMode == ReloadedGameMode.CloudyDay)
-                {
-                    levelId = 109 + levelEntryData.m_subIndex;
-                }
-                else if (levelEntryData.GameMode == GameMode.Adventure)
-                {
-                    levelId = levelEntryData.m_levelNumber;
-                }
-                else if (Data.GameModeLevelIDs.ContainsKey(levelEntryData.GameMode))
-                {
-                    levelId = Data.GameModeLevelIDs[levelEntryData.GameMode];
-                }
 
-                __result = false;
+                int levelId = Data.GetLevelIdFromEntryData(levelEntryData);
+
                 if (APClient.clearedLevels.Contains(levelId))
                 {
                     __result = true;
+                }
+                else
+                {
+                    __result = false;
                 }
 
                 return false;

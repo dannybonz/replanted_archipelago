@@ -1,4 +1,5 @@
-﻿using Il2CppReloaded.Services;
+﻿using Il2CppReloaded.DataModels;
+using Il2CppReloaded.Services;
 using Il2CppReloaded.TreeStateActivities;
 using MelonLoader;
 using ReplantedArchipelago.Patches;
@@ -23,6 +24,7 @@ namespace ReplantedArchipelago
         public static string defaultPassword;
 
         public static GameplayActivity cachedGameplayActivity;
+        public static LevelDataModel cachedLevelDataModel;
         public static Queue<Data.QueuedIngameMessage> QueuedIngameMessages = new Queue<Data.QueuedIngameMessage>();
         public static string currentMessage;
         public static string currentScene;
@@ -31,6 +33,7 @@ namespace ReplantedArchipelago
         {
             currentScene = null;
             cachedGameplayActivity = null;
+            cachedLevelDataModel = null;
             Log($"Scene Unload: {scene.name}");
         }
 
