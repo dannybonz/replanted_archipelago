@@ -25,57 +25,102 @@ class HugeWaveLocations(Toggle):
     display_name = "Huge Wave Locations"
     default = True
 
-class IncludeMinigames(Toggle):
+class ZombieRandomisation(Toggle):
     """
-    Include levels found on the Mini-games page.
-    """
-    display_name = "Include Mini-games"
-    default = True
+    Randomises the Zombie types included in each level of Adventure Mode. 
+    For example, you may see Dancing Zombies in 1-2 or Gargantuars in 1-3.
 
-class IncludePuzzleLevels(Toggle):
+    This currently doesn't affect X-5 or X-10 levels.
     """
-    Include levels found on the Puzzles page.
-    """
-    display_name = "Include Puzzle Levels"
-    default = True   
-     
-class IncludeSurvivalLevels(Toggle):
-    """
-    Include levels found on the Survival page.
-    """
-    display_name = "Include Survival Levels"
-    default = True   
-
-class MinigamePuzzleSurvivalOrder(Choice):
-    """
-    Determines the order in which you can play each individual Mini-game, Puzzle or Survival level.
-    
-    - vanilla: After receiving a mode's unlock item, the first three levels within it are unlocked (for I, Zombie and Vasebreaker, only the first level of each is unlocked). Completing any level within the mode will unlock its next one, in order.
-    - randomised: After receiving a a mode's unlock item, three random levels within it are unlocked (for I, Zombie and Vasebreaker, one random level of each is unlocked). Completing any level within the mode will unlock another one at random.
-    - open: After receiving a mode's unlock item, you have instant access to all levels within it.
-    - level_items: Every individual Mini-game, Puzzle and Survival level is a separate item.
-    """
-    display_name = "Mini-game, Puzzle and Survival Order"
-    option_vanilla = 0
-    option_randomised = 1
-    option_open = 2
-    option_items = 3
-    default = 1
-
-class IncludeCloudyDayLevels(Toggle):
-    """
-    Include levels found on the Cloudy Day page. 
-    These can be particularly challenging compared to the rest of the game.
-    """
-    display_name = "Include Cloudy Day Levels"
-    default = False   
-
-class IncludeBonusLevels(Toggle):
-    """
-    Include levels found on the Bonus Levels page.
-    """
-    display_name = "Include Bonus Levels"
+    display_name = "Zombie Randomisation"
     default = False
+
+class MinigameLevels(Choice):
+    """
+    Determines how Mini-game levels will be incorporated into the game.
+
+    - off: Mini-game levels will not be included.
+    - vanilla: After obtaining the "Mini-games" item, the first three Mini-game levels will be available to play. Clearing any Mini-game level will unlock a new one, in order.
+    - randomised_order: After obtaining the "Mini-games" item, three random Mini-game levels will be available to play. Clearing any Mini-game level will unlock a new one, in a randomised order.
+    - open: After obtaining the "Mini-games" item, you have instant access to all Mini-game levels.
+    - level_items: Every individual Mini-game level is a separate item.
+    """
+    display_name = "Mini-game Levels"
+    option_off = 0
+    option_vanilla = 1
+    option_randomised_order = 2
+    option_open = 3
+    option_level_items = 4
+    default = 2
+
+class PuzzleLevels(Choice):
+    """
+    Determines how Puzzle levels will be incorporated into the game.
+
+    - off: Puzzle levels will not be included.
+    - vanilla: After obtaining the "Puzzle Mode" item, the first Vasebreaker level and the first I, Zombie level will be available to play. Clearing a Puzzle level will unlock the next one in its category, in order.
+    - randomised_order: After obtaining the "Puzzle Mode" item, one random Vasebreaker level and one random I, Zombie level will be available to play. Clearing any Puzzle level will unlock the next one in its category, in a randomised order.
+    - open: After obtaining the "Puzzle Mode" item, you have instant access to all Puzzle levels.
+    - level_items: Every individual Puzzle level is a separate item.
+    """
+    display_name = "Puzzle Levels"
+    option_off = 0
+    option_vanilla = 1
+    option_randomised_order = 2
+    option_open = 3
+    option_level_items = 4
+    default = 2
+
+class SurvivalLevels(Choice):
+    """
+    Determines how Survival levels will be incorporated into the game.
+
+    - off: Survival levels will not be included.
+    - vanilla: After obtaining the "Survival Mode" item, the first three Survival levels will be available to play. Clearing any Survival level will unlock a new one, in order.
+    - randomised_order: After obtaining the "Survival Mode" item, three random Survival levels will be available to play. Clearing any Survival level will unlock a new one, in a randomised order.
+    - open: After obtaining the "Survival Mode" item, you have instant access to all Survival levels.
+    - level_items: Every individual Survival level is a separate item.
+    """
+    display_name = "Survival Levels"
+    option_off = 0
+    option_vanilla = 1
+    option_randomised_order = 2
+    option_open = 3
+    option_level_items = 4
+    default = 2
+
+class CloudyDayLevels(Choice):
+    """
+    Determines how Cloudy Day levels will be incorporated into the game.
+    These can be particularly challenging compared to the rest of the game.
+
+    - off: Cloudy Day levels will not be included.
+    - vanilla: After obtaining the "Cloudy Day" item, the first Cloudy Day level will be available to play. Clearing a Cloudy Day level will unlock the next one, in order.
+    - randomised_order: After obtaining the "Cloudy Day" item, one random Cloudy Day level will be available to play. Clearing a Cloudy Day level will unlock a new one, in a randomised order.
+    - open: After obtaining the "Cloudy Day" item, you have instant access to all Cloudy Day levels.
+    - level_items: Every individual Cloudy Day level is a separate item.
+    """
+    display_name = "Cloudy Day Levels"
+    option_off = 0
+    option_vanilla = 1
+    option_randomised_order = 2
+    option_open = 3
+    option_level_items = 4
+    default = 0
+
+class BonusLevels(Choice):
+    """
+    Determines how Bonus Levels (also known as Limbo Levels) will be incorporated into the game.
+
+    - off: Bonus Levels will not be included.
+    - vanilla: After obtaining the "Bonus Levels" item, you have instant access to all Bonus Levels.
+    - level_items: Every individual Bonus Level is a separate item.
+    """
+    display_name = "Bonus Levels"
+    option_off = 0
+    option_vanilla = 1
+    option_level_items = 2
+    default = 0
 
 class AdventureLevelsGoal(Range):
     """
@@ -125,14 +170,44 @@ class SurvivalLevelsGoal(Range):
     range_end = 10
     default = 0
 
+class CloudyDayLevelsGoal(Range):
+    """
+    Determines how many unique Cloudy Day levels (if any) must be cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
+    Cloudy Day Levels must be enabled in order for this setting to have any effect.
+    """
+    display_name = "Cloudy Day Levels Goal"
+    range_start = 0
+    range_end = 12
+    default = 0
+
+class BonusLevelsGoal(Range):
+    """
+    Determines how many unique Bonus Levels (if any) must be cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
+    Bonus Levels must be enabled in order for this setting to have any effect.
+    """
+    display_name = "Bonus Levels Goal"
+    range_start = 0
+    range_end = 10
+    default = 0
+
+class TotalLevelsGoal(Range):
+    """
+    Determines how many unique levels (if any) must be cleared across all modes combined before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
+    If this option is assigned a number higher than the number of available levels then it will be automatically reduced.
+    """
+    display_name = "Total Levels Goal"
+    range_start = 0
+    range_end = 119
+    default = 0
+
 class FastGoal(Toggle):
     """
     If this option is enabled, you can instantly fight Dr. Zomboss in Roof: Level 5-10 as soon as your custom goal requirements are met.
-    If this option is disabled, your custom goal requirements will be needed in addition to how your chosen adventure_mode_progression setting would typically lead to 5-10. (i.e. "linear" requires 5-9 to be completed; "area_unlock_items" requires Roof Access and 5-9 to be completed; "open area unlock_items" requires Roof Access)
+    If this option is disabled, your custom goal requirements will be needed in addition to how your chosen adventure_mode_progression setting would typically lead to 5-10. (i.e. "linear" requires 5-9 to be completed; "area_unlock_items" requires Roof Access and 5-9 to be completed; "open_area_unlock_items" requires Roof Access)
 
     This option is forced on if adventure_mode_progression is set to "level_items".
     If you are playing with adventure_mode_progression set to "level_items", make sure you set at least one goal.
-    If you have adventure_mode_progression set to "level_items" without setting any goals, you will be able to complete the game immediately!
+    If you have adventure_mode_progression set to "level_items" with all goals set to 0, you will be able to complete the game immediately!
     """
     display_name = "Fast Goal"
     default = False
@@ -188,7 +263,8 @@ class EarlyShovel(Toggle):
 class EasyUpgradePlants(Toggle):
     """
     Allows you to place upgrade plants without requiring their base form.
-    For example, Gatling Pea could be placed straight onto the lawn without requiring a Repeater first. 
+    For example, Gatling Pea could be placed straight onto the lawn without requiring a Repeater first.
+    Enabling this option increases the Sun prices of Upgrade Plants accordingly.
     """
     display_name = "Easy Upgrade Plants"
     default = False
@@ -266,24 +342,27 @@ class PVZROptions(PerGameCommonOptions):
     death_link: DeathLink
     adventure_mode_progression: AdventureModeProgression
     huge_wave_locations: HugeWaveLocations
-    include_minigames: IncludeMinigames
-    include_puzzle_levels: IncludePuzzleLevels
-    include_survival_levels: IncludeSurvivalLevels
-    minigame_puzzle_survival_order: MinigamePuzzleSurvivalOrder
-    include_cloudy_day_levels: IncludeCloudyDayLevels
-    include_bonus_levels: IncludeBonusLevels
+    zombie_randomisation: ZombieRandomisation
+    minigame_levels: MinigameLevels
+    puzzle_levels: PuzzleLevels
+    survival_levels: SurvivalLevels
+    cloudy_day_levels: CloudyDayLevels
+    bonus_levels: BonusLevels
     adventure_levels_goal: AdventureLevelsGoal
     adventure_areas_goal: AdventureAreasGoal
     minigame_levels_goal: MinigameLevelsGoal
     puzzle_levels_goal: PuzzleLevelsGoal
     survival_levels_goal: SurvivalLevelsGoal
+    cloudy_day_levels_goal: CloudyDayLevelsGoal
+    bonus_levels_goal: BonusLevelsGoal
+    total_levels_goal: TotalLevelsGoal
     fast_goal: FastGoal
     shop_items: ShopItems
     starting_plants: StartingPlants
     starting_seed_slots: StartingSeedSlots
     early_sunflower: EarlySunflower
     early_shovel: EarlyShovel
-#    easy_upgrade_plants: EasyUpgradePlants (Not fully implemented yet)
+    easy_upgrade_plants: EasyUpgradePlants
     imitater_behaviour: ImitaterBehaviour
     music_shuffle: MusicShuffle
     disable_storm_flashes: DisableStormFlashes

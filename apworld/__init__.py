@@ -9,7 +9,8 @@ from .Options import PVZROptions
 from .Rules import set_rules
 from .Regions import create_regions
 from Options import OptionError
-from .Data import SEED_PACKETS, ATTACKING_PLANTS, PROGRESSION_PLANTS, LEVELS, GEN_VERSION
+from .Data import SEED_PACKETS, ATTACKING_PLANTS, PROGRESSION_PLANTS, LEVELS, GEN_VERSION, ZOMBIE_TYPES, NO_RANDO_ZOMBIES, POOL_ONLY_ZOMBIES
+import copy
 
 class PVZRWebWorld(WebWorld):
     theme = "partyTime"
@@ -43,26 +44,26 @@ class PVZRWorld(World):
 
     def pick_progression_items(self):
         progression_items = ["Roof Cleaners"]
-        if self.options.include_minigames.value and not self.options.minigame_puzzle_survival_order.value == 3:
+        if not self.options.minigame_levels.value in [0, 4]:
             progression_items.append("Mini-games")
-        if self.options.include_puzzle_levels.value and not self.options.minigame_puzzle_survival_order.value == 3:
+        if not self.options.puzzle_levels.value in [0, 4]:
             progression_items.append("Puzzle Mode")
-        if self.options.include_survival_levels.value and not self.options.minigame_puzzle_survival_order.value == 3:
+        if not self.options.survival_levels.value in [0, 4]:
             progression_items.append("Survival Mode")
-        if self.options.include_cloudy_day_levels.value:
+        if not self.options.cloudy_day_levels.value in [0, 4]:
             progression_items.append("Cloudy Day")
-        if self.options.include_bonus_levels.value:
+        if self.options.bonus_levels.value == 1:
             progression_items.append("Bonus Levels")
+
         if self.options.shop_items.value > 8:
             number_of_pages = (self.options.shop_items.value + 7) // 8
             restocks = max(0, number_of_pages - 1)
             progression_items += ["Twiddydinkies Restock"] * restocks
 
-        if self.options.minigame_puzzle_survival_order.value == 3 or self.options.adventure_mode_progression.value == 3:
-            permitted_types = {"adventure": self.options.adventure_mode_progression.value == 3, "minigame": self.options.include_minigames.value and self.options.minigame_puzzle_survival_order.value == 3, "puzzle": self.options.include_puzzle_levels.value and self.options.minigame_puzzle_survival_order.value == 3, "survival": self.options.include_survival_levels.value and self.options.minigame_puzzle_survival_order.value == 3}
-            for level in LEVELS:
-                if LEVELS[level]["type"] in permitted_types and permitted_types[LEVELS[level]["type"]] and not level in self.starting_levels + ["5-10"]:
-                    progression_items.append(LEVELS[level]["unlock_item_name"])
+        individual_item_level_types = {"adventure": self.options.adventure_mode_progression.value == 3, "minigame": self.options.minigame_levels.value == 4, "puzzle": self.options.puzzle_levels.value == 4, "survival": self.options.survival_levels.value == 4, "cloudy": self.options.cloudy_day_levels.value == 4, "bonus": self.options.bonus_levels.value == 2}
+        for level in LEVELS:
+            if LEVELS[level]["type"] in individual_item_level_types and individual_item_level_types[LEVELS[level]["type"]] and not level in self.starting_levels + ["5-10"]:
+                progression_items.append(LEVELS[level]["unlock_item_name"])
 
         if self.options.shop_items.value > 0:
             progression_items.append("Crazy Dave's Car Keys")
@@ -120,7 +121,7 @@ class PVZRWorld(World):
 
         self.starting_slots = ["Extra Seed Slot"] * (self.options.starting_seed_slots.value - 1)
 
-        self.starting_items = self.starting_plants + self.starting_slots
+        self.starting_items = self.starting_plants + self.starting_slots + ["Lawn Mowers"]
         
         self.starting_levels = []
 
@@ -189,48 +190,93 @@ class PVZRWorld(World):
         self.survival_unlocks = { 89: 0, 90: 0, 91: 0, 92: 1, 93: 2, 94: 3, 95: 4, 96: 5, 97: 6, 98: 7 } 
         self.vasebreaker_unlocks =  { 71: 0, 72: 1, 73: 2, 74: 3, 75: 4, 76: 5, 77: 6, 78: 7, 79: 8 }
         self.izombie_unlocks =  { 80: 0, 81: 1, 82: 2, 83: 3, 84: 4, 85: 5, 86: 6, 87: 7, 88: 8 }
+        self.cloudy_day_unlocks =  { 109: 0, 110: 1, 111: 2, 112: 3, 113: 4, 114: 5, 115: 6, 116: 7, 117: 8, 118: 9, 119: 10, 120: 11 }
 
-        if self.options.minigame_puzzle_survival_order.value == 1: #Randomised
-
+        if (self.options.minigame_levels.value == 2):            
             minigame_unlock_values = list(self.minigame_unlocks.values())
             self.random.shuffle(minigame_unlock_values)
             self.minigame_unlocks = dict(zip(self.minigame_unlocks, minigame_unlock_values))
+        elif (self.options.minigame_levels.value == 3):
+            for key in self.minigame_unlocks:
+                self.minigame_unlocks[key] = 0
 
-            survival_unlock_values = list(self.survival_unlocks.values())
-            self.random.shuffle(survival_unlock_values)
-            self.survival_unlocks = dict(zip(self.survival_unlocks, survival_unlock_values))
-
+        if (self.options.puzzle_levels.value == 2):
             vasebreaker_unlock_values = list(self.vasebreaker_unlocks.values())
             self.random.shuffle(vasebreaker_unlock_values)
             self.vasebreaker_unlocks = dict(zip(self.vasebreaker_unlocks, vasebreaker_unlock_values))
-
             izombie_unlock_values = list(self.izombie_unlocks.values())
             self.random.shuffle(izombie_unlock_values)
             self.izombie_unlocks = dict(zip(self.izombie_unlocks, izombie_unlock_values))
-
-        elif self.options.minigame_puzzle_survival_order.value in [2, 3]: #Open/item based
-            for key in self.minigame_unlocks:
-                self.minigame_unlocks[key] = 0
-            for key in self.survival_unlocks:
-                self.survival_unlocks[key] = 0
+        elif (self.options.puzzle_levels.value == 3):
             for key in self.vasebreaker_unlocks:
                 self.vasebreaker_unlocks[key] = 0
             for key in self.izombie_unlocks:
                 self.izombie_unlocks[key] = 0
         
+        if (self.options.survival_levels.value == 2):
+            survival_unlock_values = list(self.survival_unlocks.values())
+            self.random.shuffle(survival_unlock_values)
+            self.survival_unlocks = dict(zip(self.survival_unlocks, survival_unlock_values))
+        elif (self.options.survival_levels.value == 3):
+            for key in self.survival_unlocks:
+                self.survival_unlocks[key] = 0
+
+        if (self.options.cloudy_day_levels.value == 2):
+            cloudy_day_unlock_values = list(self.cloudy_day_unlocks.values())
+            self.random.shuffle(cloudy_day_unlock_values)
+            self.cloudy_day_unlocks = dict(zip(self.cloudy_day_unlocks, cloudy_day_unlock_values))
+        elif (self.options.cloudy_day_levels.value == 3):
+            for key in self.cloudy_day_unlocks:
+                self.cloudy_day_unlocks[key] = 0                
+
         #Setup goal
         self.adventure_levels_goal = self.options.adventure_levels_goal.value
         self.adventure_areas_goal = self.options.adventure_areas_goal.value
-        self.fast_goal = self.options.fast_goal.value
+        if self.options.adventure_mode_progression.value == 3:
+            self.fast_goal = True
+        else:
+            self.fast_goal = self.options.fast_goal.value
+
         self.minigame_levels_goal = 0
         self.puzzle_levels_goal = 0
         self.survival_levels_goal = 0
-        if (self.options.minigame_levels_goal.value > 0 and self.options.include_minigames):
+        self.cloudy_day_levels_goal = 0
+        self.bonus_levels_goal = 0
+        self.overall_levels_goal = 0
+        if (self.options.minigame_levels_goal.value > 0 and self.options.minigame_levels.value != 0):
             self.minigame_levels_goal = self.options.minigame_levels_goal.value
-        if (self.options.puzzle_levels_goal.value > 0 and self.options.include_puzzle_levels):
+        if (self.options.puzzle_levels_goal.value > 0 and self.options.puzzle_levels.value != 0):
             self.puzzle_levels_goal = self.options.puzzle_levels_goal.value
-        if (self.options.survival_levels_goal.value > 0 and self.options.include_survival_levels):
+        if (self.options.survival_levels_goal.value > 0 and self.options.survival_levels.value != 0):
             self.survival_levels_goal = self.options.survival_levels_goal.value
+        if (self.options.cloudy_day_levels_goal.value > 0 and self.options.cloudy_day_levels.value != 0):
+            self.cloudy_day_levels_goal = self.options.cloudy_day_levels_goal.value
+        if (self.options.bonus_levels_goal.value > 0 and self.options.bonus_levels.value != 0):
+            self.bonus_levels_goal = self.options.bonus_levels_goal.value
+
+        if (self.options.total_levels_goal.value > 0):
+            total_levels = 49
+            if (self.options.minigame_levels.value != 0):
+                total_levels += 20
+            if (self.options.puzzle_levels.value != 0):
+                total_levels += 18
+            if (self.options.survival_levels.value != 0):
+                total_levels += 10
+            if (self.options.cloudy_day_levels.value != 0):
+                total_levels += 12
+            if (self.options.bonus_levels.value != 0):
+                total_levels += 10
+            
+            if (total_levels < self.options.total_levels_goal.value):
+                self.overall_levels_goal = total_levels
+            else:
+                self.overall_levels_goal = self.options.total_levels_goal.value
+        
+        #Setup zombie rando
+        self.zombie_map = {}
+        self.modified_levels = copy.deepcopy(LEVELS)
+        if (self.options.zombie_randomisation):
+            self.randomise_zombies()
 
         if hasattr(self.multiworld, "re_gen_passthrough"): #If generated through Universal Tracker passthrough
             slot_data: dict = self.multiworld.re_gen_passthrough[self.game]
@@ -238,7 +284,9 @@ class PVZRWorld(World):
             self.survival_unlocks = {int(k): v for k, v in slot_data["survival_unlocks"].items()}       
             self.vasebreaker_unlocks = {int(k): v for k, v in slot_data["vasebreaker_unlocks"].items()}       
             self.izombie_unlocks = {int(k): v for k, v in slot_data["izombie_unlocks"].items()}
-            
+            self.cloudy_day_unlocks = {int(k): v for k, v in slot_data["cloudy_day_unlocks"].items()}
+            self.zombie_map = {int(k): v for k, v in slot_data["zombie_map"].items()}
+
     def generate_basic(self) -> None:
         # Music randomisation
         self.music_map = []
@@ -255,7 +303,7 @@ class PVZRWorld(World):
             self.shop_prices.append(self.random.randint(0, 40))
 
     def fill_slot_data(self) -> dict[str, Any]:
-        slot_data_dict = {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "minigame_puzzle_survival_order": self.options.minigame_puzzle_survival_order.value, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal}
+        slot_data_dict = {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal, "easy_upgrade_plants": self.options.easy_upgrade_plants.value, "cloudy_day_levels_goal": self.cloudy_day_levels_goal, "bonus_levels_goal": self.bonus_levels_goal, "overall_levels_goal": self.overall_levels_goal, "cloudy_day_unlocks": self.cloudy_day_unlocks, "zombie_map": self.zombie_map, "minigame_levels": self.options.minigame_levels.value, "puzzle_levels": self.options.puzzle_levels.value, "survival_levels": self.options.survival_levels.value, "bonus_levels": self.options.bonus_levels.value, "cloudy_day_levels": self.options.cloudy_day_levels.value}
         return slot_data_dict
 
     @staticmethod
@@ -287,3 +335,25 @@ class PVZRWorld(World):
 
     def create_regions(self) -> None:
         create_regions(self)        
+
+    def randomise_zombies(self) -> None:
+        for level in self.modified_levels:
+            if self.modified_levels[level]["type"] == "adventure" and self.modified_levels[level]["choose"]:
+                if hasattr(self.multiworld, "re_gen_passthrough"): #Universal Tracker
+                    self.modified_levels[level]["zombies"] = [ZOMBIES_TYPES.index(z) for z in self.zombie_map[self.modified_levels[level]["id"]]]
+                else:                    
+                    old_zombies = self.modified_levels[level]["zombies"]
+
+                    possible_zombies = [z for z in ZOMBIE_TYPES if z not in NO_RANDO_ZOMBIES and (self.modified_levels[level]["location"] in ["Pool", "Fog"] or z not in POOL_ONLY_ZOMBIES)]
+                    self.random.shuffle(possible_zombies)
+                    
+                    new_zombies = [z for z in old_zombies if z in NO_RANDO_ZOMBIES]
+                    new_zombies += possible_zombies[:len(old_zombies) - len(new_zombies)]
+
+                    if "Gargantuar" in new_zombies:
+                        new_zombies.append("Imp")
+                    if "Zamboni" in new_zombies:
+                        new_zombies.append("Bobsled")
+                    self.modified_levels[level]["zombies"] = new_zombies
+
+                    self.zombie_map[self.modified_levels[level]["id"]] = [ZOMBIE_TYPES.index(z) for z in new_zombies]

@@ -2,7 +2,7 @@ from typing import Dict, List, NamedTuple, Optional
 from BaseClasses import Region
 from worlds.AutoWorld import World
 from .Locations import PVZRLocation, LOCATION_ID_FROM_NAME, LOCATION_NAME_FROM_ID
-from .Data import LEVELS, LEVEL_LOCATIONS, LEVEL_TYPE_NAMES
+from .Data import LEVEL_LOCATIONS, LEVEL_TYPE_NAMES
 from .Rules import can_clear_level
 from .Items import PVZRItem
 from BaseClasses import ItemClassification
@@ -27,7 +27,7 @@ def make_region_rule(world, player, level_data):
             access_item = "Day Access"
     elif level_data["type"] == "adventure" and world.options.adventure_mode_progression.value == 3 and not level_data["name"] == "Roof: Dr. Zomboss":
         access_item = level_data["unlock_item_name"]
-    elif world.options.minigame_puzzle_survival_order.value == 3 and level_data["type"] in ["minigame", "puzzle", "survival"]:
+    elif (level_data["type"] == "minigame" and world.options.minigame_levels.value == 4) or (level_data["type"] == "puzzle" and world.options.puzzle_levels.value == 4) or (level_data["type"] == "survival" and world.options.survival_levels.value == 4) or (level_data["type"] == "cloudy" and world.options.cloudy_day_levels.value == 4) or (level_data["type"] == "bonus" and world.options.bonus_levels.value == 2):
         access_item = level_data["unlock_item_name"]
     else:
         access_item = {"adventure": None, "minigame": "Mini-games", "cloudy": "Cloudy Day", "puzzle": "Puzzle Mode", "bonus": "Bonus Levels", "survival": "Survival Mode"}[level_data["type"]]
@@ -47,21 +47,21 @@ def create_regions(world: World) -> None:
     previous_region = menu_region
 
     allowed_types = ["adventure"]
-    if world.options.include_minigames.value:
+    if world.options.minigame_levels.value != 0:
         allowed_types.append("minigame")
-    if world.options.include_bonus_levels.value:
-        allowed_types.append("bonus")
-    if world.options.include_puzzle_levels.value:
+    if world.options.puzzle_levels.value != 0:
         allowed_types.append("puzzle")
-    if world.options.include_survival_levels.value:
+    if world.options.survival_levels.value != 0:
         allowed_types.append("survival")
-    if world.options.include_cloudy_day_levels.value:
+    if world.options.cloudy_day_levels.value != 0:
         allowed_types.append("cloudy")
+    if world.options.bonus_levels.value != 0:
+        allowed_types.append("bonus")
 
     adventure_level_index = 0
-    for level in LEVELS:
+    for level in world.modified_levels:
 
-        level_data = LEVELS[level]
+        level_data = world.modified_levels[level]
 
         if level_data["type"] in allowed_types:
 

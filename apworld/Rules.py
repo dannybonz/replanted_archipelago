@@ -1,5 +1,4 @@
 from worlds.AutoWorld import World
-from .Data import LEVELS
 
 def has_wall(state, player):
     return any(state.has(item, player) for item in ["Wall-nut", "Tall-nut", "Pumpkin"])
@@ -64,19 +63,22 @@ def get_cleared_adventure_areas(state, player):
 def get_cleared_adventure_levels(state, player):
     return state.count("Adventure Level Cleared (Area: Day)", player) + state.count("Adventure Level Cleared (Area: Night)", player) + state.count("Adventure Level Cleared (Area: Pool)", player) + state.count("Adventure Level Cleared (Area: Fog)",  player) + state.count("Adventure Level Cleared (Area: Roof)",  player)
 
+def get_total_cleared_levels(state, player):
+    return get_cleared_adventure_levels(state, player) + state.count("Mini-game Level Cleared", player) + state.count("I, Zombie Level Cleared", player) + state.count("Vasebreaker Level Cleared", player) + state.count("Survival Level Cleared",  player) + state.count("Cloudy Day Level Cleared",  player) + state.count("Bonus Level Cleared",  player)
+    
 ZOMBIE_COUNTERS = {
-    "ZOMBIE_BALLOON": can_counter_balloon,
-    "ZOMBIE_DOOR": can_counter_screen_door,
-    "ZOMBIE_FOOTBALL": can_counter_football,
-    "ZOMBIE_GARGANTUAR": can_counter_garg,
-    "ZOMBIE_SNORKEL": can_counter_snorkel,
-    "ZOMBIE_ZAMBONI": can_counter_zomboni,
-    "ZOMBIE_LADDER": can_counter_ladder,
-    "ZOMBIE_DIGGER": can_counter_digger,
-    "ZOMBIE_POGO": can_counter_pogo,
-    "ZOMBIE_PEA_HEAD": can_counter_peashooter,
-    "ZOMBIE_WALLNUT_HEAD": can_counter_wallnut,
-    "ZOMBIE_GATLING_HEAD": can_counter_peashooter
+    "Balloon": can_counter_balloon,
+    "Door": can_counter_screen_door,
+    "Football": can_counter_football,
+    "Gargantuar": can_counter_garg,
+    "Snorkel": can_counter_snorkel,
+    "Zamboni": can_counter_zomboni,
+    "Ladder": can_counter_ladder,
+    "Digger": can_counter_digger,
+    "Pogo": can_counter_pogo,
+    "PeaHead": can_counter_peashooter,
+    "WallnutHead": can_counter_wallnut,
+    "GatlingHead": can_counter_peashooter
 }
 
 def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roof):
@@ -96,15 +98,21 @@ def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roo
     elif level_data["name"] == "Roof: Dr. Zomboss":
         if world.fast_goal == False and not state.can_reach_location("Roof: Level 5-9 (Clear)", player):
             return False
-        if get_cleared_adventure_levels(state, player) < world.adventure_levels_goal:
+        if world.adventure_levels_goal > 0 and get_cleared_adventure_levels(state, player) < world.adventure_levels_goal:
             return False
-        if get_cleared_adventure_areas(state, player) < world.adventure_areas_goal:
+        if world.adventure_areas_goal > 0 and get_cleared_adventure_areas(state, player) < world.adventure_areas_goal:
             return False
-        if state.has("Survival Level Cleared", player, world.survival_levels_goal) == False:
+        if world.survival_levels_goal > 0 and state.has("Survival Level Cleared", player, world.survival_levels_goal) == False:
             return False
-        if state.has("Mini-game Level Cleared", player, world.minigame_levels_goal) == False:
+        if world.minigame_levels_goal > 0 and state.has("Mini-game Level Cleared", player, world.minigame_levels_goal) == False:
             return False
-        if state.count("Vasebreaker Level Cleared", player) + state.count("I, Zombie Level Cleared", player) < world.puzzle_levels_goal:
+        if world.puzzle_levels_goal > 0 and state.count("Vasebreaker Level Cleared", player) + state.count("I, Zombie Level Cleared", player) < world.puzzle_levels_goal:
+            return False
+        if world.cloudy_day_levels_goal > 0 and state.has("Cloudy Day Level Cleared", player, world.cloudy_day_levels_goal) == False:
+            return False
+        if world.bonus_levels_goal > 0 and state.has("Bonus Level Cleared", player, world.bonus_levels_goal) == False:
+            return False
+        if world.overall_levels_goal > 0 and get_total_cleared_levels(state, player) < world.overall_levels_goal:
             return False
 
     if level_data["choose"]:

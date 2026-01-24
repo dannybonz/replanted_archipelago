@@ -1,4 +1,4 @@
-GEN_VERSION = 1.2 #Version to match mod
+GEN_VERSION = 1.3 #Version to match mod
 
 SEED_PACKETS = ["Peashooter", "Sunflower", "Cherry Bomb", "Wall-nut", "Potato Mine", "Snow Pea", "Chomper", "Repeater", "Puff-shroom", "Sun-shroom", "Fume-shroom", "Grave Buster", "Hypno-shroom", "Scaredy-shroom", "Ice-shroom", "Doom-shroom", "Lily Pad", "Squash", "Threepeater", "Tangle Kelp", "Jalapeno", "Spikeweed", "Torchwood", "Tall-nut", "Sea-shroom", "Plantern", "Cactus", "Blover", "Split Pea", "Starfruit", "Pumpkin", "Magnet-shroom", "Cabbage-pult", "Flower Pot", "Kernel-pult", "Coffee Bean", "Garlic", "Umbrella Leaf", "Marigold", "Melon-pult", "Gatling Pea", "Twin Sunflower", "Gloom-shroom", "Cattail", "Winter Melon", "Gold Magnet", "Spikerock", "Cob Cannon", "Imitater"]
 UPGRADE_PACKETS = ["Gatling Pea", "Twin Sunflower", "Gloom-shroom", "Cattail", "Winter Melon", "Gold Magnet", "Spikerock", "Cob Cannon"]
@@ -21,7 +21,8 @@ LEVELS = {
         "flags": 0,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL"
+            "Normal",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -33,7 +34,8 @@ LEVELS = {
         "flags": 1,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL"
+            "Normal",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -45,8 +47,9 @@ LEVELS = {
         "flags": 1,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "TrafficCone",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -58,8 +61,9 @@ LEVELS = {
         "flags": 1,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "TrafficCone",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -71,8 +75,9 @@ LEVELS = {
         "flags": 1,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "TrafficCone",
+            "Flag"
         ],
         "choose": False,
         "type": "adventure",
@@ -84,9 +89,10 @@ LEVELS = {
         "flags": 1,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -98,9 +104,10 @@ LEVELS = {
         "flags": 2,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -114,9 +121,10 @@ LEVELS = {
         "flags": 1,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -128,10 +136,11 @@ LEVELS = {
         "flags": 2,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -145,10 +154,11 @@ LEVELS = {
         "flags": 2,
         "location": "Day",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Flag"
         ],
         "choose": False,
         "type": "adventure",
@@ -162,8 +172,9 @@ LEVELS = {
         "flags": 1,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_NEWSPAPER"
+            "Normal",
+            "Newspaper",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -175,10 +186,11 @@ LEVELS = {
         "flags": 2,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "Newspaper",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -192,9 +204,10 @@ LEVELS = {
         "flags": 1,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_DOOR"
+            "Normal",
+            "TrafficCone",
+            "Door",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -206,10 +219,11 @@ LEVELS = {
         "flags": 2,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_DOOR"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Door",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -223,11 +237,12 @@ LEVELS = {
         "flags": 0,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Flag"
         ],
         "choose": False,
         "type": "adventure",
@@ -239,8 +254,9 @@ LEVELS = {
         "flags": 1,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "TrafficCone",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -252,9 +268,10 @@ LEVELS = {
         "flags": 2,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_DOOR"
+            "Normal",
+            "TrafficCone",
+            "Door",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -268,8 +285,9 @@ LEVELS = {
         "flags": 1,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "TrafficCone",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -281,9 +299,10 @@ LEVELS = {
         "flags": 2,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_DOOR"
+            "Normal",
+            "TrafficCone",
+            "Door",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -297,9 +316,10 @@ LEVELS = {
         "flags": 2,
         "location": "Night",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_DOOR"
+            "Normal",
+            "TrafficCone",
+            "Door",
+            "Flag"
         ],
         "choose": False,
         "type": "adventure",
@@ -313,11 +333,12 @@ LEVELS = {
         "flags": 1,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -329,8 +350,9 @@ LEVELS = {
         "flags": 2,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "TrafficCone",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -344,12 +366,13 @@ LEVELS = {
         "flags": 2,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_SNORKEL"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Snorkel",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -363,9 +386,10 @@ LEVELS = {
         "flags": 3,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_SNORKEL"
+            "Normal",
+            "TrafficCone",
+            "Snorkel",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -380,9 +404,10 @@ LEVELS = {
         "flags": 2,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_SNORKEL"
+            "Normal",
+            "TrafficCone",
+            "Snorkel",
+            "Flag"
         ],
         "choose": False,
         "type": "adventure",
@@ -396,11 +421,11 @@ LEVELS = {
         "flags": 2,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_BOBSLED"
+            "Normal",
+            "TrafficCone",
+            "Football",
+            "Zamboni",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -414,14 +439,14 @@ LEVELS = {
         "flags": 3,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_SNORKEL",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_BOBSLED",
-            "ZOMBIE_DOLPHIN_RIDER"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "Football",
+            "Snorkel",
+            "Zamboni",
+            "DolphinRider",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -436,11 +461,11 @@ LEVELS = {
         "flags": 2,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER",
-            "ZOMBIE_DOLPHIN_RIDER"
+            "Normal",
+            "TrafficCone",
+            "Dancer",
+            "DolphinRider",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -454,15 +479,14 @@ LEVELS = {
         "flags": 3,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_BOBSLED",
-            "ZOMBIE_DOLPHIN_RIDER"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Dancer",
+            "Zamboni",
+            "DolphinRider",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -477,15 +501,14 @@ LEVELS = {
         "flags": 3,
         "location": "Pool",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER",
-            "ZOMBIE_SNORKEL",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_BOBSLED"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "Football",
+            "Dancer",
+            "Snorkel",
+            "Zamboni",
+            "Flag"
         ],
         "choose": False,
         "type": "adventure",
@@ -500,10 +523,11 @@ LEVELS = {
         "flags": 1,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_JACK_IN_THE_BOX"
+            "Normal",
+            "TrafficCone",
+            "Football",
+            "JackInTheBox",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -515,11 +539,12 @@ LEVELS = {
         "flags": 2,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_JACK_IN_THE_BOX"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Football",
+            "JackInTheBox",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -533,10 +558,11 @@ LEVELS = {
         "flags": 1,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_BALLOON"
+            "Normal",
+            "TrafficCone",
+            "Football",
+            "Balloon",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -548,10 +574,11 @@ LEVELS = {
         "flags": 2,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_DOLPHIN_RIDER",
-            "ZOMBIE_BALLOON"
+            "Normal",
+            "TrafficCone",
+            "DolphinRider",
+            "Balloon",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -565,8 +592,9 @@ LEVELS = {
         "flags": 0,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "TrafficCone",
+            "Flag"
         ],
         "choose": False,
         "type": "adventure",
@@ -578,9 +606,10 @@ LEVELS = {
         "flags": 1,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_DIGGER"
+            "Normal",
+            "TrafficCone",
+            "Digger",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -592,11 +621,12 @@ LEVELS = {
         "flags": 2,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_DIGGER"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "JackInTheBox",
+            "Digger",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -610,9 +640,10 @@ LEVELS = {
         "flags": 1,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POGO"
+            "Normal",
+            "TrafficCone",
+            "Pogo",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -624,11 +655,12 @@ LEVELS = {
         "flags": 2,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_POGO"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "Balloon",
+            "Pogo",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -642,13 +674,14 @@ LEVELS = {
         "flags": 2,
         "location": "Fog",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_DIGGER",
-            "ZOMBIE_POGO"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "JackInTheBox",
+            "Balloon",
+            "Digger",
+            "Pogo",
+            "Flag"
         ],
         "choose": False,
         "type": "adventure",
@@ -662,10 +695,11 @@ LEVELS = {
         "flags": 1,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_BUNGEE"
+            "Normal",
+            "TrafficCone",
+            "Football",
+            "Bungee",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -677,11 +711,12 @@ LEVELS = {
         "flags": 2,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_BUNGEE"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Bungee",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -695,9 +730,10 @@ LEVELS = {
         "flags": 2,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_LADDER"
+            "Normal",
+            "TrafficCone",
+            "Ladder",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -711,10 +747,11 @@ LEVELS = {
         "flags": 3,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POGO",
-            "ZOMBIE_LADDER"
+            "Normal",
+            "TrafficCone",
+            "Pogo",
+            "Ladder",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -729,10 +766,11 @@ LEVELS = {
         "flags": 2,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_LADDER"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "Ladder",
+            "Flag"
         ],
         "choose": False,
         "type": "adventure",
@@ -746,9 +784,10 @@ LEVELS = {
         "flags": 2,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_CATAPULT"
+            "Normal",
+            "TrafficCone",
+            "Catapult",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -762,11 +801,12 @@ LEVELS = {
         "flags": 3,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_BUNGEE",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT"
+            "Normal",
+            "TrafficCone",
+            "Bungee",
+            "Ladder",
+            "Catapult",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -781,10 +821,10 @@ LEVELS = {
         "flags": 2,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP"
+            "Normal",
+            "TrafficCone",
+            "Gargantuar",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -798,15 +838,15 @@ LEVELS = {
         "flags": 3,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BUNGEE",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "JackInTheBox",
+            "Bungee",
+            "Ladder",
+            "Catapult",
+            "Gargantuar",
+            "Flag"
         ],
         "choose": True,
         "type": "adventure",
@@ -821,15 +861,14 @@ LEVELS = {
         "flags": 0,
         "location": "Roof",
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BUNGEE",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "JackInTheBox",
+            "Bungee",
+            "Ladder",
+            "Catapult",
+            "Gargantuar"
         ],
         "choose": False,
         "type": "adventure",
@@ -838,8 +877,8 @@ LEVELS = {
     },
     "ChallengeWarAndPeas": {
         "zombies": [
-            "ZOMBIE_PEA_HEAD",
-            "ZOMBIE_WALLNUT_HEAD"
+            "PeaHead",
+            "WallnutHead"
         ],
         "name": "Mini-games: ZomBotany",
         "location": "Day",
@@ -853,11 +892,11 @@ LEVELS = {
     },
     "ChallengeWallnutBowling": {
         "zombies": [
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Newspaper",
+            "Normal",
+            "Pail",
+            "Polevaulter",
+            "TrafficCone"
         ],
         "name": "Mini-games: Wall-nut Bowling",
         "location": "Day",
@@ -871,9 +910,9 @@ LEVELS = {
     },
     "ChallengeSlotMachine": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Mini-games: Slot Machine",
         "location": "Day",
@@ -885,14 +924,14 @@ LEVELS = {
     },
     "ChallengeRainingSeeds": {
         "zombies": [
-            "ZOMBIE_BUNGEE",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Bungee",
+            "Door",
+            "Football",
+            "JackInTheBox",
+            "Newspaper",
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Mini-games: It's Raining Seeds",
         "location": "Fog",
@@ -908,12 +947,12 @@ LEVELS = {
     },
     "ChallengeBeghouled": {
         "zombies": [
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Door",
+            "Football",
+            "Newspaper",
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Mini-games: Beghouled",
         "location": "Night",
@@ -925,12 +964,12 @@ LEVELS = {
     },
     "ChallengeInvisighoul": {
         "zombies": [
-            "ZOMBIE_DOLPHIN_RIDER",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_ZAMBONI"
+            "DolphinRider",
+            "JackInTheBox",
+            "Normal",
+            "Pail",
+            "TrafficCone",
+            "Zamboni"
         ],
         "name": "Mini-games: Invisi-ghoul",
         "location": "Fog",
@@ -944,9 +983,9 @@ LEVELS = {
     },
     "ChallengeSeeingStars": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Mini-games: Seeing Stars",
         "location": "Day",
@@ -968,12 +1007,12 @@ LEVELS = {
     },
     "ChallengeBeghouledTwist": {
         "zombies": [
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Door",
+            "Football",
+            "Newspaper",
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Mini-games: Beghouled Twist",
         "location": "Night",
@@ -985,10 +1024,10 @@ LEVELS = {
     },
     "ChallengeLittleTrouble": {
         "zombies": [
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_SNORKEL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Football",
+            "Normal",
+            "Snorkel",
+            "TrafficCone"
         ],
         "name": "Mini-games: Big Trouble Little Zombie",
         "location": "Pool",
@@ -1003,10 +1042,10 @@ LEVELS = {
     },
     "ChallengePortalCombat": {
         "zombies": [
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL"
+            "Balloon",
+            "Football",
+            "Normal",
+            "Pail"
         ],
         "name": "Mini-games: Portal Combat",
         "location": "Night",
@@ -1020,10 +1059,10 @@ LEVELS = {
     },
     "ChallengeColumn": {
         "zombies": [
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Football",
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Mini-games: Column Like You See 'Em",
         "location": "Roof",
@@ -1038,8 +1077,7 @@ LEVELS = {
     },
     "ChallengeBobsledBonanza": {
         "zombies": [
-            "ZOMBIE_BOBSLED",
-            "ZOMBIE_ZAMBONI"
+            "Zamboni"
         ],
         "name": "Mini-games: Bobsled Bonanza",
         "location": "Pool",
@@ -1055,10 +1093,10 @@ LEVELS = {
     },
     "ChallengeSpeed": {
         "zombies": [
-            "ZOMBIE_DOLPHIN_RIDER",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_TRAFFIC_CONE"
+            "DolphinRider",
+            "Normal",
+            "Polevaulter",
+            "TrafficCone"
         ],
         "name": "Mini-games: Zombie Nimble Zombie Quick",
         "location": "Pool",
@@ -1074,9 +1112,9 @@ LEVELS = {
     },
     "ChallengeWhackAZombie": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Mini-games: Whack a Zombie",
         "location": "Night",
@@ -1088,15 +1126,15 @@ LEVELS = {
     },
     "ChallengeLastStand": {
         "zombies": [
-            "ZOMBIE_DOLPHIN_RIDER",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_TRAFFIC_CONE"
+            "DolphinRider",
+            "Football",
+            "JackInTheBox",
+            "Ladder",
+            "Newspaper",
+            "Normal",
+            "Pail",
+            "Polevaulter",
+            "TrafficCone"
         ],
         "name": "Mini-games: Last Stand",
         "location": "Pool",
@@ -1113,12 +1151,12 @@ LEVELS = {
     },
     "ChallengeWarAndPeas2": {
         "zombies": [
-            "ZOMBIE_GATLING_HEAD",
-            "ZOMBIE_JALAPENO_HEAD",
-            "ZOMBIE_PEA_HEAD",
-            "ZOMBIE_SQUASH_HEAD",
-            "ZOMBIE_TALLNUT_HEAD",
-            "ZOMBIE_WALLNUT_HEAD"
+            "GatlingHead",
+            "JalapenoHead",
+            "PeaHead",
+            "SquashHead",
+            "TallnutHead",
+            "WallnutHead"
         ],
         "name": "Mini-games: ZomBotany 2",
         "location": "Pool",
@@ -1133,13 +1171,13 @@ LEVELS = {
     },
     "ChallengeWallnutBowling2": {
         "zombies": [
-            "ZOMBIE_DANCER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Dancer",
+            "Door",
+            "Newspaper",
+            "Normal",
+            "Pail",
+            "Polevaulter",
+            "TrafficCone"
         ],
         "name": "Mini-games: Wall-nut Bowling 2",
         "location": "Day",
@@ -1154,7 +1192,7 @@ LEVELS = {
     },
     "ChallengePogoParty": {
         "zombies": [
-            "ZOMBIE_POGO"
+            "Pogo"
         ],
         "name": "Mini-games: Pogo Party",
         "location": "Roof",
@@ -1359,15 +1397,14 @@ LEVELS = {
     },
     "SurvivalNormalStage1": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Dancer"
         ],
         "name": "Survival: Day",
         "location": "Day",
@@ -1384,15 +1421,14 @@ LEVELS = {
     },
     "SurvivalNormalStage2": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Dancer"
         ],
         "name": "Survival: Night",
         "location": "Night",
@@ -1409,16 +1445,15 @@ LEVELS = {
     },
     "SurvivalNormalStage3": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER",
-            "ZOMBIE_SNORKEL"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Dancer",
+            "Snorkel"
         ],
         "name": "Survival: Pool",
         "location": "Pool",
@@ -1435,24 +1470,23 @@ LEVELS = {
     },
     "SurvivalNormalStage4": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER",
-            "ZOMBIE_SNORKEL",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_DOLPHIN_RIDER",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_DIGGER",
-            "ZOMBIE_POGO",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Dancer",
+            "Snorkel",
+            "Zamboni",
+            "DolphinRider",
+            "JackInTheBox",
+            "Balloon",
+            "Digger",
+            "Pogo",
+            "Ladder",
+            "Catapult"
         ],
         "name": "Survival: Fog",
         "location": "Fog",
@@ -1469,20 +1503,20 @@ LEVELS = {
     },
     "SurvivalNormalStage5": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_POGO",
-            "ZOMBIE_BUNGEE",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Zamboni",
+            "JackInTheBox",
+            "Balloon",
+            "Pogo",
+            "Bungee",
+            "Ladder",
+            "Catapult"
         ],
         "name": "Survival: Roof",
         "location": "Roof",
@@ -1499,24 +1533,22 @@ LEVELS = {
     },
     "SurvivalHardStage1": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_DIGGER",
-            "ZOMBIE_POGO",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Dancer",
+            "Zamboni",
+            "JackInTheBox",
+            "Balloon",
+            "Digger",
+            "Pogo",
+            "Ladder",
+            "Catapult",
+            "Gargantuar"
         ],
         "name": "Survival: Day (Hard)",
         "location": "Day",
@@ -1538,23 +1570,21 @@ LEVELS = {
     },
     "SurvivalHardStage2": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_DIGGER",
-            "ZOMBIE_POGO",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Dancer",
+            "JackInTheBox",
+            "Balloon",
+            "Digger",
+            "Pogo",
+            "Ladder",
+            "Catapult",
+            "Gargantuar"
         ],
         "name": "Survival: Night (Hard)",
         "location": "Night",
@@ -1576,26 +1606,24 @@ LEVELS = {
     },
     "SurvivalHardStage3": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER",
-            "ZOMBIE_SNORKEL",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_DOLPHIN_RIDER",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_DIGGER",
-            "ZOMBIE_POGO",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Dancer",
+            "Snorkel",
+            "Zamboni",
+            "DolphinRider",
+            "JackInTheBox",
+            "Balloon",
+            "Digger",
+            "Pogo",
+            "Ladder",
+            "Catapult",
+            "Gargantuar"
         ],
         "name": "Survival: Pool (Hard)",
         "location": "Pool",
@@ -1617,26 +1645,24 @@ LEVELS = {
     },
     "SurvivalHardStage4": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_DANCER",
-            "ZOMBIE_BACKUP_DANCER",
-            "ZOMBIE_SNORKEL",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_DOLPHIN_RIDER",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_DIGGER",
-            "ZOMBIE_POGO",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Dancer",
+            "Snorkel",
+            "Zamboni",
+            "DolphinRider",
+            "JackInTheBox",
+            "Balloon",
+            "Digger",
+            "Pogo",
+            "Ladder",
+            "Catapult",
+            "Gargantuar"
         ],
         "name": "Survival: Fog (Hard)",
         "location": "Fog",
@@ -1658,22 +1684,21 @@ LEVELS = {
     },
     "SurvivalHardStage5": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_NEWSPAPER",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_POGO",
-            "ZOMBIE_BUNGEE",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_CATAPULT",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP"
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
+            "Pail",
+            "Newspaper",
+            "Door",
+            "Football",
+            "Zamboni",
+            "JackInTheBox",
+            "Balloon",
+            "Pogo",
+            "Bungee",
+            "Ladder",
+            "Catapult",
+            "Gargantuar"
         ],
         "name": "Survival: Roof (Hard)",
         "location": "Roof",
@@ -1695,9 +1720,9 @@ LEVELS = {
     },
     "ChallengeArtChallenge1": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Bonus Levels: Art Challenge Wall-nut",
         "location": "Day",
@@ -1709,12 +1734,12 @@ LEVELS = {
     },
     "ChallengeSunnyDay": {
         "zombies": [
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Football",
+            "JackInTheBox",
+            "Normal",
+            "Pail",
+            "Polevaulter",
+            "TrafficCone"
         ],
         "name": "Bonus Levels: Sunny Day",
         "location": "Day",
@@ -1730,9 +1755,9 @@ LEVELS = {
     },
     "ChallengeResodded": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Bonus Levels: Unsodded",
         "location": "Day",
@@ -1748,12 +1773,12 @@ LEVELS = {
     },
     "ChallengeBigTime": {
         "zombies": [
-            "ZOMBIE_DOOR",
-            "ZOMBIE_FOOTBALL",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Door",
+            "Football",
+            "JackInTheBox",
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Bonus Levels: Big Time",
         "location": "Day",
@@ -1769,9 +1794,9 @@ LEVELS = {
     },
     "ChallengeArtChallenge2": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Bonus Levels: Art Challenge Sunflower",
         "location": "Day",
@@ -1783,7 +1808,7 @@ LEVELS = {
     },
     "ChallengeAirRaid": {
         "zombies": [
-            "ZOMBIE_BALLOON"
+            "Balloon"
         ],
         "name": "Bonus Levels: Air Raid",
         "location": "Fog",
@@ -1797,11 +1822,11 @@ LEVELS = {
     },
     "ChallengeHighGravity": {
         "zombies": [
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_DOOR",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Balloon",
+            "Door",
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Bonus Levels: High Gravity",
         "location": "Roof",
@@ -1815,9 +1840,9 @@ LEVELS = {
     },
     "ChallengeGraveDanger": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "Pail",
+            "TrafficCone"
         ],
         "name": "Bonus Levels: Grave Danger",
         "location": "Night",
@@ -1831,8 +1856,8 @@ LEVELS = {
     },
     "ChallengeShovel": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Normal",
+            "TrafficCone"
         ],
         "name": "Bonus Levels: Can You Dig It?",
         "location": "Day",
@@ -1847,10 +1872,10 @@ LEVELS = {
     },
     "ChallengeStormyNight": {
         "zombies": [
-            "ZOMBIE_BALLOON",
-            "ZOMBIE_DOLPHIN_RIDER",
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE"
+            "Balloon",
+            "DolphinRider",
+            "Normal",
+            "TrafficCone"
         ],
         "name": "Bonus Levels: Dark Stormy Night",
         "location": "Fog",
@@ -1865,9 +1890,9 @@ LEVELS = {
     },
     "CloudyDay1": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
         ],
         "name": "Cloudy Day: Level 1",
         "location": "Day",
@@ -1879,9 +1904,9 @@ LEVELS = {
     },
     "CloudyDay2": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_POLEVAULTER",
+            "Normal",
+            "TrafficCone",
+            "Polevaulter",
         ],
         "name": "Cloudy Day: Level 2",
         "location": "Day",
@@ -1895,9 +1920,9 @@ LEVELS = {
     },
     "CloudyDay3": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
+            "Normal",
+            "TrafficCone",
+            "Pail",
         ],
         "name": "Cloudy Day: Level 3",
         "location": "Day",
@@ -1909,10 +1934,10 @@ LEVELS = {
     },
     "CloudyDay4": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_POLEVAULTER"
+            "Normal",
+            "TrafficCone",
+            "Pail",
+            "Polevaulter"
         ],
         "name": "Cloudy Day: Level 4",
         "location": "Day",
@@ -1927,10 +1952,9 @@ LEVELS = {
     },
     "CloudyDay5": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_BOBSLED"
+            "Normal",
+            "TrafficCone",
+            "Zamboni"
         ],
         "name": "Cloudy Day: Level 5",
         "location": "Pool",
@@ -1944,12 +1968,11 @@ LEVELS = {
     },
     "CloudyDay6": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_BOBSLED",
-            "ZOMBIE_PAIL",
-            "ZOMBIE_SNORKEL"
+            "Normal",
+            "TrafficCone",
+            "Zamboni",
+            "Pail",
+            "Snorkel"
         ],
         "name": "Cloudy Day: Level 6",
         "location": "Pool",
@@ -1964,9 +1987,9 @@ LEVELS = {
     },
     "CloudyDay7": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_DOLPHIN_RIDER",
+            "Normal",
+            "TrafficCone",
+            "DolphinRider",
         ],
         "name": "Cloudy Day: Level 7",
         "location": "Pool",
@@ -1980,13 +2003,12 @@ LEVELS = {
     },    
     "CloudyDay8": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_DOLPHIN_RIDER",
-            "ZOMBIE_ZAMBONI",
-            "ZOMBIE_BOBSLED",
-            "ZOMBIE_POLEVAULTER",
-            "ZOMBIE_PAIL"
+            "Normal",
+            "TrafficCone",
+            "DolphinRider",
+            "Zamboni",
+            "Polevaulter",
+            "Pail"
         ],
         "name": "Cloudy Day: Level 8",
         "location": "Pool",
@@ -2001,9 +2023,9 @@ LEVELS = {
     },    
     "CloudyDay9": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_CATAPULT"
+            "Normal",
+            "TrafficCone",
+            "Catapult"
         ],
         "name": "Cloudy Day: Level 9",
         "location": "Roof",
@@ -2017,11 +2039,11 @@ LEVELS = {
     },   
     "CloudyDay10": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_CATAPULT",
-            "ZOMBIE_BUNGEE",
-            "ZOMBIE_LADDER"
+            "Normal",
+            "TrafficCone",
+            "Catapult",
+            "Bungee",
+            "Ladder"
         ],
         "name": "Cloudy Day: Level 10",
         "location": "Roof",
@@ -2036,10 +2058,9 @@ LEVELS = {
     },  
     "CloudyDay11": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP"
+            "Normal",
+            "TrafficCone",
+            "Gargantuar"
         ],
         "name": "Cloudy Day: Level 11",
         "location": "Roof",
@@ -2053,15 +2074,14 @@ LEVELS = {
     }, 
     "CloudyDay12": {
         "zombies": [
-            "ZOMBIE_NORMAL",
-            "ZOMBIE_TRAFFIC_CONE",
-            "ZOMBIE_GARGANTUAR",
-            "ZOMBIE_IMP",
-            "ZOMBIE_BUNGEE",
-            "ZOMBIE_CATAPULT",
-            "ZOMBIE_LADDER",
-            "ZOMBIE_JACK_IN_THE_BOX",
-            "ZOMBIE_PAIL"
+            "Normal",
+            "TrafficCone",
+            "Gargantuar",
+            "Bungee",
+            "Catapult",
+            "Ladder",
+            "JackInTheBox",
+            "Pail"
         ],
         "name": "Cloudy Day: Level 12",
         "location": "Roof",
@@ -2085,3 +2105,46 @@ for level in LEVELS:
     LEVELS[level]["unlock_item_name"] = f"{type_name} Unlock: {(LEVELS[level]["name"].split(": ")[-1])}"
     LEVELS[level]["id"] = level_id
     level_id += 1
+
+    ZOMBIE_TYPES = [
+        "Normal",
+        "Flag",
+        "TrafficCone",
+        "Polevaulter",
+        "Pail",
+        "Newspaper",
+        "Door",
+        "Football",
+        "Dancer",
+        "BackupDancer",
+        "DuckyTube",
+        "Snorkel",
+        "Zamboni",
+        "Bobsled",
+        "DolphinRider",
+        "JackInTheBox",
+        "Balloon",
+        "Digger",
+        "Pogo",
+        "Yeti",
+        "Bungee",
+        "Ladder",
+        "Catapult",
+        "Gargantuar",
+        "Imp",
+        "Boss",
+        "PeaHead",
+        "WallnutHead",
+        "JalapenoHead",
+        "GatlingHead",
+        "SquashHead",
+        "TallnutHead",
+        "RedeyeGargantuar",
+        "Zombatar",
+        "Target",
+        "TrashCan"
+    ]
+
+NO_RANDO_ZOMBIES = ["Normal", "Flag", "DuckyTube", "RedeyeGargantuar", "Yeti", "PeaHead", "WallnutHead", "JalapenoHead", "GatlingHead", "SquashHead", "TallnutHead", "Target", "Zombatar", "TrashCan", "Imp", "Boss", "Bobsled", "BackupDancer"]
+
+POOL_ONLY_ZOMBIES = ["Snorkel", "DolphinRider"]
