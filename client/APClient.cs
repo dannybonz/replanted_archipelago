@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using ReplantedArchipelago.Patches;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace ReplantedArchipelago
@@ -100,7 +101,7 @@ namespace ReplantedArchipelago
                 var loginSuccess = (LoginSuccessful)result;
                 slotData = loginSuccess.SlotData;
 
-                genVersion = Convert.ToString(slotData["gen_version"]);
+                genVersion = ((double)slotData["gen_version"]).ToString(CultureInfo.InvariantCulture);
 
                 if (genVersion != Data.GenVersion) //Version mismatch
                 {
