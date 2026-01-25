@@ -2,6 +2,7 @@
 using Archipelago.MultiClient.Net.Models;
 using HarmonyLib;
 using Il2Cpp;
+using Il2CppReloaded.Data;
 using Il2CppReloaded.DataModels;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
@@ -790,6 +791,18 @@ namespace ReplantedArchipelago.Patches
                 else
                 {
                     return true;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.GetZombieDefinition))]
+        public static class GetZombieDefinitionPatch
+        {
+            private static void Postfix(GameplayActivity __instance, ref ZombieDefinition __result)
+            {
+                if (__result.ZombieType == ZombieType.PeaHead && __instance.GameMode != GameMode.ChallengeWarAndPeas && __instance.GameMode != GameMode.ChallengeWarAndPeas2)
+                {
+                    __result.m_weight = 4; //Re-weights Peahead to not be so pervasive with Zombie rando enabled - we could also use this in future for Zombie value rando
                 }
             }
         }

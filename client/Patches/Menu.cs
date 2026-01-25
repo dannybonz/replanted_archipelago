@@ -94,6 +94,11 @@ namespace ReplantedArchipelago.Patches
 
                 Profile.refreshRequired = true;
                 Profile.ProcessIUserService();
+                if (Profile.cachedUserService != null)
+                {
+                    Main.Log("Adjusting Level...");
+                    Profile.cachedUserService.ActiveUserProfile.mLevel = 50; //Set level back to 50 (prevents the forced 1-1?)
+                }
 
                 Main.Log("Main Menu Panel View modified.");
             }
