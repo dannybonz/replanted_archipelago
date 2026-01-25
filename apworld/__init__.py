@@ -268,12 +268,7 @@ class PVZRWorld(World):
             else:
                 self.overall_levels_goal = self.options.total_levels_goal.value
         
-        #Setup zombie rando
         self.zombie_map = {}
-        self.modified_levels = copy.deepcopy(LEVELS)
-        if (self.options.zombie_randomisation):
-            self.randomise_zombies()
-
         if hasattr(self.multiworld, "re_gen_passthrough"): #If generated through Universal Tracker passthrough
             slot_data: dict = self.multiworld.re_gen_passthrough[self.game]
             self.minigame_unlocks = {int(k): v for k, v in slot_data["minigame_unlocks"].items()}
@@ -282,6 +277,11 @@ class PVZRWorld(World):
             self.izombie_unlocks = {int(k): v for k, v in slot_data["izombie_unlocks"].items()}
             self.cloudy_day_unlocks = {int(k): v for k, v in slot_data["cloudy_day_unlocks"].items()}
             self.zombie_map = {int(k): v for k, v in slot_data["zombie_map"].items()}
+
+        #Setup zombie rando
+        self.modified_levels = copy.deepcopy(LEVELS)
+        if (self.options.zombie_randomisation):
+            self.randomise_zombies()
 
     def generate_basic(self) -> None:
         # Music randomisation
@@ -336,7 +336,7 @@ class PVZRWorld(World):
         for level in self.modified_levels:
             if self.modified_levels[level]["type"] == "adventure" and self.modified_levels[level]["choose"]:
                 if hasattr(self.multiworld, "re_gen_passthrough"): #Universal Tracker
-                    self.modified_levels[level]["zombies"] = [ZOMBIES_TYPES.index(z) for z in self.zombie_map[self.modified_levels[level]["id"]]]
+                    self.modified_levels[level]["zombies"] = [ZOMBIE_TYPES[z] for z in self.zombie_map[self.modified_levels[level]["id"]]]
                 else:                    
                     old_zombies = self.modified_levels[level]["zombies"]
 

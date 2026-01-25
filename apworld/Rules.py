@@ -44,12 +44,7 @@ def can_counter_pogo(state, player, at_night, has_pool, on_roof):
     return has_magnet(state, player, at_night) or state.has("Split Pea", player) or (state.has("Starfruit", player) and not on_roof) or (has_pool and state.has("Lily Pad", player) and state.has("Cattail", player)) or state.has("Tall-nut", player)
 
 def can_counter_peashooter(state, player, at_night, has_pool, on_roof):
-    counters = [
-        has_wall(state, player),
-        state.has("Spikeweed", player) and not on_roof,
-        state.has("Garlic", player),
-    ]
-    return sum(counters) >= 2 
+    return has_wall(state, player)
 
 def can_counter_wallnut(state, player, at_night, has_pool, on_roof):
     return has_wall(state, player) and has_instant(state, player, 1, at_night)
@@ -78,7 +73,9 @@ ZOMBIE_COUNTERS = {
     "Pogo": can_counter_pogo,
     "PeaHead": can_counter_peashooter,
     "WallnutHead": can_counter_wallnut,
-    "GatlingHead": can_counter_peashooter
+    "GatlingHead": can_counter_peashooter,
+    "TallnutHead": can_counter_wallnut,
+    "TrashCan": can_counter_screen_door
 }
 
 def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roof):
