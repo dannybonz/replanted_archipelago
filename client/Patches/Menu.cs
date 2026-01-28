@@ -92,12 +92,11 @@ namespace ReplantedArchipelago.Patches
                     ShowErrorPanel("Goal Unlocked", "You have unlocked the final battle with Dr. Zomboss! Go fight him to complete your game!");
                 }
 
-                Profile.refreshRequired = true;
                 Profile.ProcessIUserService();
                 if (Profile.cachedUserService != null)
                 {
                     Main.Log("Adjusting Level...");
-                    Profile.cachedUserService.ActiveUserProfile.mLevel = 50; //Set level back to 50 (prevents the forced 1-1?)
+                    Profile.cachedUserService.ActiveUserProfile.mLevel = 40; //Set level back to 40 (prevents the forced 1-1?)
                 }
 
                 Main.Log("Main Menu Panel View modified.");
@@ -118,29 +117,32 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(MainMenuPanelView __instance)
             {
-                GameObject usersPanel = __instance.transform.parent.Find("P_UsersPanel").gameObject;
-                if (usersPanel != null)
+                if (Main.currentScene == "Frontend")
                 {
-                    usersPanel.SetActive(false);
-                }
-
-                if ((!APClient.currentlyConnected || APClient.apSession.Socket == null || !APClient.apSession.Socket.Connected) && !ConnectionPanel.active)
-                {
-                    Main.Log("Lost connection to server.");
-                    ShowConnectionPanel();
-                    ShowErrorPanel("Lost Connection", "You have been disconnected from the server.");
-                }
-
-                if (APClient.currentlyConnected && ClientPanel != null && ClientPanel.active && APClient.receivedMessages.Count > cachedMessageCount)
-                {
-                    for (int i = cachedMessageCount; i < APClient.receivedMessages.Count; i++)
+                    GameObject usersPanel = __instance.transform.parent.Find("P_UsersPanel").gameObject;
+                    if (usersPanel != null)
                     {
-                        AddClientMessage(APClient.receivedMessages[i]);
+                        usersPanel.SetActive(false);
                     }
-                    cachedMessageCount = APClient.receivedMessages.Count;
-                }
 
-                APClient.chooserRefreshState = "none"; //No need to refresh seed chooser
+                    if ((!APClient.currentlyConnected || APClient.apSession.Socket == null || !APClient.apSession.Socket.Connected) && (ConnectionPanel == null || !ConnectionPanel.active))
+                    {
+                        Main.Log("Lost connection to server.");
+                        ShowConnectionPanel();
+                        ShowErrorPanel("Lost Connection", "You have been disconnected from the server.");
+                    }
+
+                    if (APClient.currentlyConnected && ClientPanel != null && ClientPanel.active && APClient.receivedMessages.Count > cachedMessageCount)
+                    {
+                        for (int i = cachedMessageCount; i < APClient.receivedMessages.Count; i++)
+                        {
+                            AddClientMessage(APClient.receivedMessages[i]);
+                        }
+                        cachedMessageCount = APClient.receivedMessages.Count;
+                    }
+
+                    APClient.chooserRefreshState = "none"; //No need to refresh seed chooser
+                }
             }
         }
 
@@ -486,12 +488,13 @@ namespace ReplantedArchipelago.Patches
             {
                 if (__instance.m_board != null && __instance.m_board.mLevelComplete)
                 {
-                    APClient.CompletedLevel(Data.GetLevelIdFromGameplayActivity(__instance)); //Re-send the completion check in case it was somehow missed until now (might help fix the Last Stand problem people are facing?)
-
                     if (__instance.IsSurvivalMode() && !__instance.m_board.IsFinalSurvivalStage())
                     {
                         return true;
                     }
+
+                    APClient.CompletedLevel(Data.GetLevelIdFromGameplayActivity(__instance)); //Re-send the completion check in case it was somehow missed until now (might help fix the Last Stand problem people are facing?)
+
                     __instance.KillBoard();
                     if (showAwardScreen)
                     {
@@ -520,21 +523,21 @@ namespace ReplantedArchipelago.Patches
                 {
                     __instance.m_isImitaterUnlocked.m_value = true;
 
-                    if (!APClient.imitaterOpen)
+                    if (APClient.easyUpgradePlants || !APClient.imitaterOpen)
                     {
                         Il2CppSystem.Collections.Generic.List<ModelReference> imitaterEntries = __instance.m_imitaterEntriesModel.m_models;
                         for (int i = imitaterEntries.Count - 1; i >= 0; i--)
                         {
                             var entry = imitaterEntries[i].Model.Cast<SeedChooserEntryModel>();
 
-                            if (!APClient.HasSeedType(entry.m_chosenSeed.mSeedType))
+                            if ((!APClient.imitaterOpen && !APClient.HasSeedType(entry.m_chosenSeed.mSeedType)) || (APClient.easyUpgradePlants && Data.easyUpgradeCostAddons.ContainsKey(entry.m_chosenSeed.mSeedType)))
                             {
                                 imitaterEntries.RemoveAt(i);
                             }
                         }
                     }
                 }
-                else
+                else if (__instance.m_isImitaterUnlocked.m_value == true)
                 {
                     __instance.m_isImitaterUnlocked.m_value = false;
                 }
@@ -553,7 +556,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(SeedChooserEntryModel __instance)
             {
-                if (Data.easyUpgradeCostAddons.ContainsKey(__instance.m_chosenSeed.mSeedType))
+                if (APClient.easyUpgradePlants && Data.easyUpgradeCostAddons.ContainsKey(__instance.m_chosenSeed.mSeedType))
                 {
                     __instance.m_sunCostModel.Value += Data.easyUpgradeCostAddons[__instance.m_chosenSeed.mSeedType];
                 }

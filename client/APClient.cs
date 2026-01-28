@@ -194,7 +194,6 @@ namespace ReplantedArchipelago
                         apSession.Items.ItemReceived += RunOnItemReceived; //Set handler for any items received in this session
                         Menu.HideConnectionPanel();
 
-                        Profile.refreshRequired = true;
                         Profile.ProcessIUserService();
 
                         if (Main.cachedLevelDataModel != null)
@@ -300,11 +299,6 @@ namespace ReplantedArchipelago
             else if (item.ItemId >= 100 && item.ItemId < 200)
             {
                 chooserRefreshState = "update"; //Used to force a Seed Chooser rebuild for any plants obtained after a level has already begun
-            }
-
-            if (Data.menuUpdateItems.Contains(item.ItemId))
-            {
-                Profile.refreshRequired = true;
             }
 
             if (item.ItemId > 205 && item.ItemId < 250)

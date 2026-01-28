@@ -12,7 +12,6 @@ namespace ReplantedArchipelago.Patches
     {
         public static IUserService cachedUserService;
         public static bool profileValidated = false;
-        public static bool refreshRequired = true;
         public static int focusedLevelId = 1;
 
         public static void ProcessIUserService(IUserService userService = null) //Checks with APClient to see if anything has to be done related to the given userService
@@ -52,11 +51,10 @@ namespace ReplantedArchipelago.Patches
                 APClient.queuedUpPurchases = new List<int>();
             }
 
-            if (refreshRequired)
+            if (Main.currentScene == "Frontend")
             {
                 Main.Log("Refreshing profile...");
                 userService.SetActiveProfile(userService.ActiveUserIndex);
-                refreshRequired = false;
             }
         }
 
@@ -81,7 +79,7 @@ namespace ReplantedArchipelago.Patches
                     Main.Log("Profile Validation: Passed.");
                     profileValidated = true;
                     userService.ActiveUserProfile.mZenGardenTutorialCompleted = true; //Skip Zen Garden tutorial
-                    userService.ActiveUserProfile.mLevel = 50; //Set level to 50
+                    userService.ActiveUserProfile.mLevel = 40; //Set level to 40
                 }
                 else //Current profile does not match desired guids
                 {
@@ -108,6 +106,7 @@ namespace ReplantedArchipelago.Patches
                             RegisterNewestProfile(profiles.Last());
                             userService.SetActiveProfile(profiles.IndexOf(profiles.Last()));
                             userService.ActiveUserProfile.mZenGardenTutorialCompleted = true; //Skip Zen Garden tutorial
+                            userService.ActiveUserProfile.mLevel = 40; //Set level to 40
                             profileValidated = true;
                         }
                     }
