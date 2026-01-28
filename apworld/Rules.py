@@ -80,16 +80,16 @@ ZOMBIE_COUNTERS = {
 
 def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roof):
 
-    if level_data["type"] == "minigame" and world.minigame_unlocks[level_data["id"]] > 0:
+    if level_data["type"] == "minigame" and world.options.minigame_levels.value in [1, 2] and world.minigame_unlocks[level_data["id"]] > 0:
         if not state.has("Mini-game Level Cleared", player, world.minigame_unlocks[level_data["id"]]):
             return False
-    elif level_data["type"] == "survival" and world.survival_unlocks[level_data["id"]] > 0:
+    elif level_data["type"] == "survival" and world.options.survival_levels.value in [1, 2] and world.survival_unlocks[level_data["id"]] > 0:
         if not state.has("Survival Level Cleared", player, world.survival_unlocks[level_data["id"]]):
             return False
-    elif level_data["type"] == "puzzle" and level_data["id"] < 80:
+    elif level_data["type"] == "puzzle" and world.options.puzzle_levels.value in [1, 2] and level_data["id"] < 80:
         if not state.has("Vasebreaker Level Cleared", player, world.vasebreaker_unlocks[level_data["id"]]):
             return False
-    elif level_data["type"] == "puzzle":
+    elif level_data["type"] == "puzzle" and world.options.puzzle_levels.value in [1, 2]:
         if not state.has("I, Zombie Level Cleared", player, world.izombie_unlocks[level_data["id"]]):
             return False
     elif level_data["name"] == "Roof: Dr. Zomboss":
@@ -150,7 +150,7 @@ def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roo
             if zombie in ZOMBIE_COUNTERS:
                 if not ZOMBIE_COUNTERS[zombie](state, player, at_night, has_pool, on_roof):
                     return False
-
+    
     return True
 
 

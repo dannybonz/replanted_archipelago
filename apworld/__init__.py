@@ -37,10 +37,12 @@ class PVZRWorld(World):
     options: PVZROptions
 
     junk_pool: Dict[str, int]
-    topology_present = True
+    topology_present = False
 
     item_name_to_id = item_ids
     location_name_to_id = LOCATION_ID_FROM_NAME
+
+    ut_can_gen_without_yaml = False
 
     def pick_progression_items(self):
         progression_items = ["Roof Cleaners"]
@@ -278,6 +280,24 @@ class PVZRWorld(World):
             self.cloudy_day_unlocks = {int(k): v for k, v in slot_data["cloudy_day_unlocks"].items()}
             self.zombie_map = {int(k): v for k, v in slot_data["zombie_map"].items()}
 
+            self.options.adventure_mode_progression.value = slot_data["adventure_mode_progression"]
+            self.options.minigame_levels.value = slot_data["minigame_levels"]
+            self.options.puzzle_levels.value = slot_data["puzzle_levels"]
+            self.options.survival_levels.value = slot_data["survival_levels"]
+            self.options.cloudy_day_levels.value = slot_data["cloudy_day_levels"]
+            self.options.bonus_levels.value = slot_data["bonus_levels"]
+            self.options.easy_upgrade_plants.value = slot_data["easy_upgrade_plants"]
+
+            self.adventure_levels_goal = slot_data["adventure_levels_goal"]
+            self.adventure_areas_goal = slot_data["adventure_areas_goal"]
+            self.minigame_levels_goal = slot_data["minigame_levels_goal"]
+            self.puzzle_levels_goal = slot_data["puzzle_levels_goal"]
+            self.survival_levels_goal = slot_data["survival_levels_goal"]
+            self.cloudy_day_levels_goal = slot_data["cloudy_day_levels_goal"]
+            self.bonus_levels_goal = slot_data["bonus_levels_goal"]
+            self.adventure_areas_goal = slot_data["adventure_areas_goal"]
+            self.overall_levels_goal = slot_data["overall_levels_goal"]
+
         #Setup zombie rando
         self.modified_levels = copy.deepcopy(LEVELS)
         if (self.options.zombie_randomisation):
@@ -299,8 +319,7 @@ class PVZRWorld(World):
             self.shop_prices.append(self.random.randint(0, 40))
 
     def fill_slot_data(self) -> dict[str, Any]:
-        slot_data_dict = {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal, "easy_upgrade_plants": self.options.easy_upgrade_plants.value, "cloudy_day_levels_goal": self.cloudy_day_levels_goal, "bonus_levels_goal": self.bonus_levels_goal, "overall_levels_goal": self.overall_levels_goal, "cloudy_day_unlocks": self.cloudy_day_unlocks, "zombie_map": self.zombie_map, "minigame_levels": self.options.minigame_levels.value, "puzzle_levels": self.options.puzzle_levels.value, "survival_levels": self.options.survival_levels.value, "bonus_levels": self.options.bonus_levels.value, "cloudy_day_levels": self.options.cloudy_day_levels.value}
-        return slot_data_dict
+        return {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal, "easy_upgrade_plants": self.options.easy_upgrade_plants.value, "cloudy_day_levels_goal": self.cloudy_day_levels_goal, "bonus_levels_goal": self.bonus_levels_goal, "overall_levels_goal": self.overall_levels_goal, "cloudy_day_unlocks": self.cloudy_day_unlocks, "zombie_map": self.zombie_map, "minigame_levels": self.options.minigame_levels.value, "puzzle_levels": self.options.puzzle_levels.value, "survival_levels": self.options.survival_levels.value, "bonus_levels": self.options.bonus_levels.value, "cloudy_day_levels": self.options.cloudy_day_levels.value}
 
     @staticmethod
     def interpret_slot_data(slot_data: dict[str:Any]) -> dict[str:Any]:
