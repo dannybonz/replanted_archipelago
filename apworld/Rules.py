@@ -92,6 +92,9 @@ def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roo
     elif level_data["type"] == "puzzle" and world.options.puzzle_levels.value in [1, 2]:
         if not state.has("I, Zombie Level Cleared", player, world.izombie_unlocks[level_data["id"]]):
             return False
+    elif level_data["type"] == "cloudy" and world.options.cloudy_day_levels.value in [1, 2]:
+        if not state.has("Cloudy Day Level Cleared", player, world.cloudy_day_unlocks[level_data["id"]]):
+            return False
     elif level_data["name"] == "Roof: Dr. Zomboss":
         if world.fast_goal == False and not state.can_reach_location("Roof: Level 5-9 (Clear)", player):
             return False

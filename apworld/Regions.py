@@ -74,9 +74,9 @@ def create_regions(world: World) -> None:
             level_region = Region(level_data["name"], player, multiworld)
             level_region.locations += [PVZRLocation(player, LOCATION_NAME_FROM_ID[location], location, level_region) for location in region_locations]
 
-            if level_data["type"] in ["minigame", "bonus", "puzzle", "survival"] or (level_data["type"] == "adventure" and (level_data["name"] == "Roof: Dr. Zomboss" or (world.options.adventure_mode_progression.value == 1 and adventure_level_index % 10 == 0) or (world.options.adventure_mode_progression.value in [2, 3]))) or (level == "CloudyDay1"):
+            if level_data["type"] in ["minigame", "bonus", "puzzle", "survival", "cloudy"] or (level_data["type"] == "adventure" and (level_data["name"] == "Roof: Dr. Zomboss" or (world.options.adventure_mode_progression.value == 1 and adventure_level_index % 10 == 0) or (world.options.adventure_mode_progression.value in [2, 3]))):
                 menu_region.connect(connecting_region = level_region,  rule = make_region_rule(world, player, level_data))
-            elif level_data["type"] in ["adventure", "cloudy"]:
+            elif level_data["type"] == "adventure":
                 previous_region.connect(connecting_region = level_region,  rule = make_region_rule(world, player, level_data))
 
             level_clear_event_location = PVZRLocation(player, f"{level_data["name"]} (Level Clear)", None, level_region)
