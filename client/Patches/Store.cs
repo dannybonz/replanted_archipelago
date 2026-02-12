@@ -46,10 +46,10 @@ namespace ReplantedArchipelago.Patches
 
             for (int i = 0; i < customStoreEntries.Count; i++)
             {
-                var customEntry = new StoreEntryData();
+                StoreEntryData customEntry = new StoreEntryData();
                 CustomStoreEntry customEntryData = customStoreEntries[i];
 
-                var costArray = new Il2CppStructArray<int>(1);
+                Il2CppStructArray<int> costArray = new Il2CppStructArray<int>(1);
                 costArray[0] = customEntryData.Cost;
 
                 int pageNum = i / 8;
@@ -65,7 +65,7 @@ namespace ReplantedArchipelago.Patches
                 newEntries.Add(customEntry);
             }
 
-            var array = new Il2CppReferenceArray<StoreEntryData>(newEntries.Count);
+            Il2CppReferenceArray<StoreEntryData> array = new Il2CppReferenceArray<StoreEntryData>(newEntries.Count);
             for (int i = 0; i < newEntries.Count; i++)
                 array[i] = newEntries[i];
 
@@ -202,6 +202,10 @@ namespace ReplantedArchipelago.Patches
                     if (!DaveFlavourTexts.TryGetValue(itemClass, out flavourTexts))
                     {
                         flavourTexts = DaveFlavourTexts[ItemFlags.None];
+                    }
+                    if (DaveCrossoverTexts.ContainsKey(scoutedLocation.ItemGame))
+                    {
+                        flavourTexts = DaveCrossoverTexts[scoutedLocation.ItemGame].Concat(flavourTexts).ToArray();
                     }
                     System.Random rnd = new System.Random();
                     string flavourText = flavourTexts[rnd.Next(flavourTexts.Length)];

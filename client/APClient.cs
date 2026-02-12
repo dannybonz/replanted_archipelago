@@ -13,8 +13,8 @@ using Newtonsoft.Json.Linq;
 using ReplantedArchipelago.Patches;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+using static ReplantedArchipelago.Data;
 
 namespace ReplantedArchipelago
 {
@@ -32,6 +32,7 @@ namespace ReplantedArchipelago
         public static int displayedIngameMessages = 0;
         public static string genVersion;
         public static DeathLinkService deathLinkService;
+        public static List<SeedType> preferredSeeds = new List<SeedType>();
 
         public static Dictionary<string, object> slotData;
         public static JArray musicMap;
@@ -63,6 +64,11 @@ namespace ReplantedArchipelago
         public static int cloudyDayLevels;
         public static int bonusLevels;
         public static JObject zombieMap;
+        public static JObject sunPrices;
+        public static JObject rechargeTimes;
+        public static JObject firingRates;
+        public static JObject projectileDamages;
+        public static JObject plantHealths;
 
         public static bool hugeWaveChecks;
 
@@ -98,10 +104,10 @@ namespace ReplantedArchipelago
             }
             else
             {
-                var loginSuccess = (LoginSuccessful)result;
+                LoginSuccessful loginSuccess = (LoginSuccessful)result;
                 slotData = loginSuccess.SlotData;
 
-                genVersion = ((double)slotData["gen_version"]).ToString(CultureInfo.InvariantCulture);
+                genVersion = (string)slotData["gen_version"];
 
                 if (genVersion != Data.GenVersion) //Version mismatch
                 {
@@ -142,6 +148,11 @@ namespace ReplantedArchipelago
                     bonusLevelsGoal = Convert.ToInt32(slotData["bonus_levels_goal"]);
                     overallLevelsGoal = Convert.ToInt32(slotData["overall_levels_goal"]);
                     zombieMap = (JObject)slotData["zombie_map"];
+                    sunPrices = (JObject)slotData["sun_prices"];
+                    rechargeTimes = (JObject)slotData["recharge_times"];
+                    firingRates = (JObject)slotData["firing_rates"];
+                    projectileDamages = (JObject)slotData["projectile_damages"];
+                    plantHealths = (JObject)slotData["plant_healths"];
 
                     adventureProgression = Convert.ToInt32(slotData["adventure_mode_progression"]);
                     minigameLevels = Convert.ToInt32(slotData["minigame_levels"]);
@@ -182,6 +193,54 @@ namespace ReplantedArchipelago
                         deathLinkService = apSession.CreateDeathLinkService();
                         deathLinkService.OnDeathLinkReceived += HandleDeathLink;
                         deathLinkService.EnableDeathLink();
+                    }
+
+                    //Set up plant stats
+                    foreach (var plant in Data.plantStats)
+                    {
+                        SeedType theSeedType = plant.Key;
+                        PlantStats theStats = plant.Value;
+                        string plantIndex = Array.FindIndex(seedTypes, seedType => seedType == theSeedType).ToString();
+                        string statsString = "";
+                        if (sunPrices.ContainsKey(plantIndex))
+                        {
+                            statsString += Data.FormatPlantStatChanges("Cost", theStats.Cost, (double)sunPrices[plantIndex], false);
+                            theStats.Cost = (int)sunPrices[plantIndex];
+                        }
+                        if (rechargeTimes.ContainsKey(plantIndex))
+                        {
+                            statsString += Data.FormatPlantStatChanges("Refresh", theStats.Refresh, (double)rechargeTimes[plantIndex], false);
+                            theStats.Refresh = (int)rechargeTimes[plantIndex];
+                        }
+                        if (plantHealths.ContainsKey(plantIndex))
+                        {
+                            statsString += Data.FormatPlantStatChanges("Toughness", theStats.Health, (double)plantHealths[plantIndex], true);
+                            theStats.Health = (int)plantHealths[plantIndex];
+                        }
+                        if (firingRates.ContainsKey(plantIndex))
+                        {
+                            statsString += Data.FormatPlantStatChanges("Rate", theStats.Rate, (double)firingRates[plantIndex], true);
+                            theStats.Rate = (int)firingRates[plantIndex];
+                        }
+                        if (theStats.Projectiles != null)
+                        {
+                            foreach (string projectileName in theStats.Projectiles)
+                            {
+                                ProjectileStats theProjectileStats = Data.projectileStats[projectileName];
+                                string projectileIndex = Array.FindIndex(Data.projectileTypes, projectileType => projectileType == theProjectileStats.ProjectileType).ToString();
+                                if (projectileDamages.ContainsKey(projectileIndex))
+                                {
+                                    string damageName = "Damage";
+                                    if (theStats.Projectiles.Count > 1)
+                                    {
+                                        damageName = $"{projectileName} Damage";
+                                    }
+                                    statsString += Data.FormatPlantStatChanges(damageName, theProjectileStats.OldDamage, (double)projectileDamages[projectileIndex], true);
+                                    theProjectileStats.Damage = (int)projectileDamages[projectileIndex];
+                                }
+                            }
+                        }
+                        theStats.StatsString = statsString;
                     }
 
                     currentlyConnected = true; //Connection successful!
@@ -569,8 +628,7 @@ namespace ReplantedArchipelago
 
         public static int GetHowManyPlants(long[] extraPlants, long[] bannedPlants)
         {
-            var availablePlants = receivedItems.Where(item => item >= 100 && item < 200).Union(extraPlants).Except(bannedPlants).Distinct().Count();
-            return availablePlants;
+            return receivedItems.Where(item => item >= 100 && item < 200).Union(extraPlants).Except(bannedPlants).Distinct().Count();
         }
 
         public static ItemFlags GetPrimaryItemClassification(ItemFlags Flags)

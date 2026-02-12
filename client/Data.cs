@@ -4,7 +4,9 @@ using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using Il2CppReloaded.TreeStateActivities;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace ReplantedArchipelago
@@ -12,7 +14,7 @@ namespace ReplantedArchipelago
     public class Data
     {
         //Version to match with generation
-        public static string GenVersion = "1.3";
+        public static string GenVersion = "1.4";
         //Whether cheat keys are enabled
         public static bool CheatKeys = false;
 
@@ -153,23 +155,146 @@ namespace ReplantedArchipelago
             { 5, CoinType.Almanac }
         };
 
-        public static Dictionary<SeedType, int> easyUpgradeCostAddons = new Dictionary<SeedType, int> //Costs of each upgrade's base form to be added on for "easy upgrade" mode
-        {
-            { SeedType.Gatlingpea, 200 },
-            { SeedType.Twinsunflower, 50 },
-            { SeedType.Gloomshroom, 75 },
-            { SeedType.Cattail, 25 },
-            { SeedType.Wintermelon, 300 },
-            { SeedType.GoldMagnet, 100 },
-            { SeedType.Spikerock, 100 },
-            { SeedType.Cobcannon, 200 },
-        };
-
         //Common Game Data
         public static SeedType[] seedTypes = { SeedType.Peashooter, SeedType.Sunflower, SeedType.Cherrybomb, SeedType.Wallnut, SeedType.Potatomine, SeedType.Snowpea, SeedType.Chomper, SeedType.Repeater, SeedType.Puffshroom, SeedType.Sunshroom, SeedType.Fumeshroom, SeedType.Gravebuster, SeedType.Hypnoshroom, SeedType.Scaredyshroom, SeedType.Iceshroom, SeedType.Doomshroom, SeedType.Lilypad, SeedType.Squash, SeedType.Threepeater, SeedType.Tanglekelp, SeedType.Jalapeno, SeedType.Spikeweed, SeedType.Torchwood, SeedType.Tallnut, SeedType.Seashroom, SeedType.Plantern, SeedType.Cactus, SeedType.Blover, SeedType.Splitpea, SeedType.Starfruit, SeedType.Pumpkinshell, SeedType.Magnetshroom, SeedType.Cabbagepult, SeedType.Flowerpot, SeedType.Kernelpult, SeedType.InstantCoffee, SeedType.Garlic, SeedType.Umbrella, SeedType.Marigold, SeedType.Melonpult, SeedType.Gatlingpea, SeedType.Twinsunflower, SeedType.Gloomshroom, SeedType.Cattail, SeedType.Wintermelon, SeedType.GoldMagnet, SeedType.Spikerock, SeedType.Cobcannon, SeedType.Imitater };
         public static MusicTune[] musicTunes = { MusicTune.DayGrasswalk, MusicTune.MinigameLoonboon, MusicTune.Conveyer, MusicTune.NightMoongrains, MusicTune.PoolWaterygraves, MusicTune.FogRigormormist, MusicTune.RoofGrazetheroof, MusicTune.FinalBossBrainiacManiac, MusicTune.PuzzleCerebrawl };
         public static Dictionary<string, int[]> levelOrders = new Dictionary<string, int[]>();
         public static Dictionary<string, LevelEntryData[]> orderedLevelEntries = new Dictionary<string, LevelEntryData[]>();
+        public static ProjectileType[] projectileTypes = { ProjectileType.Pea, ProjectileType.Snowpea, ProjectileType.Cabbage, ProjectileType.Melon, ProjectileType.Puff, ProjectileType.Wintermelon, ProjectileType.Star, ProjectileType.Spike, ProjectileType.Kernel, ProjectileType.Butter };
+        public static string[] plantNames = { "Peashooter", "Sunflower", "Cherry Bomb", "Wall-nut", "Potato Mine", "Snow Pea", "Chomper", "Repeater", "Puff-shroom", "Sun-shroom", "Fume-shroom", "Grave Buster", "Hypno-shroom", "Scaredy-shroom", "Ice-shroom", "Doom-shroom", "Lily Pad", "Squash", "Threepeater", "Tangle Kelp", "Jalapeno", "Spikeweed", "Torchwood", "Tall-nut", "Sea-shroom", "Plantern", "Cactus", "Blover", "Split Pea", "Starfruit", "Pumpkin", "Magnet-shroom", "Cabbage-pult", "Flower Pot", "Kernel-pult", "Coffee Bean", "Garlic", "Umbrella Leaf", "Marigold", "Melon-pult", "Gatling Pea", "Twin Sunflower", "Gloom-shroom", "Cattail", "Winter Melon", "Gold Magnet", "Spikerock", "Cob Cannon", "Imitater" };
+
+        //Plant stats
+        public class PlantStats
+        {
+            public int Cost { get; set; }
+            public int Refresh { get; set; }
+            public int Rate { get; set; }
+            public int Health { get; set; }
+            public List<string> Projectiles { get; set; }
+            public int EasyUpgradeCost { get; set; }
+            public string StatsString { get; set; }
+        }
+
+        public static Dictionary<SeedType, PlantStats> plantStats = new Dictionary<SeedType, PlantStats>
+        {
+            [SeedType.Peashooter] = new PlantStats { Cost = 100, Refresh = 750, Rate = 150, Health = 300, Projectiles = new List<string> { "Pea" } },
+            [SeedType.Sunflower] = new PlantStats { Cost = 50, Refresh = 750, Rate = 2500, Health = 300 },
+            [SeedType.Cherrybomb] = new PlantStats { Cost = 150, Refresh = 5000 },
+            [SeedType.Wallnut] = new PlantStats { Cost = 50, Refresh = 3000, Health = 4000 },
+            [SeedType.Potatomine] = new PlantStats { Cost = 25, Refresh = 3000, Health = 300 },
+            [SeedType.Snowpea] = new PlantStats { Cost = 175, Refresh = 750, Rate = 150, Health = 300, Projectiles = new List<string> { "Frozen Pea" } },
+            [SeedType.Chomper] = new PlantStats { Cost = 150, Refresh = 750, Health = 300 },
+            [SeedType.Repeater] = new PlantStats { Cost = 200, Refresh = 750, Rate = 150, Health = 300, Projectiles = new List<string> { "Pea" } },
+            [SeedType.Puffshroom] = new PlantStats { Cost = 0, Refresh = 750, Rate = 150, Health = 300, Projectiles = new List<string> { "Spore" } },
+            [SeedType.Sunshroom] = new PlantStats { Cost = 25, Refresh = 750, Rate = 2500, Health = 300 },
+            [SeedType.Fumeshroom] = new PlantStats { Cost = 75, Refresh = 750, Rate = 150, Health = 300 },
+            [SeedType.Gravebuster] = new PlantStats { Cost = 75, Refresh = 750, Health = 300 },
+            [SeedType.Hypnoshroom] = new PlantStats { Cost = 75, Refresh = 3000, Health = 300 },
+            [SeedType.Scaredyshroom] = new PlantStats { Cost = 25, Refresh = 750, Rate = 150, Health = 300, Projectiles = new List<string> { "Spore" } },
+            [SeedType.Iceshroom] = new PlantStats { Cost = 75, Refresh = 5000, Health = 300 },
+            [SeedType.Doomshroom] = new PlantStats { Cost = 125, Refresh = 5000, Health = 300 },
+            [SeedType.Lilypad] = new PlantStats { Cost = 25, Refresh = 750, Health = 300 },
+            [SeedType.Squash] = new PlantStats { Cost = 50, Refresh = 3000 },
+            [SeedType.Threepeater] = new PlantStats { Cost = 325, Refresh = 750, Rate = 150, Health = 300, Projectiles = new List<string> { "Pea" } },
+            [SeedType.Tanglekelp] = new PlantStats { Cost = 25, Refresh = 3000 },
+            [SeedType.Jalapeno] = new PlantStats { Cost = 125, Refresh = 5000 },
+            [SeedType.Spikeweed] = new PlantStats { Cost = 100, Refresh = 750, Health = 300 },
+            [SeedType.Torchwood] = new PlantStats { Cost = 175, Refresh = 750, Health = 300 },
+            [SeedType.Tallnut] = new PlantStats { Cost = 125, Refresh = 3000, Health = 8000 },
+            [SeedType.Seashroom] = new PlantStats { Cost = 0, Refresh = 3000, Rate = 150, Health = 300, Projectiles = new List<string> { "Spore" } },
+            [SeedType.Plantern] = new PlantStats { Cost = 25, Refresh = 3000, Health = 300 },
+            [SeedType.Cactus] = new PlantStats { Cost = 125, Refresh = 750, Rate = 150, Health = 300, Projectiles = new List<string> { "Spike" } },
+            [SeedType.Blover] = new PlantStats { Cost = 100, Refresh = 750 },
+            [SeedType.Splitpea] = new PlantStats { Cost = 125, Refresh = 750, Rate = 150, Health = 300, Projectiles = new List<string> { "Pea" } },
+            [SeedType.Starfruit] = new PlantStats { Cost = 125, Refresh = 750, Rate = 150, Health = 300, Projectiles = new List<string> { "Star" } },
+            [SeedType.Pumpkinshell] = new PlantStats { Cost = 125, Refresh = 3000, Health = 4000 },
+            [SeedType.Magnetshroom] = new PlantStats { Cost = 100, Refresh = 750, Health = 300 },
+            [SeedType.Cabbagepult] = new PlantStats { Cost = 100, Refresh = 750, Rate = 300, Health = 300, Projectiles = new List<string> { "Cabbage" } },
+            [SeedType.Flowerpot] = new PlantStats { Cost = 25, Refresh = 750, Health = 300 },
+            [SeedType.Kernelpult] = new PlantStats { Cost = 100, Refresh = 750, Rate = 300, Health = 300, Projectiles = new List<string> { "Kernel", "Butter" } },
+            [SeedType.InstantCoffee] = new PlantStats { Cost = 75, Refresh = 750 },
+            [SeedType.Garlic] = new PlantStats { Cost = 50, Refresh = 750, Health = 400 },
+            [SeedType.Umbrella] = new PlantStats { Cost = 100, Refresh = 750, Health = 300 },
+            [SeedType.Marigold] = new PlantStats { Cost = 50, Refresh = 3000, Rate = 2500, Health = 300 },
+            [SeedType.Melonpult] = new PlantStats { Cost = 300, Refresh = 750, Rate = 300, Health = 300, Projectiles = new List<string> { "Melon" } },
+            [SeedType.Gatlingpea] = new PlantStats { Cost = 250, Refresh = 5000, Rate = 150, Health = 300, Projectiles = new List<string> { "Pea" }, EasyUpgradeCost = 450 },
+            [SeedType.Twinsunflower] = new PlantStats { Cost = 150, Refresh = 5000, Rate = 2500, Health = 300, EasyUpgradeCost = 200 },
+            [SeedType.Gloomshroom] = new PlantStats { Cost = 150, Refresh = 5000, Rate = 200, Health = 300, EasyUpgradeCost = 225 },
+            [SeedType.Cattail] = new PlantStats { Cost = 225, Refresh = 5000, Rate = 150, Health = 300, Projectiles = new List<string> { "Spike" }, EasyUpgradeCost = 250 },
+            [SeedType.Wintermelon] = new PlantStats { Cost = 200, Refresh = 5000, Rate = 300, Health = 300, Projectiles = new List<string> { "Frozen Melon" }, EasyUpgradeCost = 500 },
+            [SeedType.GoldMagnet] = new PlantStats { Cost = 50, Refresh = 5000, Health = 300, EasyUpgradeCost = 150 },
+            [SeedType.Spikerock] = new PlantStats { Cost = 125, Refresh = 5000, Health = 450, EasyUpgradeCost = 450 },
+            [SeedType.Cobcannon] = new PlantStats { Cost = 500, Refresh = 5000, Rate = 600, Health = 300, EasyUpgradeCost = 700 }
+        };
+
+        public static SeedType[] upgradePlants = { SeedType.Gatlingpea, SeedType.Twinsunflower, SeedType.Gloomshroom, SeedType.Cattail, SeedType.Wintermelon, SeedType.GoldMagnet, SeedType.Spikerock, SeedType.Cobcannon };
+
+        //Projectile Stats
+        public class ProjectileStats
+        {
+            public int Damage { get; set; }
+            public ProjectileType ProjectileType { get; set; }
+            public int OldDamage { get; set; }
+            public ProjectileStats(int damage, ProjectileType type)
+            {
+                Damage = damage;
+                OldDamage = damage; // set baseline once
+                ProjectileType = type;
+            }
+        }
+
+        public static Dictionary<string, ProjectileStats> projectileStats = new Dictionary<string, ProjectileStats>
+        {
+            ["Pea"] = new ProjectileStats(20, ProjectileType.Pea),
+            ["Frozen Pea"] = new ProjectileStats(20, ProjectileType.Snowpea),
+            ["Cabbage"] = new ProjectileStats(40, ProjectileType.Cabbage),
+            ["Melon"] = new ProjectileStats(80, ProjectileType.Melon),
+            ["Spore"] = new ProjectileStats(20, ProjectileType.Puff),
+            ["Frozen Melon"] = new ProjectileStats(80, ProjectileType.Wintermelon),
+            ["Star"] = new ProjectileStats(20, ProjectileType.Star),
+            ["Spike"] = new ProjectileStats(20, ProjectileType.Spike),
+            ["Kernel"] = new ProjectileStats(20, ProjectileType.Kernel),
+            ["Butter"] = new ProjectileStats(40, ProjectileType.Butter)
+        };
+
+        public static string FormatPlantStatChanges(string label, double oldValue, double newValue, bool upIsGood)
+        {
+            double multiplier = newValue / oldValue;
+            if (label == "Rate")
+            {
+                multiplier = 1 / multiplier; //Invert the firing rate multiplier for clarity
+            }
+            if (oldValue == newValue)
+            {
+                multiplier = 1;
+            }
+
+            string textColor = "<color=black>◌ ";
+            if (multiplier > 1)
+            {
+                if (upIsGood)
+                {
+                    textColor = "<color=#00B400>↑ ";
+                }
+                else
+                {
+                    textColor = "<color=#B40000>↑ ";
+                }
+            }
+            else if (multiplier < 1)
+            {
+                if (upIsGood)
+                {
+                    textColor = "<color=#B40000>↓ ";
+                }
+                else
+                {
+                    textColor = "<color=#00B400>↓ ";
+                }
+            }
+
+            return $"{textColor}{label} x{multiplier:F2}</color><br>";
+        }
 
         public static System.Collections.Generic.Dictionary<ZombieType, string> zombieTypeNames = new System.Collections.Generic.Dictionary<ZombieType, string>
         {
@@ -478,7 +603,15 @@ namespace ReplantedArchipelago
                 "It probably won't amount to much, but that's what they said about me!",
                 "It tastes like dirt! It's around the same price, too.",
                 "It's called filler, but I still feel hungry!",
-                "It's about as useful as a Wall-nut is against a Zomboni.",
+                "It's about as useful as a Wall-nut is against a Zomboni."
+            }
+        };
+
+        public static Dictionary<string, string[]> DaveCrossoverTexts = new Dictionary<string, string[]>
+        {
+            ["K-On! After School Live!!"] = new[] {
+                "Imported straight from Kyoto!",
+                "Undead things are fun!"
             }
         };
 
@@ -530,7 +663,7 @@ namespace ReplantedArchipelago
 
         public static Sprite FindSpriteByName(string spriteName)
         {
-            foreach (var sprite in Resources.FindObjectsOfTypeAll<Sprite>())
+            foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
             {
                 if (sprite.name == spriteName)
                 {
@@ -538,6 +671,28 @@ namespace ReplantedArchipelago
                 }
             }
             return null;
+        }
+
+        private static byte[] LoadEmbeddedResource(string resourceName)
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            Stream stream = assembly.GetManifestResourceStream(resourceName);
+            MemoryStream memoryStream = new MemoryStream();
+
+            stream.CopyTo(memoryStream);
+            return memoryStream.ToArray();
+        }
+
+        public static Sprite LoadEmbeddedSprite(string resourceName, int pixelsPerUnit)
+        {
+            byte[] data = LoadEmbeddedResource(resourceName);
+
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            texture.LoadImage(data);
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+
+            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
         }
 
         public static string GetTransitionNameFromLevelId(int levelId)

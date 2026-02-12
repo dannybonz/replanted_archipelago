@@ -56,7 +56,7 @@ namespace ReplantedArchipelago.Patches
                 Profile.ProcessIUserService(__instance.m_userService);
 
                 //Cheat keys
-                var board = __instance.m_board; //Represents the lawn and its contents
+                Board board = __instance.m_board; //Represents the lawn and its contents
                 if (Data.CheatKeys)
                 {
                     //Instant Level Win - F1
@@ -130,6 +130,50 @@ namespace ReplantedArchipelago.Patches
                 if (board.mTutorialState != TutorialState.Off)
                 {
                     board.SetTutorialState(TutorialState.Off);
+                }
+
+                if (__instance.GameScene == GameScenes.LevelIntro && __instance.Board.mSeedBank.mIsChoosing)
+                {
+                    if (APClient.rechargeTimes.Count > 0)
+                    {
+                        Menu.AddCustomTooltips();
+                    }
+
+                    if (APClient.preferredSeeds.Count > 0 || board.SeedBanks[0].mSeedPackets[0].mPacketType != SeedType.None)
+                    {
+                        Menu.RepickUI.Activate();
+                        if (Input.GetKeyDown(KeyCode.R) || Menu.RepickUI.repickRequested || Input.GetKeyDown(KeyCode.JoystickButton3))
+                        {
+                            Menu.RepickUI.repickRequested = false;
+                            if (board.SeedBanks[0].mSeedPackets[0].mPacketType != SeedType.None) //If there are already seeds in the bank, empty it instead
+                            {
+                                foreach (ChosenSeed seed in __instance.m_seedChooserScreen.mChosenSeeds)
+                                {
+                                    if (seed.mSeedState == ChosenSeedState.SeedInBank)
+                                    {
+                                        __instance.m_seedChooserScreen.ClickedSeedInBank(seed, 0);
+                                        __instance.m_seedChooserScreen.LandAllFlyingSeeds();
+                                    }
+                                }
+                            }
+                            else //Otherwise auto re-pick
+                            {
+                                foreach (SeedType seedType in APClient.preferredSeeds)
+                                {
+                                    if (seedType != SeedType.None)
+                                    {
+                                        ChosenSeed seed = __instance.m_seedChooserScreen.GetChosenSeedFromType(seedType);
+                                        __instance.m_seedChooserScreen.ClickedSeedInChooser(seed, 0);
+                                        __instance.m_seedChooserScreen.LandAllFlyingSeeds();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Menu.RepickUI.Hide();
+                    }
                 }
 
                 if (__instance.GameScene == GameScenes.Playing && Main.QueuedIngameMessages.Count > 0 && board.mAdvice.mDuration == 0) //If there are queued up AP messages to display
@@ -478,7 +522,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(Board __instance, ref bool __result)
             {
-                var app = __instance.mApp;
+                GameplayActivity app = __instance.mApp;
                 if (!app.IsChallengeWithoutSeedBank() &&
                     !__instance.HasConveyorBeltSeedBank() &&
                     app.GameMode != GameMode.ChallengeIce &&
@@ -601,7 +645,7 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
-        [HarmonyPatch(typeof(StormyNightLightningController), nameof(StormyNightLightningController._setAlpha))] //Disable the award screen for puzzles
+        [HarmonyPatch(typeof(StormyNightLightningController), nameof(StormyNightLightningController._setAlpha))] //Disable storm flashes
         public static class DrawStormPatch
         {
             private static bool Prefix()
@@ -704,30 +748,6 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
-        [HarmonyPatch(typeof(SeedPacket), nameof(SeedPacket.GetCost))]
-        public static class PacketCostPatch
-        {
-            private static void Postfix(SeedPacket __instance, ref int __result)
-            {
-                if (APClient.easyUpgradePlants && Data.easyUpgradeCostAddons.ContainsKey(__instance.mPacketType))
-                {
-                    __result += Data.easyUpgradeCostAddons[__instance.mPacketType];
-                }
-            }
-        }
-
-        [HarmonyPatch(typeof(Plant), nameof(Plant.GetCost))]
-        public static class PlantCostPatch
-        {
-            private static void Postfix(Plant __instance, GameplayActivity gLawnApp, SeedType theSeedType, SeedType theImitaterType, ref int __result)
-            {
-                if (APClient.easyUpgradePlants && Data.easyUpgradeCostAddons.ContainsKey(theSeedType))
-                {
-                    __result += Data.easyUpgradeCostAddons[theSeedType];
-                }
-            }
-        }
-
         [HarmonyPatch(typeof(CutScene), nameof(CutScene.StartZombiesLost))]
         public static class ZombiesLostPatch
         {
@@ -800,9 +820,94 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(GameplayActivity __instance, ref ZombieDefinition __result)
             {
+                __result.m_firstLevel = -1;
                 if (__result.ZombieType == ZombieType.PeaHead && __instance.GameMode != GameMode.ChallengeWarAndPeas && __instance.GameMode != GameMode.ChallengeWarAndPeas2)
                 {
-                    __result.m_weight = 4; //Re-weights Peahead to not be so pervasive with Zombie rando enabled - we could also use this in future for Zombie value rando
+                    __result.m_value = 3; //Re-weights Peahead to not be so pervasive with Zombie rando enabled - we could also use this in future for Zombie value rando
+                }
+                if (__result.ZombieType == ZombieType.TrashCan)
+                {
+                    __result.m_weight = 4000; //Makes Trash Can Zombie eligible to spawn
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Board), nameof(Board.StartLevel))]
+        public static class StartLevelPatch
+        {
+            private static void Postfix(Board __instance)
+            {
+                if (__instance.ChooseSeedsOnCurrentLevel())
+                {
+                    APClient.preferredSeeds = new System.Collections.Generic.List<SeedType>();
+                    foreach (SeedPacket seedPacket in __instance.SeedBanks[0].mSeedPackets)
+                    {
+                        if (seedPacket.mImitaterType == SeedType.None)
+                        {
+                            APClient.preferredSeeds.Add(seedPacket.mPacketType);
+                        }
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.GetPlantDefinition))]
+        public static class GetPlantDefinitionPatch
+        {
+            private static void Postfix(GameplayActivity __instance, ref PlantDefinition __result)
+            {
+                if (__result != null && APClient.sunPrices.Count > 0 && __instance.Board != null && __instance.Board.ChooseSeedsOnCurrentLevel())
+                {
+                    SeedType theSeedType = __result.m_seedType;
+                    if (Data.plantStats.ContainsKey(theSeedType))
+                    {
+                        Data.PlantStats theStats = Data.plantStats[theSeedType];
+                        __result.m_seedCost = theStats.Cost;
+                        __result.m_refreshTime = theStats.Refresh;
+                        __result.m_launchRate = theStats.Rate;
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.GetProjectileDefinition))]
+        public static class GetProjectileDefinitionPatch
+        {
+            private static void Postfix(GameplayActivity __instance, ref ProjectileDefinition __result)
+            {
+                if (__result != null && APClient.projectileDamages.Count > 0 && __instance.Board != null && __instance.Board.ChooseSeedsOnCurrentLevel())
+                {
+                    ProjectileType theProjectileType = __result.m_projectileType;
+                    if (Data.projectileTypes.Contains(theProjectileType))
+                    {
+                        string projectileIndex = Array.FindIndex(Data.projectileTypes, projectileType => projectileType == theProjectileType).ToString();
+                        if (APClient.projectileDamages.ContainsKey(projectileIndex))
+                        {
+                            __result.m_damage = (int)APClient.projectileDamages[projectileIndex];
+                        }
+                    }
+                    else if (theProjectileType == ProjectileType.Fireball && APClient.projectileDamages.ContainsKey("0"))
+                    {
+                        __result.m_damage = ((int)APClient.projectileDamages[0]) * 2;
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Plant), nameof(Plant.PlantInitialize))]
+        public static class PlantInitializePatch
+        {
+            private static void Postfix(Plant __instance)
+            {
+                if (APClient.plantHealths.Count > 0 && __instance.mBoard != null && __instance.mSeedType != null && __instance.mBoard.ChooseSeedsOnCurrentLevel())
+                {
+                    SeedType theSeedType = __instance.mSeedType;
+                    if (Data.plantStats.ContainsKey(theSeedType))
+                    {
+                        Data.PlantStats theStats = Data.plantStats[theSeedType];
+                        __instance.mPlantMaxHealth = theStats.Health;
+                        __instance.mPlantHealth = theStats.Health;
+                    }
                 }
             }
         }

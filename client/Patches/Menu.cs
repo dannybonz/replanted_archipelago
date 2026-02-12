@@ -5,6 +5,7 @@ using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using Il2CppReloaded.TreeStateActivities;
 using Il2CppReloaded.UI;
+using Il2CppSource.Binders;
 using Il2CppSource.DataModels;
 using Il2CppSource.TreeStateActivities;
 using Il2CppSource.Utils;
@@ -13,6 +14,7 @@ using Il2CppTekly.DataModels.Models;
 using Il2CppTekly.Localizations;
 using Il2CppTMPro;
 using Il2CppUI.Scripts;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -35,13 +37,13 @@ namespace ReplantedArchipelago.Patches
 
         public static GameObject RemoveUnwantedComponents(GameObject gameObject, bool aggressive)
         {
-            foreach (var localizer in gameObject.GetComponentsInChildren<TextLocalizer>())
+            foreach (TextLocalizer localizer in gameObject.GetComponentsInChildren<TextLocalizer>())
                 GameObject.Destroy(localizer);
             if (aggressive)
             {
-                foreach (var binder in gameObject.GetComponentsInChildren<InputBinder>())
+                foreach (InputBinder binder in gameObject.GetComponentsInChildren<InputBinder>())
                     GameObject.Destroy(binder);
-                foreach (var selectable in gameObject.GetComponentsInChildren<Selectable>())
+                foreach (Selectable selectable in gameObject.GetComponentsInChildren<Selectable>())
                     GameObject.Destroy(selectable);
             }
             return gameObject;
@@ -187,7 +189,7 @@ namespace ReplantedArchipelago.Patches
             Button okButton = center.Find("Buttons/P_BacicButton_OK").GetComponent<Button>();
             okButton.onClick.RemoveAllListeners();
             okButton.onClick.AddListener((Action)ConnectButtonPressed);
-            foreach (var localizer in center.Find("Buttons/P_BacicButton_OK").GetComponentsInChildren<TextLocalizer>())
+            foreach (TextLocalizer localizer in center.Find("Buttons/P_BacicButton_OK").GetComponentsInChildren<TextLocalizer>())
                 GameObject.Destroy(localizer);
 
             GameObject.Destroy(center.Find("Buttons/P_BacicButton_Cancel").gameObject);
@@ -340,17 +342,17 @@ namespace ReplantedArchipelago.Patches
             clientLogsRect.anchoredPosition = Vector2.zero;
             clientLogsRect.sizeDelta = Vector2.zero;
 
-            var layout = clientLogsContainer.AddComponent<VerticalLayoutGroup>();
+            VerticalLayoutGroup layout = clientLogsContainer.AddComponent<VerticalLayoutGroup>();
             layout.childAlignment = TextAnchor.UpperLeft;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            var fitter = clientLogsContainer.AddComponent<ContentSizeFitter>();
+            ContentSizeFitter fitter = clientLogsContainer.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            var scrollRect = main.gameObject.AddComponent<ScrollRect>();
+            ScrollRect scrollRect = main.gameObject.AddComponent<ScrollRect>();
             scrollRect.viewport = insetRect;
             scrollRect.content = clientLogsRect;
             scrollRect.horizontal = false;
@@ -432,15 +434,15 @@ namespace ReplantedArchipelago.Patches
 
             //Alternating background colour
             darkerLog = !darkerLog;
-            foreach (var img in entry.GetComponentsInChildren<UnityEngine.UI.Image>())
+            foreach (Image img in entry.GetComponentsInChildren<Image>())
             {
                 if (darkerLog)
                 {
-                    img.color = new UnityEngine.Color(0f, 0f, 0f, 1f);
+                    img.color = new Color(0f, 0f, 0f, 1f);
                 }
                 else
                 {
-                    img.color = new UnityEngine.Color(0f, 0f, 0f, 0.0f);
+                    img.color = new Color(0f, 0f, 0f, 0.0f);
                 }
             }
 
@@ -466,7 +468,7 @@ namespace ReplantedArchipelago.Patches
             button.name = label;
             button.GetComponentInChildren<TextMeshProUGUI>().text = label;
 
-            var buttonComponent = button.GetComponent<Button>();
+            Button buttonComponent = button.GetComponent<Button>();
             buttonComponent.onClick.RemoveAllListeners();
             buttonComponent.onClick.AddListener(onClick);
             return button;
@@ -521,16 +523,14 @@ namespace ReplantedArchipelago.Patches
 
                 if (APClient.HasSeedType(SeedType.Imitater))
                 {
-                    __instance.m_isImitaterUnlocked.m_value = true;
-
                     if (APClient.easyUpgradePlants || !APClient.imitaterOpen)
                     {
                         Il2CppSystem.Collections.Generic.List<ModelReference> imitaterEntries = __instance.m_imitaterEntriesModel.m_models;
                         for (int i = imitaterEntries.Count - 1; i >= 0; i--)
                         {
-                            var entry = imitaterEntries[i].Model.Cast<SeedChooserEntryModel>();
+                            SeedChooserEntryModel entry = imitaterEntries[i].Model.Cast<SeedChooserEntryModel>();
 
-                            if ((!APClient.imitaterOpen && !APClient.HasSeedType(entry.m_chosenSeed.mSeedType)) || (APClient.easyUpgradePlants && Data.easyUpgradeCostAddons.ContainsKey(entry.m_chosenSeed.mSeedType)))
+                            if ((!APClient.imitaterOpen && !APClient.HasSeedType(entry.m_chosenSeed.mSeedType)) || (APClient.easyUpgradePlants && Data.upgradePlants.Contains(entry.m_chosenSeed.mSeedType)))
                             {
                                 imitaterEntries.RemoveAt(i);
                             }
@@ -556,9 +556,10 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(SeedChooserEntryModel __instance)
             {
-                if (APClient.easyUpgradePlants && Data.easyUpgradeCostAddons.ContainsKey(__instance.m_chosenSeed.mSeedType))
+                SeedType theSeedType = __instance.m_chosenSeed.mSeedType;
+                if (Data.plantStats.ContainsKey(theSeedType))
                 {
-                    __instance.m_sunCostModel.Value += Data.easyUpgradeCostAddons[__instance.m_chosenSeed.mSeedType];
+                    __instance.m_sunCostModel.Value = Data.plantStats[theSeedType].Cost;
                 }
             }
         }
@@ -573,26 +574,23 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
+        [HarmonyPatch(typeof(SeedChooserScreen), nameof(SeedChooserScreen.OnStartButton))] //Triggers when displaying a warning after seed selection
+        public static class OnStartButtonPatch
+        {
+            private static void Postfix()
+            {
+                RepickUI.Hide();
+            }
+        }
 
         [HarmonyPatch(typeof(TransitionWhenFocusLostActivity), nameof(TransitionWhenFocusLostActivity.OnPlatformFocusChanged))] //Prevent focus change from pausing game
-        internal static class IgnoreFocusChangePatch
+        public static class IgnoreFocusChangePatch
         {
-            [HarmonyPrefix]
             private static bool Prefix()
             {
                 return false;
             }
         }
-
-        [HarmonyPatch(typeof(LevelSelectScreen), nameof(LevelSelectScreen.ShowReachedCarouselIfInLevelSelect))]
-        public class ShowReachedCarouselPatch
-        {
-            private static bool Prefix(LevelSelectScreen __instance)
-            {
-                return false;
-            }
-        }
-
 
         [HarmonyPatch(typeof(LevelSelectScreen), nameof(LevelSelectScreen.OnEnterLevelSelect))]
         public class LevelSelectEnterPatch
@@ -625,7 +623,7 @@ namespace ReplantedArchipelago.Patches
                             int levelId = levelPosition;
                             if (x == 5 && APClient.cloudyDayLevels == 2)
                             {
-                                foreach (var property in APClient.cloudyDayUnlocks.Properties())
+                                foreach (JProperty property in APClient.cloudyDayUnlocks.Properties())
                                 {
                                     if ((int)property.Value == levelId - 109)
                                     {
@@ -658,9 +656,24 @@ namespace ReplantedArchipelago.Patches
                         }
                     }
                 }
-
                 Main.Log("Added custom clear indicators.");
+            }
+        }
 
+        [HarmonyPatch(typeof(LevelSelectScreen), nameof(LevelSelectScreen.ShowReachedCarouselIfInLevelSelect))]
+        public class ShowReachedCarouselPrePatch
+        {
+            private static void Prefix(LevelSelectScreen __instance)
+            {
+                __instance.m_selectedCarouselGroup = __instance.CarouselGroups[3];
+            }
+        }
+
+        [HarmonyPatch(typeof(LevelSelectScreen), nameof(LevelSelectScreen.ShowReachedCarouselIfInLevelSelect))]
+        public class ShowReachedCarouselPatch
+        {
+            private static void Postfix(LevelSelectScreen __instance)
+            {
                 //Automatically focus what the user (probably) wants to see
                 int carouselNumber = (Profile.focusedLevelId - 1) / 10;
                 int positionInCarousel = (Profile.focusedLevelId - 1) % 10;
@@ -669,7 +682,6 @@ namespace ReplantedArchipelago.Patches
                     carouselNumber = 5;
                     int requiredUnlocks = (int)APClient.cloudyDayUnlocks[Profile.focusedLevelId.ToString()];
                     positionInCarousel = requiredUnlocks;
-                    Main.Log($"{positionInCarousel}");
                 }
                 else if (Profile.focusedLevelId >= 99 && Profile.focusedLevelId < 109) //Bonus Levels
                 {
@@ -677,9 +689,117 @@ namespace ReplantedArchipelago.Patches
                     positionInCarousel = Profile.focusedLevelId - 99;
                 }
 
+                __instance.m_selectedCarouselGroup = __instance.CarouselGroups[carouselNumber];
+                __instance.CarouselGroups[carouselNumber].levelButton.Select();
                 __instance.ShowCarousel(__instance.CarouselGroups[carouselNumber]);
                 __instance.SelectLevel(positionInCarousel, true);
+            }
+        }
 
+        public static class RepickUI
+        {
+            public static GameObject repickButton;
+            public static bool repickRequested = false;
+
+            public static void Create()
+            {
+                GameObject layout = GameObject.Find("Panels/P_Gameplay_MainHUD/Canvas/Layout/Center");
+
+                if (layout != null)
+                {
+                    repickButton = new GameObject("RepickButton");
+                    repickButton.transform.SetParent(layout.transform, false);
+
+                    Image repickImage = repickButton.AddComponent<Image>();
+                    repickImage.sprite = Data.LoadEmbeddedSprite("ReplantedArchipelago.Assets.Repick.png", 920);
+
+                    Button buttonComponent = repickButton.AddComponent<Button>();
+                    buttonComponent.onClick.AddListener(new Action(OnClick));
+
+                    RectTransform rectTransform = repickButton.GetComponent<RectTransform>();
+                    rectTransform.anchorMin = rectTransform.anchorMax = new Vector2(1, 1);
+                    rectTransform.pivot = new Vector2(1, 1);
+                    rectTransform.anchoredPosition = new Vector2(-20f, -20f);
+                    rectTransform.sizeDelta = new Vector2(200f, 200f);
+                }
+            }
+
+            private static void OnClick()
+            {
+                repickRequested = true;
+            }
+
+            public static void Activate()
+            {
+                if (repickButton == null)
+                {
+                    Create();
+                }
+                else if (!repickButton.activeSelf)
+                {
+                    repickButton.SetActive(true);
+                }
+            }
+
+            public static void Hide()
+            {
+                if (repickButton != null && repickButton.activeSelf)
+                {
+                    repickButton.SetActive(false);
+                }
+            }
+        }
+
+        public static void AddCustomTooltips()
+        {
+            GameObject grid = GameObject.Find("Panels/SeedChooserPanels/P_SeedChooser/Canvas/Layout/Center/Panel/SeedChooser/Grid");
+            if (grid != null)
+            {
+                Transform transform = grid.transform;
+                for (int i = 0; i < transform.childCount; i++)
+                {
+                    Transform plant = transform.GetChild(i);
+                    if (!plant.name.Contains("P_GamePlay_SeedChooser_Item"))
+                        continue;
+
+                    string thePlantName = plant.Find("Offset/ToolTip/Name").GetComponent<TextMeshProUGUI>().text;
+                    int plantIndex = System.Array.FindIndex(Data.plantNames, plantName => plantName == thePlantName);
+
+                    TMP_Text plantDescription = plant.Find("Offset/ToolTip/Description").GetComponent<TextMeshProUGUI>();
+                    if (plantDescription.text == Data.plantStats[Data.seedTypes[plantIndex]].StatsString)
+                    {
+                        return;
+                    }
+                    plantDescription.text = Data.plantStats[Data.seedTypes[plantIndex]].StatsString;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(AlmanacPlantBinder), nameof(AlmanacPlantBinder.SetupPlant))]
+        public class AlmanacModelPatch
+        {
+            private static void Postfix(AlmanacPlantBinder __instance)
+            {
+                if (APClient.rechargeTimes.Count > 0)
+                {
+                    GameObject description = GameObject.Find("GlobalPanels(Clone)/P_Almanac_Plants/Canvas/Layout/Center/Panel/SelectedItem/Scroll View/Viewport/SelectedItemInfoBox/SelectedItemInfoLabel");
+                    if (description != null && Data.plantStats.ContainsKey(__instance.m_plant.mSeedType))
+                    {
+                        string originalText = description.GetComponent<TextMeshProUGUI>().text;
+                        string tooltipText = originalText.Substring(0, originalText.IndexOf("<color=#cc241d>"));
+                        description.GetComponent<TextMeshProUGUI>().text = tooltipText + "<color=#cc241d>" + "\n" + Data.plantStats[__instance.m_plant.mSeedType].StatsString; //Set stat multiplier text
+                        GameObject.Find("GlobalPanels(Clone)/P_Almanac_Plants/Canvas/Layout/Center/Panel/SelectedItem/Scroll View/Viewport/SelectedItemInfoBox/InfoBox/SelectedItemCostLabel").GetComponent<TextMeshProUGUI>().text = $"Cost: {Data.plantStats[__instance.m_plant.mSeedType].Cost}"; //Set sun price
+                        GameObject.Find("GlobalPanels(Clone)/P_Almanac_Plants/Canvas/Layout/Center/Panel/SelectedItem/Scroll View/Viewport/SelectedItemInfoBox/InfoBox/SelectedItemRechargeLabel").SetActive(false); //Hide the OG recharge text
+                    }
+                }
+                else if (APClient.sunPrices.Count > 0 && Data.plantStats.ContainsKey(__instance.m_plant.mSeedType))
+                {
+                    GameObject sunCost = GameObject.Find("GlobalPanels(Clone)/P_Almanac_Plants/Canvas/Layout/Center/Panel/SelectedItem/Scroll View/Viewport/SelectedItemInfoBox/InfoBox/SelectedItemCostLabel");
+                    if (sunCost != null)
+                    {
+                        sunCost.GetComponent<TextMeshProUGUI>().text = $"Cost: {Data.plantStats[__instance.m_plant.mSeedType].Cost}";
+                    }
+                }
             }
         }
     }

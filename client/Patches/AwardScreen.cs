@@ -97,7 +97,7 @@ namespace ReplantedArchipelago.Patches
                 Il2CppSystem.Collections.Generic.List<ModelReference> models = entriesModel.m_models;
                 foreach (ModelReference model in models)
                 {
-                    var entry = model.Model.Cast<AwardScreenEntryModel>();
+                    AwardScreenEntryModel entry = model.Model.Cast<AwardScreenEntryModel>();
                     entry.m_isAlmanacModel.Value = false;
                     entry.m_showAwardNameModel.Value = true;
                     entry.m_isNoteModel.Value = false;
