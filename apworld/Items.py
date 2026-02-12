@@ -1,6 +1,6 @@
 from typing import Dict, NamedTuple, Optional
 from BaseClasses import Item, ItemClassification
-from .Data import SEED_PACKETS, LEVELS
+from .Data import ALL_PLANTS, LEVELS
 
 class PVZRItem(Item):
 	game: str = "Plants vs. Zombies: Replanted"
@@ -44,8 +44,8 @@ item_ids: Dict[str, int] = {
 	"Zombie Ambush Trap": 72
 }
 
-for seed_packet in SEED_PACKETS:
-	item_ids[seed_packet] = 100 + SEED_PACKETS.index(seed_packet)
+for seed_packet in ALL_PLANTS:
+	item_ids[seed_packet] = 100 + ALL_PLANTS.index(seed_packet)
 
 for level in LEVELS:
 	item_ids[LEVELS[level]["unlock_item_name"]] = 200 + LEVELS[level]["id"]

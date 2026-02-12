@@ -1,161 +1,167 @@
 from worlds.AutoWorld import World
+from .Data import ALL_PLANTS, LEVEL_LOCATIONS
+import itertools
 
-def has_wall(state, player):
-    return any(state.has(item, player) for item in ["Wall-nut", "Tall-nut", "Pumpkin"])
+expected_level_loadouts = {}
 
-def has_pult(state, player):
-    return any(state.has(item, player) for item in ["Cabbage-pult", "Kernel-pult", "Melon-pult"])
-
-def has_instant(state, player, amount, at_night):
-    instants = ["Chomper", "Cherry Bomb", "Jalapeno", "Squash", "Potato Mine"]
-    count = sum(state.has(plant, player) for plant in instants)
-    if state.has("Doom-shroom", player) and (at_night or state.has("Coffee Bean", player)):
-        count += 1
-    return count >= amount
-
-def has_magnet(state, player, at_night):
-    return state.has("Magnet-shroom", player) and (at_night or state.has("Coffee Bean", player))
-
-def can_counter_screen_door(state, player, at_night, has_pool, on_roof):
-    return state.has("Fume-shroom", player) or has_magnet(state, player, at_night) or has_pult(state, player) or (has_wall(state, player) and (state.has("Spikeweed", player) or has_instant(state, player, 1, at_night)))
-
-def can_counter_ladder(state, player, at_night, has_pool, on_roof):
-    return state.has("Fume-shroom", player) or has_magnet(state, player, at_night) or has_pult(state, player) or has_instant(state, player, 1, at_night)
-
-def can_counter_football(state, player, at_night, has_pool, on_roof):
-    return has_instant(state, player, 1, at_night) or has_wall(state, player) or has_magnet(state, player, at_night)
-
-def can_counter_garg(state, player, at_night, has_pool, on_roof):
-    return has_instant(state, player, 2, at_night)
-
-def can_counter_snorkel(state, player, at_night, has_pool, on_roof):
-    return has_wall(state, player) or has_pult(state, player)
-
-def can_counter_zomboni(state, player, at_night, has_pool, on_roof):
-    return has_instant(state, player, 1, at_night) or (state.has("Spikeweed", player) and not on_roof)
-
-def can_counter_balloon(state, player, at_night, has_pool, on_roof):
-    return state.has("Cactus", player) or state.has("Blover", player) or (has_pool and state.has("Lily Pad", player) and state.has("Cattail", player))
-
-def can_counter_digger(state, player, at_night, has_pool, on_roof):
-    return has_magnet(state, player, at_night) or state.has("Split Pea", player) or (state.has("Starfruit", player) and not on_roof) or (has_pool and state.has("Lily Pad", player) and state.has("Cattail", player)) or (state.has("Spikeweed", player) and has_wall(state, player) and not on_roof)
-
-def can_counter_pogo(state, player, at_night, has_pool, on_roof):
-    return has_magnet(state, player, at_night) or state.has("Split Pea", player) or (state.has("Starfruit", player) and not on_roof) or (has_pool and state.has("Lily Pad", player) and state.has("Cattail", player)) or state.has("Tall-nut", player)
-
-def can_counter_peashooter(state, player, at_night, has_pool, on_roof):
-    return has_wall(state, player)
-
-def can_counter_wallnut(state, player, at_night, has_pool, on_roof):
-    return has_wall(state, player) and has_instant(state, player, 1, at_night)
-
-def has_sun_producer(state, player, at_night, has_pool, on_roof):
-    return state.has("Sunflower", player) or (state.has("Sun-shroom", player) and at_night)
-
-def get_cleared_adventure_areas(state, player):
-    return state.has("Adventure Level Cleared (Area: Day)", player, 10) + state.has("Adventure Level Cleared (Area: Night)", player, 10) + state.has("Adventure Level Cleared (Area: Pool)", player, 10) + state.has("Adventure Level Cleared (Area: Fog)",  player, 10) + state.has("Adventure Level Cleared (Area: Roof)",  player, 9)
-
-def get_cleared_adventure_levels(state, player):
-    return state.count("Adventure Level Cleared (Area: Day)", player) + state.count("Adventure Level Cleared (Area: Night)", player) + state.count("Adventure Level Cleared (Area: Pool)", player) + state.count("Adventure Level Cleared (Area: Fog)",  player) + state.count("Adventure Level Cleared (Area: Roof)",  player)
-
-def get_total_cleared_levels(state, player):
-    return get_cleared_adventure_levels(state, player) + state.count("Mini-game Level Cleared", player) + state.count("I, Zombie Level Cleared", player) + state.count("Vasebreaker Level Cleared", player) + state.count("Survival Level Cleared",  player) + state.count("Cloudy Day Level Cleared",  player) + state.count("Bonus Levels Level Cleared",  player)
-    
-ZOMBIE_COUNTERS = {
-    "Balloon": can_counter_balloon,
-    "Door": can_counter_screen_door,
-    "Football": can_counter_football,
-    "Gargantuar": can_counter_garg,
-    "Snorkel": can_counter_snorkel,
-    "Zamboni": can_counter_zomboni,
-    "Ladder": can_counter_ladder,
-    "Digger": can_counter_digger,
-    "Pogo": can_counter_pogo,
-    "PeaHead": can_counter_peashooter,
-    "WallnutHead": can_counter_wallnut,
-    "GatlingHead": can_counter_peashooter,
-    "TallnutHead": can_counter_wallnut,
-    "TrashCan": can_counter_screen_door
-}
-
-def can_clear_level(state, world, player, level_data, at_night, has_pool, on_roof):
-
-    if level_data["type"] == "minigame" and world.options.minigame_levels.value in [1, 2] and world.minigame_unlocks[level_data["id"]] > 0:
-        if not state.has("Mini-game Level Cleared", player, world.minigame_unlocks[level_data["id"]]):
-            return False
-    elif level_data["type"] == "survival" and world.options.survival_levels.value in [1, 2] and world.survival_unlocks[level_data["id"]] > 0:
-        if not state.has("Survival Level Cleared", player, world.survival_unlocks[level_data["id"]]):
-            return False
-    elif level_data["type"] == "puzzle" and world.options.puzzle_levels.value in [1, 2] and level_data["id"] < 80:
-        if not state.has("Vasebreaker Level Cleared", player, world.vasebreaker_unlocks[level_data["id"]]):
-            return False
-    elif level_data["type"] == "puzzle" and world.options.puzzle_levels.value in [1, 2]:
-        if not state.has("I, Zombie Level Cleared", player, world.izombie_unlocks[level_data["id"]]):
-            return False
-    elif level_data["type"] == "cloudy" and world.options.cloudy_day_levels.value in [1, 2]:
-        if not state.has("Cloudy Day Level Cleared", player, world.cloudy_day_unlocks[level_data["id"]]):
-            return False
-    elif level_data["name"] == "Roof: Dr. Zomboss":
-        if world.fast_goal == False and not state.can_reach_location("Roof: Level 5-9 (Clear)", player):
-            return False
-        if world.adventure_levels_goal > 0 and get_cleared_adventure_levels(state, player) < world.adventure_levels_goal:
-            return False
-        if world.adventure_areas_goal > 0 and get_cleared_adventure_areas(state, player) < world.adventure_areas_goal:
-            return False
-        if world.survival_levels_goal > 0 and state.has("Survival Level Cleared", player, world.survival_levels_goal) == False:
-            return False
-        if world.minigame_levels_goal > 0 and state.has("Mini-game Level Cleared", player, world.minigame_levels_goal) == False:
-            return False
-        if world.puzzle_levels_goal > 0 and state.count("Vasebreaker Level Cleared", player) + state.count("I, Zombie Level Cleared", player) < world.puzzle_levels_goal:
-            return False
-        if world.cloudy_day_levels_goal > 0 and state.has("Cloudy Day Level Cleared", player, world.cloudy_day_levels_goal) == False:
-            return False
-        if world.bonus_levels_goal > 0 and state.has("Bonus Levels Level Cleared", player, world.bonus_levels_goal) == False:
-            return False
-        if world.overall_levels_goal > 0 and get_total_cleared_levels(state, player) < world.overall_levels_goal:
-            return False
-
+def can_clear_level(state, world, player, level_data):
     if level_data["choose"]:
-        if level_data["type"] == "survival" and not has_wall(state, player):
-            return False
-        if at_night:
-            if level_data["type"] == "survival":
-                if not (state.has("Fume-shroom", player)):
-                    return False
-                if has_pool == False and not (state.has("Grave Buster", player)):
-                    return False
+        location_data = LEVEL_LOCATIONS[level_data["location"]]
+        at_night = location_data["at_night"]
+        has_pool = location_data["has_pool"]
+        on_roof = location_data["on_roof"]
 
-            night_required_plants = [state.has("Puff-shroom", player), state.has("Scaredy-shroom", player), state.has("Sun-shroom", player), state.has("Fume-shroom", player)]
-            if sum(night_required_plants) < 3:
-                return False
-
+        #Non-negotiables
+        forced_items = []
         if has_pool:
-            if not state.has("Lily Pad", player):
-                return False
+            forced_items.append("Lily Pad")
         if on_roof:
-            if not (state.has("Flower Pot", player) and has_pult(state, player)):
-                return False
-        if (level_data["flags"] > 1 or level_data["location"] != "Day" or level_data["type"] in ["minigame", "survival", "bonus"]) and not has_sun_producer(state, player, at_night, has_pool, on_roof):
-            return False
-        
-        if level_data["name"] == "Bonus Levels: Unsodded" and not (state.has("Threepeater", player) or state.has("Starfruit", player)):
-            return False
-        elif level_data["name"] == "Bonus Levels: Grave Danger" and not state.has("Grave Buster", player):
-            return False
-        elif level_data["name"] == "Mini-games: Pogo Party" and not state.has("Roof Cleaners", player):
-            return False
-        elif level_data["name"] in ["Minigames: Last Stand", "Survival: Day (Hard)", "Survival: Night (Hard)", "Survival: Pool (Hard)", "Survival: Fog (Hard)", "Survival: Roof (Hard)"] and not ((state.has("Fume-shroom", player) and (at_night or state.has("Coffee Bean", player))) or (state.has("Torchwood", player) and (state.has("Threepeater", player) or state.has("Repeater", player))) or (state.has("Melon-pult", player))):
-            return False
-        elif level_data["name"] == "Mini-games: Bobsled Bonanza" and not state.has("Spikeweed", player):
-            return False
-            
-        for zombie in level_data["zombies"]:
-            if zombie in ZOMBIE_COUNTERS:
-                if not ZOMBIE_COUNTERS[zombie](state, player, at_night, has_pool, on_roof):
-                    return False
-    
-    return True
+            forced_items.append("Flower Pot")
+        if level_data["name"] == "Mini-games: Pogo Party":
+            forced_items.append("Roof Cleaners")
+        if level_data["name"] == "Bonus Levels: Grave Danger" or (level_data["type"] == "survival" and at_night and not has_pool):
+            forced_items.append("Grave Buster")
+        if level_data["name"] == "Mini-games: Bobsled Bonanza" and "Zomboni" in level_data["zombies"]:
+            forced_items.append("Spikeweed")
 
+        if not all(state.has(item, player) for item in forced_items):
+            return False
+
+        forced_plants = [item for item in forced_items if item in ALL_PLANTS]
+
+        #Remaining seed slots
+        number_of_seed_slots = state.count("Extra Seed Slot", player) + 1
+        if level_data["type"] == "survival":
+            number_of_seed_slots *= 2
+        usable_slots = number_of_seed_slots - len(forced_plants)
+        if usable_slots < 0:
+            return False
+
+        #Build possible loadouts
+        possible_combinations = {}
+
+        #Attackers
+        if not on_roof:
+            possible_combinations["attacker"] = [["Peashooter"], ["Chomper"], ["Snow Pea"], ["Repeater"], ["Split Pea"], ["Cactus"], ["Cabbage-pult"], ["Kernel-pult"], ["Starfruit"]]
+            if at_night:
+                possible_combinations["attacker"].append(["Fume-shroom"])
+        else:
+            possible_combinations["attacker"] = [["Cabbage-pult"], ["Kernel-pult"], ["Melon-pult"]]
+            if world.options.easy_upgrade_plants.value:
+                possible_combinations["attacker"].append(["Winter Melon"])
+
+        #Cloudy Day attackers
+        if level_data["type"] == "cloudy":
+            possible_combinations["cloudy"] = [["Peashooter"], ["Snow Pea"], ["Repeater"], ["Cactus"], ["Cabbage-pult"], ["Kernel-pult"]]
+        
+        #Sun producers
+        if level_data["type"] != "adventure" or level_data["flags"] > 1:
+            if at_night:
+                possible_combinations["sun"] = [["Sun-shroom"]]
+            else:
+                possible_combinations["sun"] = [["Sunflower"]]
+
+        #Wall plants
+        if level_data["type"] == "survival" or any(zombie in level_data["zombies"] for zombie in ["PeaHead", "GatlingHead", "TallnutHead"]):
+            possible_combinations["wall"] = [["Wall-nut"], ["Tall-nut"], ["Pumpkin"]]
+
+        #AOE plants
+        if level_data["type"] == "survival" or level_data["name"] == "Minigames: Last Stand" or "GigaGargantuar" in level_data["zombies"]:
+            possible_combinations["aoe"] = [["Repeater", "Torchwood"], ["Threepeater", "Torchwood"], ["Melon-pult"]]
+            if world.options.easy_upgrade_plants.value:
+                possible_combinations["aoe"].append(["Winter Melon"])
+            if at_night:
+                possible_combinations["aoe"].append(["Fume-shroom"])
+            else:
+                possible_combinations["aoe"].append(["Fume-shroom", "Coffee Bean"])
+
+        #Night plants
+        if at_night:
+            possible_combinations["night"] = [["Puff-shroom", "Fume-shroom"], ["Scaredy-shroom", "Fume-shroom"], ["Puff-shroom", "Scaredy-shroom"]]
+
+        #Multi-lane
+        if level_data["name"] == "Bonus Levels: Unsodded":
+            possible_combinations["lanes"] = [["Threepeater"], ["Starfruit"]]
+
+        #Balloon
+        if "Balloon" in level_data["zombies"]:
+            possible_combinations["balloon"] = [["Cactus"], ["Blover"]]
+            if has_pool:
+                possible_combinations["balloon"].append(["Cattail"])
+
+        #Shields
+        if any(zombie in level_data["zombies"] for zombie in ["ScreenDoor", "Ladder", "TrashCan"]):
+            possible_combinations["shield"] = [["Cabbage-pult"], ["Kernel-pult"]]
+            if at_night:
+                possible_combinations["shield"] += [["Fume-shroom"], ["Magnet-shroom"]]
+            else:
+                possible_combinations["shield"] += [["Fume-shroom", "Coffee Bean"], ["Magnet-shroom", "Coffee Bean"]]
+
+        #Digger
+        if "Digger" in level_data["zombies"]:
+            possible_combinations["digger"] = [["Starfruit"], ["Split Pea"]]
+            if has_pool:
+                possible_combinations["digger"].append(["Cattail"])
+            if at_night:
+                possible_combinations["digger"].append(["Magnet-shroom"])
+            else:
+                possible_combinations["digger"].append(["Magnet-shroom", "Coffee Bean"])
+
+        #Snorkel
+        if "Snorkel" in level_data["zombies"]:
+            possible_combinations["snorkel"] = [["Cabbage-pult"], ["Kernel-pult"], ["Melon-pult"], ["Wall-nut"], ["Tall-nut"], ["Pumpkin"]]
+            if world.options.easy_upgrade_plants.value:
+                possible_combinations["snorkel"].append(["Winter Melon"])
+
+        #Pogo
+        if "Pogo" in level_data["zombies"]:
+            possible_combinations["pogo"] = [["Split Pea"], ["Starfruit"], ["Tall-nut"]]
+            if at_night:
+                possible_combinations["pogo"].append(["Magnet-shroom"])
+            else:
+                possible_combinations["pogo"].append(["Magnet-shroom", "Coffee Bean"])
+            if has_pool:
+                possible_combinations["pogo"].append(["Cattail"])
+
+        #Football
+        if any(zombie in level_data["zombies"] for zombie in ["Football"]):
+            possible_combinations["football"] = [["Cherry Bomb"], ["Squash"], ["Jalapeno"], ["Wall-nut"], ["Tall-nut"], ["Pumpkin"]]
+            if at_night:
+                possible_combinations["football"].append(["Magnet-shroom"])
+            else:
+                possible_combinations["football"].append(["Magnet-shroom", "Coffee Bean"])
+
+        #Zomboni
+        if any(zombie in level_data["zombies"] for zombie in ["Zomboni"]):
+            possible_combinations["zomboni"] = [["Cherry Bomb"], ["Squash"], ["Jalapeno"]]
+            if not on_roof:
+                possible_combinations["zomboni"].append(["Spikeweed"])
+
+        #Gargantuar
+        if any(zombie in level_data["zombies"] for zombie in ["Gargantuar", "GigaGargantuar"]):
+            possible_combinations["garg"] = [["Cherry Bomb", "Squash"], ["Squash", "Jalapeno"], ["Jalapeno", "Cherry Bomb"]]
+
+        unlocked_plants = {plant for plant in ALL_PLANTS if state.has(plant, player)}
+        choosable_combinations = {}
+        for req, combos in possible_combinations.items():
+            valid = [combo for combo in combos if all(p in unlocked_plants for p in combo)]
+            if not valid:
+                return False #Don't have the plants unlocked in order to meet this requirement
+            choosable_combinations[req] = valid
+
+        selected_plants = set(forced_plants)
+        for req in sorted(choosable_combinations, key=lambda r: len(choosable_combinations[r])):
+            combos = sorted(choosable_combinations[req], key=lambda combo: len([p for p in combo if p not in selected_plants])) #Try to re-use plants where possible
+            for combo in combos:
+                new_plants = [p for p in combo if p not in selected_plants]
+                if len(selected_plants) + len(new_plants) <= number_of_seed_slots:
+                    selected_plants.update(combo)
+                    break
+            else: #You cannot fit the requirement in
+                return False
+
+        expected_level_loadouts[level_data['name']] = selected_plants
+    return True
 
 def set_rules(world: World) -> None:
 

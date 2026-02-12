@@ -7,35 +7,68 @@ from .Rules import can_clear_level
 from .Items import PVZRItem
 from BaseClasses import ItemClassification
 
-def make_region_rule(world, player, level_data):
-    location_data = LEVEL_LOCATIONS[level_data["location"]]
-    at_night = location_data["at_night"]
-    has_pool = location_data["has_pool"]
-    on_roof = location_data["on_roof"]
+def get_cleared_adventure_areas(state, world, player):
+    return state.has("Adventure Level Cleared (Area: Day)", player, 10) + state.has("Adventure Level Cleared (Area: Night)", player, 10) + state.has("Adventure Level Cleared (Area: Pool)", player, 10) + state.has("Adventure Level Cleared (Area: Fog)",  player, 10) + state.has("Adventure Level Cleared (Area: Roof)",  player, 9)
 
-    access_item = None
-    if level_data["type"] == "adventure" and world.options.adventure_mode_progression.value in [1, 2] and not level_data["name"] == "Roof: Dr. Zomboss":
-        if on_roof:
-            access_item = "Roof Access"
-        elif has_pool and at_night:
-            access_item = "Fog Access"
-        elif has_pool:
-            access_item = "Pool Access"
-        elif at_night:
-            access_item = "Night Access"
-        else:
-            access_item = "Day Access"
+def get_cleared_adventure_levels(state, world, player):
+    return state.count("Adventure Level Cleared (Area: Day)", player) + state.count("Adventure Level Cleared (Area: Night)", player) + state.count("Adventure Level Cleared (Area: Pool)", player) + state.count("Adventure Level Cleared (Area: Fog)",  player) + state.count("Adventure Level Cleared (Area: Roof)",  player)
+
+def get_total_cleared_levels(state, world, player):
+    return get_cleared_adventure_levels(state, world, player) + state.count("Mini-game Level Cleared", player) + state.count("I, Zombie Level Cleared", player) + state.count("Vasebreaker Level Cleared", player) + state.count("Survival Level Cleared",  player) + state.count("Cloudy Day Level Cleared",  player) + state.count("Bonus Levels Level Cleared",  player)
+    
+def can_access_level(state, world, player, level_data):
+    #Access items
+    if level_data["type"] == "adventure" and world.options.adventure_mode_progression.value in [1, 2]:
+        access_item = f"{level_data["location"]} Access"
     elif level_data["type"] == "adventure" and world.options.adventure_mode_progression.value == 3 and not level_data["name"] == "Roof: Dr. Zomboss":
         access_item = level_data["unlock_item_name"]
     elif (level_data["type"] == "minigame" and world.options.minigame_levels.value == 4) or (level_data["type"] == "puzzle" and world.options.puzzle_levels.value == 4) or (level_data["type"] == "survival" and world.options.survival_levels.value == 4) or (level_data["type"] == "cloudy" and world.options.cloudy_day_levels.value == 4) or (level_data["type"] == "bonus" and world.options.bonus_levels.value == 2):
         access_item = level_data["unlock_item_name"]
     else:
         access_item = {"adventure": None, "minigame": "Mini-games", "cloudy": "Cloudy Day", "puzzle": "Puzzle Mode", "bonus": "Bonus Levels", "survival": "Survival Mode"}[level_data["type"]]
+    if access_item != None and not state.has(access_item, player):
+        return False
 
-    if access_item == None:
-        return lambda state: can_clear_level(state, world, player, level_data, at_night, has_pool, on_roof)
-    else: 
-        return lambda state: can_clear_level(state, world, player, level_data, at_night, has_pool, on_roof) and state.has(access_item, player)
+    #Clears
+    if level_data["type"] == "minigame" and world.options.minigame_levels.value in [1, 2] and world.minigame_unlocks[level_data["id"]] > 0:
+        if not state.has("Mini-game Level Cleared", player, world.minigame_unlocks[level_data["id"]]):
+            return False
+    elif level_data["type"] == "survival" and world.options.survival_levels.value in [1, 2] and world.survival_unlocks[level_data["id"]] > 0:
+        if not state.has("Survival Level Cleared", player, world.survival_unlocks[level_data["id"]]):
+            return False
+    elif level_data["type"] == "puzzle" and world.options.puzzle_levels.value in [1, 2] and level_data["id"] < 80:
+        if not state.has("Vasebreaker Level Cleared", player, world.vasebreaker_unlocks[level_data["id"]]):
+            return False
+    elif level_data["type"] == "puzzle" and world.options.puzzle_levels.value in [1, 2]:
+        if not state.has("I, Zombie Level Cleared", player, world.izombie_unlocks[level_data["id"]]):
+            return False
+    elif level_data["type"] == "cloudy" and world.options.cloudy_day_levels.value in [1, 2]:
+        if not state.has("Cloudy Day Level Cleared", player, world.cloudy_day_unlocks[level_data["id"]]):
+            return False
+    elif level_data["name"] == "Roof: Dr. Zomboss":
+        if world.fast_goal == False and not state.can_reach_location("Roof: Level 5-9 (Clear)", player):
+            return False
+        if world.adventure_levels_goal > 0 and get_cleared_adventure_levels(state, world, player) < world.adventure_levels_goal:
+            return False
+        if world.adventure_areas_goal > 0 and get_cleared_adventure_areas(state, world, player) < world.adventure_areas_goal:
+            return False
+        if world.survival_levels_goal > 0 and state.has("Survival Level Cleared", player, world.survival_levels_goal) == False:
+            return False
+        if world.minigame_levels_goal > 0 and state.has("Mini-game Level Cleared", player, world.minigame_levels_goal) == False:
+            return False
+        if world.puzzle_levels_goal > 0 and state.count("Vasebreaker Level Cleared", player) + state.count("I, Zombie Level Cleared", player) < world.puzzle_levels_goal:
+            return False
+        if world.cloudy_day_levels_goal > 0 and state.has("Cloudy Day Level Cleared", player, world.cloudy_day_levels_goal) == False:
+            return False
+        if world.bonus_levels_goal > 0 and state.has("Bonus Levels Level Cleared", player, world.bonus_levels_goal) == False:
+            return False
+        if world.overall_levels_goal > 0 and get_total_cleared_levels(state, world, player) < world.overall_levels_goal:
+            return False
+
+    return True
+
+def make_region_rule(world, player, level_data):
+    return lambda state: can_access_level(state, world, player, level_data) and can_clear_level(state, world, player, level_data)
 
 def create_regions(world: World) -> None:
     player = world.player

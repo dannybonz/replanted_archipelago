@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from Options import Choice, Range, Toggle, PerGameCommonOptions, DeathLink
+from Options import Choice, Range, Toggle, PerGameCommonOptions, DeathLink, OptionCounter, OptionGroup
 
 class AdventureModeProgression(Choice):
     """
@@ -34,6 +34,77 @@ class ZombieRandomisation(Toggle):
     """
     display_name = "Zombie Randomisation"
     default = False
+
+class RandomisedZombies(OptionCounter):
+    """
+    Determines which Zombies will be included in randomisation.
+    This setting only matters if zombie_randomisation is set to true.
+    If zombie_randomisation is set to false, this option will be ignored and no Zombies will be randomised.
+
+    Any Zombie type set to 1 will be included in randomisation and can appear in randomly selected levels.
+    Any Zombie type set to 0 will stay in its usual level(s) and will not be randomised to any others.
+
+    *Trash Can Zombie is forced to 0 if goty_compatability_mode is enabled.
+    """
+    display_name = "Randomised Zombies"
+    min = 0
+    max = 1
+    valid_keys = ["Conehead", "Polevaulter", "Buckethead", "Newspaper", "ScreenDoor", "Football", "Dancer", "Snorkel", "Zomboni", "DolphinRider", "JackInTheBox", "Balloon", "Digger", "Pogo", "Bungee", "Ladder", "Catapult", "Gargantuar", "PeaHead", "WallnutHead", "JalapenoHead", "GatlingHead", "SquashHead", "TallnutHead", "GigaGargantuar", "TrashCan"]
+    default = {
+        "Conehead": 1,
+        "Polevaulter": 1,
+        "Buckethead": 1,
+        "Newspaper": 1,
+        "ScreenDoor": 1,
+        "Football": 1,
+        "Dancer": 1,
+        "Snorkel": 1,
+        "Zomboni": 1,
+        "DolphinRider": 1,
+        "JackInTheBox": 1,
+        "Balloon": 1,
+        "Digger": 1,
+        "Pogo": 1,
+        "Bungee": 1,
+        "Ladder": 1,
+        "Catapult": 1,
+        "Gargantuar": 1,
+        "PeaHead": 0,
+        "WallnutHead": 0,
+        "JalapenoHead": 0,
+        "GatlingHead": 0,
+        "SquashHead": 0,
+        "TallnutHead": 0,
+        "GigaGargantuar": 0,
+        "TrashCan": 0
+    }
+
+class PlantStatRandomisation(Toggle):
+    """
+    Randomises the stats of each Plant in the game. 
+    This affects Sun Cost, Packet Refresh Time, Toughness, Firing Rate and Projectile Damage.
+    Plants should remain relatively balanced while still providing variety.
+
+    This setting applies across modes, however it does not currently affect levels without a "Choose Your Seeds" screen.
+
+    This is a brand new option that has not yet been heavily tested. 
+    It may be unwise to bring it to group multiworlds in its current state.
+    Enable at your own risk, but if you're up to the challenge, let me know how you get on!
+    """
+    display_name = "Plant Stat Randomisation"
+    default = False  
+
+class MaintainVanillaProjectileStrength(Toggle):
+    """
+    Prevents Plant Stat Randomisation from affecting the damage of projectiles.
+    If this option is enabled, then projectiles will maintain their original damage values.
+    This will result in plants that play much more similarly to their standard versions.
+
+    This option only matters if plant_stat_randomisation is set to true.
+    If plant_stat_randomisation is set to false then projectiles will provide their usual damage and this option is irrelevant.
+    """
+    display_name = "Maintain Vanilla Projectile Strength"
+    default = False  
 
 class MinigameLevels(Choice):
     """
@@ -99,6 +170,8 @@ class CloudyDayLevels(Choice):
     - randomised_order: After obtaining the "Cloudy Day" item, one random Cloudy Day level will be available to play. Clearing a Cloudy Day level will unlock a new one, in a randomised order.
     - open: After obtaining the "Cloudy Day" item, you have instant access to all Cloudy Day levels.
     - level_items: Every individual Cloudy Day level is a separate item.
+
+    *This option is forced to "off" if goty_compatability_mode is enabled.
     """
     display_name = "Cloudy Day Levels"
     option_off = 0
@@ -115,6 +188,8 @@ class BonusLevels(Choice):
     - off: Bonus Levels will not be included.
     - vanilla: After obtaining the "Bonus Levels" item, you have instant access to all Bonus Levels.
     - level_items: Every individual Bonus Level is a separate item.
+
+    *This option is forced to "off" if goty_compatability_mode is enabled.
     """
     display_name = "Bonus Levels"
     option_off = 0
@@ -174,6 +249,8 @@ class CloudyDayLevelsGoal(Range):
     """
     Determines how many unique Cloudy Day levels (if any) must be cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
     Cloudy Day Levels must be enabled in order for this setting to have any effect.
+
+    *This option is forced to 0 if goty_compatability_mode is enabled.
     """
     display_name = "Cloudy Day Levels Goal"
     range_start = 0
@@ -184,6 +261,8 @@ class BonusLevelsGoal(Range):
     """
     Determines how many unique Bonus Levels (if any) must be cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
     Bonus Levels must be enabled in order for this setting to have any effect.
+
+    *This option is forced to 0 if goty_compatability_mode is enabled.
     """
     display_name = "Bonus Levels Goal"
     range_start = 0
@@ -242,7 +321,7 @@ class StartingSeedSlots(Range):
     How many seed slots to begin the game with.
     """
     display_name = "Starting Seed Slots"
-    range_start = 6
+    range_start = 1
     range_end = 10
     default = 6
 
@@ -337,12 +416,22 @@ class ZombieAmbushTrapWeight(Range):
     range_end = 100
     default = 50
 
+class GotyCompatabilityMode(Toggle):
+    """
+    Forces your options to comply with the restrictions of Victor Tran's GOTY client.
+    Setting this to true will automatically adjust your options to ensure they remain compatible.
+    """
+    display_name = "GOTY Compatability Mode"
+    default = False
+
 @dataclass
 class PVZROptions(PerGameCommonOptions):
-    death_link: DeathLink
     adventure_mode_progression: AdventureModeProgression
     huge_wave_locations: HugeWaveLocations
     zombie_randomisation: ZombieRandomisation
+    randomised_zombies: RandomisedZombies
+    plant_stat_randomisation: PlantStatRandomisation
+    maintain_vanilla_projectile_strength: MaintainVanillaProjectileStrength
     minigame_levels: MinigameLevels
     puzzle_levels: PuzzleLevels
     survival_levels: SurvivalLevels
@@ -366,7 +455,20 @@ class PVZROptions(PerGameCommonOptions):
     imitater_behaviour: ImitaterBehaviour
     music_shuffle: MusicShuffle
     disable_storm_flashes: DisableStormFlashes
+    goty_compatability_mode: GotyCompatabilityMode 
+    death_link: DeathLink
     trap_percentage: TrapPercentage
     mower_deploy_trap_weight: MowerDeployTrapWeight
     seed_packet_cooldown_trap_weight: SeedPacketCooldownTrapWeight
     zombie_ambush_trap_weight: ZombieAmbushTrapWeight
+
+OPTION_GROUPS = [
+    OptionGroup("AP Settings", [GotyCompatabilityMode, DeathLink]),
+    OptionGroup("Level Access", [AdventureModeProgression, MinigameLevels, PuzzleLevels, SurvivalLevels, CloudyDayLevels, BonusLevels]),    
+    OptionGroup("Extra Locations", [HugeWaveLocations, ShopItems]),
+    OptionGroup("Goal", [AdventureLevelsGoal, AdventureAreasGoal, MinigameLevelsGoal, PuzzleLevelsGoal, SurvivalLevelsGoal, CloudyDayLevelsGoal, BonusLevelsGoal, TotalLevelsGoal, FastGoal]),
+    OptionGroup("Zombie & Plant Randomisation", [ZombieRandomisation, RandomisedZombies, PlantStatRandomisation, MaintainVanillaProjectileStrength]),
+    OptionGroup("Other Tweaks", [EasyUpgradePlants, ImitaterBehaviour, DisableStormFlashes, MusicShuffle]),
+    OptionGroup("Early Items", [StartingPlants, StartingSeedSlots, EarlySunflower, EarlyShovel]),
+    OptionGroup("Traps", [TrapPercentage, MowerDeployTrapWeight, SeedPacketCooldownTrapWeight, ZombieAmbushTrapWeight])
+]
