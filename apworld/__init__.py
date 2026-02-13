@@ -535,6 +535,7 @@ class PVZRWorld(World):
                 excess_mult = raw_sun_price / max_price
                 sun_cost_mult = max_price / base_cost
                 packet_cd_mult *= excess_mult
+            packet_cd_mult = min(30, packet_cd_mult) #Cap seed packet recharge time at 30x
 
             self.sun_prices[plant_index] = 5 * round((base_cost * sun_cost_mult) / 5)
             base_refresh = stats["refresh"]
