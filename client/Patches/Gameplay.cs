@@ -821,13 +821,27 @@ namespace ReplantedArchipelago.Patches
             private static void Postfix(GameplayActivity __instance, ref ZombieDefinition __result)
             {
                 __result.m_firstLevel = -1;
-                if (__result.ZombieType == ZombieType.PeaHead && __instance.GameMode != GameMode.ChallengeWarAndPeas && __instance.GameMode != GameMode.ChallengeWarAndPeas2)
+                if (__result.ZombieType == ZombieType.PeaHead)
                 {
-                    __result.m_value = 3; //Re-weights Peahead to not be so pervasive with Zombie rando enabled - we could also use this in future for Zombie value rando
+                    if (__instance.GameMode == GameMode.ChallengeWarAndPeas || __instance.GameMode == GameMode.ChallengeWarAndPeas2)
+                    {
+                        __result.m_value = 1; //Default Peahead weight
+                    }
+                    else
+                    {
+                        __result.m_value = 3; //Re-weights Peahead to not be so pervasive with Zombie rando enabled - we could also use this in future for Zombie value rando
+                    }
+
                 }
-                if (__result.ZombieType == ZombieType.TrashCan)
+                else if (__result.ZombieType == ZombieType.TrashCan)
                 {
-                    __result.m_weight = 4000; //Makes Trash Can Zombie eligible to spawn
+                    if (__instance.GameMode == GameMode.Adventure)
+                    {
+                        __result.m_weight = 4000; //Makes Trash Can Zombie eligible to spawn
+                    } else
+                    {
+                        __result.m_weight = 0;
+                    }
                 }
             }
         }

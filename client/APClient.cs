@@ -204,7 +204,14 @@ namespace ReplantedArchipelago
                         string statsString = "";
                         if (sunPrices.ContainsKey(plantIndex))
                         {
-                            statsString += Data.FormatPlantStatChanges("Cost", theStats.Cost, (double)sunPrices[plantIndex], false);
+                            if (easyUpgradePlants && theStats.EasyUpgradeCost > theStats.Cost)
+                            {
+                                statsString += Data.FormatPlantStatChanges("Cost", theStats.EasyUpgradeCost, (double)sunPrices[plantIndex], false);
+                            }
+                            else
+                            {
+                                statsString += Data.FormatPlantStatChanges("Cost", theStats.Cost, (double)sunPrices[plantIndex], false);
+                            }
                             theStats.Cost = (int)sunPrices[plantIndex];
                         }
                         if (rechargeTimes.ContainsKey(plantIndex))

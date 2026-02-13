@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using static ReplantedArchipelago.Patches.Menu;
 
-[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.3.2", "dannybonz")]
+[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.4.1", "dannybonz")]
 [assembly: MelonGame("PopCap Games", "PvZ Replanted")]
 
 namespace ReplantedArchipelago
