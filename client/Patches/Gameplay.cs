@@ -7,12 +7,16 @@ using Il2CppReloaded.DataModels;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using Il2CppReloaded.TreeStateActivities;
+using Il2CppSentry.Protocol;
 using Il2CppSource.Controllers;
 using Il2CppSource.Utils;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace ReplantedArchipelago.Patches
 {
@@ -796,7 +800,7 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
-        [HarmonyPatch(typeof(Board), nameof(Board.CanZombieSpawnOnLevel))]
+        [HarmonyPatch(typeof(Board), nameof(Board.CanZombieSpawnOnLevel))] //Randomise Zombies for Adventure Mode
         public static class CanZombieSpawnOnLevelPatch
         {
             private static bool Prefix(Board __instance, ZombieType theZombieType, int theLevel, ref bool __result)
@@ -814,6 +818,25 @@ namespace ReplantedArchipelago.Patches
                 }
             }
         }
+
+        /*
+        [HarmonyPatch(typeof(Challenge), nameof(Challenge.InitZombieWaves))] //Randomise Zombies for other modes
+        public static class InitZombieWavesPatchPatch
+        {
+            private static bool Prefix(Challenge __instance)
+            {
+                int levelId = Data.GetLevelIdFromGameplayActivity(__instance.mApp);
+                if (levelId != -1 && APClient.zombieMap.ContainsKey(levelId.ToString()))
+                {
+                    foreach (int zombieIndex in APClient.zombieMap[levelId.ToString()])
+                    {
+                        __instance.mBoard.mZombieAllowed[(int)Data.zombieTypes[zombieIndex]] = true;
+                    }
+                    return false;
+                }
+                return true;
+            }
+        }*/
 
         [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.GetZombieDefinition))]
         public static class GetZombieDefinitionPatch
@@ -838,7 +861,8 @@ namespace ReplantedArchipelago.Patches
                     if (__instance.GameMode == GameMode.Adventure)
                     {
                         __result.m_weight = 4000; //Makes Trash Can Zombie eligible to spawn
-                    } else
+                    }
+                    else
                     {
                         __result.m_weight = 0;
                     }
@@ -856,7 +880,7 @@ namespace ReplantedArchipelago.Patches
                     APClient.preferredSeeds = new System.Collections.Generic.List<SeedType>();
                     foreach (SeedPacket seedPacket in __instance.SeedBanks[0].mSeedPackets)
                     {
-                        if (seedPacket.mImitaterType == SeedType.None)
+                        if (seedPacket.mImitaterType == SeedType.None && APClient.HasSeedType(seedPacket.PacketType))
                         {
                             APClient.preferredSeeds.Add(seedPacket.mPacketType);
                         }
@@ -902,7 +926,7 @@ namespace ReplantedArchipelago.Patches
                     }
                     else if (theProjectileType == ProjectileType.Fireball && APClient.projectileDamages.ContainsKey("0"))
                     {
-                        __result.m_damage = ((int)APClient.projectileDamages[0]) * 2;
+                        __result.m_damage = ((int)APClient.projectileDamages["0"]) * 2;
                     }
                 }
             }
@@ -925,5 +949,120 @@ namespace ReplantedArchipelago.Patches
                 }
             }
         }
+
+        /*
+        [HarmonyPatch(typeof(Challenge), nameof(Challenge.UpdateConveyorBelt))] //Conveyor Rando
+        public static class UpdateConveyorBeltPatch
+        {
+            private static bool Prefix(Challenge __instance)
+            {
+                if (!__instance.mBoard.HasLevelAwardDropped())
+                {
+                    if (__instance.mConveyorBeltCounter > 1)
+                    {
+                        return true;
+                    }
+
+                    float conveyorSpeedMultiplier = 1;
+                    if (__instance.mApp.IsFinalBossLevel())
+                    {
+                        conveyorSpeedMultiplier = 0.875f;
+                    }
+                    else if (__instance.mApp.IsShovelLevel() || __instance.mApp.GameMode == GameMode.ChallengePortalCombat)
+                    {
+                        conveyorSpeedMultiplier = 1.5f;
+                    }
+                    else if (__instance.mApp.GameMode == GameMode.ChallengeInvisighoul)
+                    {
+                        conveyorSpeedMultiplier = 2.0f;
+                    }
+                    else if (__instance.mApp.GameMode == GameMode.ChallengeColumn)
+                    {
+                        conveyorSpeedMultiplier = 3.0f;
+                    }
+
+                    int numSeedsOnConveyor = __instance.mBoard.mSeedBank.GetNumSeedsOnConveyorBelt();
+                    float conveyorBeltCounter = conveyorSpeedMultiplier * (numSeedsOnConveyor > 8 ? 1000 : numSeedsOnConveyor > 6 ? 500 : numSeedsOnConveyor > 4 ? 425 : 400);
+                    __instance.mConveyorBeltCounter = (int)conveyorBeltCounter;
+
+                    TodWeightedArray[] customSeeds = new TodWeightedArray[2];
+                    customSeeds[0].Item = (int)SeedType.Blover;
+                    customSeeds[0].Weight = 100;
+                    customSeeds[1].Item = (int)SeedType.Cobcannon;
+                    customSeeds[1].Weight = 200;
+
+                    for (int i = 0; i < customSeeds.Length; i++)
+                    {
+                        TodWeightedArray customSeed = customSeeds[i];
+                        SeedType seedType = (SeedType)customSeed.Item;
+                        int aCountInBank = __instance.mBoard.SeedBanks[0].CountOfTypeOnConveyorBelt(seedType);
+                        int aTotalCount = __instance.mBoard.CountPlantByType(seedType) + aCountInBank;
+
+                        if (seedType == SeedType.Gravebuster)
+                        {
+                            if (__instance.mBoard.GetGraveStoneCount() <= aTotalCount)
+                            {
+                                customSeed.Weight = 0;
+                            }
+                        }
+                        else if (seedType == SeedType.Lilypad)
+                        {
+                            customSeed.Weight = Common.TodAnimateCurve(0, 18, aTotalCount, customSeed.Weight, 1, TodCurves.Linear);
+                        }
+                        else if (seedType == SeedType.Flowerpot)
+                        {
+                            customSeed.Weight = Common.TodAnimateCurve(0, __instance.mApp.GameMode == GameMode.ChallengeColumn ? 45 : 35, aTotalCount, customSeed.Weight, 1, TodCurves.Linear);
+                        }
+
+                        if (__instance.mApp.IsFinalBossLevel())
+                        {
+                            if (seedType != SeedType.Jalapeno && seedType != SeedType.Iceshroom && seedType != SeedType.Flowerpot)
+                            {
+                                int emptyPots = __instance.mBoard.CountEmptyPotsOrLilies(SeedType.Flowerpot);
+                                if (emptyPots <= 2)
+                                {
+                                    customSeed.Weight /= 5;
+                                }
+                                else if (emptyPots <= 5)
+                                {
+                                    customSeed.Weight /= 3;
+                                }
+                            }
+
+                            if (seedType == SeedType.Flowerpot && __instance.mApp.IsFinalBossLevel())
+                            {
+                                Zombie boss = __instance.mBoard.GetBossZombie();
+                                if (boss.mZombiePhase == ZombiePhase.BossDropRV)
+                                {
+                                    customSeed.Weight = 500;
+                                }
+                            }
+                        }
+
+                        if (customSeeds.Length > 2)
+                        {
+                            if (aCountInBank >= 4)
+                            {
+                                customSeed.Weight = 1;
+                            }
+                            else if (aCountInBank >= 3)
+                            {
+                                customSeed.Weight = 5;
+                            }
+                            else if (seedType == __instance.mLastConveyorSeedType)
+                            {
+                                customSeed.Weight /= 2;
+                            }
+                        }
+                    }
+
+                    SeedType theSeedType = (SeedType)Common.TodPickFromWeightedArray(customSeeds, customSeeds.Length);
+                    __instance.mBoard.SeedBanks[0].AddSeed(theSeedType, false);
+                    __instance.mLastConveyorSeedType = theSeedType;
+                }
+                return false;
+            }
+        }
+        */
     }
 }
