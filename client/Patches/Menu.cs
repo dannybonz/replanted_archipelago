@@ -32,7 +32,7 @@ namespace ReplantedArchipelago.Patches
         public static GameObject ClientPanel;
         public static GameObject messageInput;
         public static int cachedMessageCount = 0;
-        private static bool darkerLog = false; // keep track of odd/even entries
+        private static bool darkerLog = false; //keep track of odd/even entries
         public static bool showAwardScreen = true;
 
         public static GameObject RemoveUnwantedComponents(GameObject gameObject, bool aggressive)
@@ -62,6 +62,29 @@ namespace ReplantedArchipelago.Patches
                 if (accountSign != null)
                 {
                     accountSign.SetActive(false);
+                }
+
+                GameObject achievementsPot = __instance.transform.Find("Canvas/Layout/Center/Main/BG_Tree/AchievementsButton").gameObject;
+                if (achievementsPot != null)
+                {
+                    achievementsPot.transform.Find("AchievementsTextTop").GetComponent<TextMeshProUGUI>().text = "To China!";
+                    achievementsPot.transform.Find("AchievementsTextbottom").GetComponent<TextMeshProUGUI>().text = "To China!";
+                    achievementsPot.transform.Find("AchievementsText").GetComponent<TextMeshProUGUI>().text = "To China!";
+
+                    RemoveUnwantedComponents(achievementsPot.transform.Find("AchievementsTextTop").gameObject, false);
+                    RemoveUnwantedComponents(achievementsPot.transform.Find("AchievementsTextbottom").gameObject, false);
+                    RemoveUnwantedComponents(achievementsPot.transform.Find("AchievementsText").gameObject, false);
+
+                    Button achievementsButton = achievementsPot.GetComponent<Button>();
+                    achievementsButton.onClick.RemoveAllListeners();
+
+                    Button chinaButton = __instance.transform.Find("Canvas/Layout/Center/Achievements/ScrollView/Viewport/Content/BackgroundTile (34)/DiscoverChina!/ButtonContainer/P_DiscoverChinaButton_kbm").GetComponent<Button>();
+                    achievementsButton.onClick.AddListener((UnityEngine.Events.UnityAction)(() =>
+                    {
+                        chinaButton.onClick.Invoke();
+                    }));
+
+                    achievementsPot.SetActive(false);
                 }
 
                 Data.panelTemplate = __instance.transform.parent.Find("P_UsersPanel_Rename").gameObject;
@@ -125,6 +148,15 @@ namespace ReplantedArchipelago.Patches
                     if (usersPanel != null)
                     {
                         usersPanel.SetActive(false);
+                    }
+
+                    if (APClient.receivedItems.Contains(25))
+                    {
+                        GameObject achievementsPot = __instance.transform.Find("Canvas/Layout/Center/Main/BG_Tree/AchievementsButton").gameObject;
+                        if (achievementsPot != null)
+                        {
+                            achievementsPot.SetActive(true);
+                        }
                     }
 
                     if ((!APClient.currentlyConnected || APClient.apSession.Socket == null || !APClient.apSession.Socket.Connected) && (ConnectionPanel == null || !ConnectionPanel.active))
@@ -377,9 +409,9 @@ namespace ReplantedArchipelago.Patches
             //Position text input
             RectTransform inputRect = messageInput.GetComponent<RectTransform>();
             inputRect.anchoredPosition = new Vector2(-220, -490);
-            inputRect.anchorMin = new Vector2(0.5f, 0.5f); // Anchor in the center
+            inputRect.anchorMin = new Vector2(0.5f, 0.5f); //Anchor in the center
             inputRect.anchorMax = new Vector2(0.5f, 0.5f);
-            inputRect.pivot = new Vector2(0.5f, 0.5f);     // Pivot in the center
+            inputRect.pivot = new Vector2(0.5f, 0.5f);     //Pivot in the center
 
             //Add Send button
             GameObject sendButton = CreateButton("Send", main, SendClientMessage);
@@ -394,9 +426,9 @@ namespace ReplantedArchipelago.Patches
             GameObject closeButton = CreateButton("Close", main, HideClientPanel);
             RectTransform closeRect = closeButton.GetComponent<RectTransform>();
             closeRect.anchoredPosition = new Vector2(0, -650);
-            closeRect.anchorMin = new Vector2(0.5f, 0.5f); // Anchor in the center
+            closeRect.anchorMin = new Vector2(0.5f, 0.5f); //Anchor in the center
             closeRect.anchorMax = new Vector2(0.5f, 0.5f);
-            closeRect.pivot = new Vector2(0.5f, 0.5f);     // Pivot in the center
+            closeRect.pivot = new Vector2(0.5f, 0.5f);     //Pivot in the center
             closeRect.sizeDelta = new Vector2(1880f, closeRect.sizeDelta.y);
 
             //Force layout rebuild
@@ -771,6 +803,10 @@ namespace ReplantedArchipelago.Patches
                         return;
                     }
                     plantDescription.text = Data.plantStats[Data.seedTypes[plantIndex]].StatsString;
+
+                    Transform controllerDescription = plant.Find("Offset/ControllerTipContainer/ToolTipController/Description");
+                    RemoveUnwantedComponents(controllerDescription.gameObject, false);
+                    controllerDescription.GetComponent<TextMeshProUGUI>().text = Data.plantStats[Data.seedTypes[plantIndex]].StatsString;
                 }
             }
         }

@@ -14,7 +14,7 @@ namespace ReplantedArchipelago
     public class Data
     {
         //Version to match with generation
-        public static string GenVersion = "1.4";
+        public static string GenVersion = "1.5";
         //Whether cheat keys are enabled
         public static bool CheatKeys = false;
 
@@ -160,7 +160,6 @@ namespace ReplantedArchipelago
         public static MusicTune[] musicTunes = { MusicTune.DayGrasswalk, MusicTune.MinigameLoonboon, MusicTune.Conveyer, MusicTune.NightMoongrains, MusicTune.PoolWaterygraves, MusicTune.FogRigormormist, MusicTune.RoofGrazetheroof, MusicTune.FinalBossBrainiacManiac, MusicTune.PuzzleCerebrawl };
         public static Dictionary<string, int[]> levelOrders = new Dictionary<string, int[]>();
         public static Dictionary<string, LevelEntryData[]> orderedLevelEntries = new Dictionary<string, LevelEntryData[]>();
-        public static ProjectileType[] projectileTypes = { ProjectileType.Pea, ProjectileType.Snowpea, ProjectileType.Cabbage, ProjectileType.Melon, ProjectileType.Puff, ProjectileType.Wintermelon, ProjectileType.Star, ProjectileType.Spike, ProjectileType.Kernel, ProjectileType.Butter };
         public static string[] plantNames = { "Peashooter", "Sunflower", "Cherry Bomb", "Wall-nut", "Potato Mine", "Snow Pea", "Chomper", "Repeater", "Puff-shroom", "Sun-shroom", "Fume-shroom", "Grave Buster", "Hypno-shroom", "Scaredy-shroom", "Ice-shroom", "Doom-shroom", "Lily Pad", "Squash", "Threepeater", "Tangle Kelp", "Jalapeno", "Spikeweed", "Torchwood", "Tall-nut", "Sea-shroom", "Plantern", "Cactus", "Blover", "Split Pea", "Starfruit", "Pumpkin", "Magnet-shroom", "Cabbage-pult", "Flower Pot", "Kernel-pult", "Coffee Bean", "Garlic", "Umbrella Leaf", "Marigold", "Melon-pult", "Gatling Pea", "Twin Sunflower", "Gloom-shroom", "Cattail", "Winter Melon", "Gold Magnet", "Spikerock", "Cob Cannon", "Imitater" };
 
         //Plant stats
@@ -173,6 +172,24 @@ namespace ReplantedArchipelago
             public List<string> Projectiles { get; set; }
             public int EasyUpgradeCost { get; set; }
             public string StatsString { get; set; }
+            public string ConveyorStatsString { get; set; }
+            public PlantStats OldStats { get; private set; }
+            public void BackupStats() //Save old stats to restore during I, Zombie etc.
+            {
+                if (OldStats == null)
+                {
+                    OldStats = new PlantStats();
+                    OldStats.Cost = this.Cost;
+                    OldStats.Refresh = this.Refresh;
+                    OldStats.Rate = this.Rate;
+                    OldStats.Health = this.Health;
+                    if (Projectiles != null)
+                    {
+                        OldStats.Projectiles = new List<string>(Projectiles);
+                    }
+                    OldStats.EasyUpgradeCost = this.EasyUpgradeCost;
+                }
+            }
         }
 
         public static Dictionary<SeedType, PlantStats> plantStats = new Dictionary<SeedType, PlantStats>
@@ -229,32 +246,36 @@ namespace ReplantedArchipelago
 
         public static SeedType[] upgradePlants = { SeedType.Gatlingpea, SeedType.Twinsunflower, SeedType.Gloomshroom, SeedType.Cattail, SeedType.Wintermelon, SeedType.GoldMagnet, SeedType.Spikerock, SeedType.Cobcannon };
 
-        //Projectile Stats
-        public class ProjectileStats
-        {
-            public int Damage { get; set; }
-            public ProjectileType ProjectileType { get; set; }
-            public int OldDamage { get; set; }
-            public ProjectileStats(int damage, ProjectileType type)
-            {
-                Damage = damage;
-                OldDamage = damage; // set baseline once
-                ProjectileType = type;
-            }
-        }
+        //Projectiles
+        public static ProjectileType[] projectileTypes = { ProjectileType.Pea, ProjectileType.Snowpea, ProjectileType.Cabbage, ProjectileType.Melon, ProjectileType.Puff, ProjectileType.Wintermelon, ProjectileType.Star, ProjectileType.Spike, ProjectileType.Kernel, ProjectileType.Butter, ProjectileType.Fireball };
 
-        public static Dictionary<string, ProjectileStats> projectileStats = new Dictionary<string, ProjectileStats>
+        public static Dictionary<string, ProjectileType> projectileNamesToTypes = new Dictionary<string, ProjectileType>
         {
-            ["Pea"] = new ProjectileStats(20, ProjectileType.Pea),
-            ["Frozen Pea"] = new ProjectileStats(20, ProjectileType.Snowpea),
-            ["Cabbage"] = new ProjectileStats(40, ProjectileType.Cabbage),
-            ["Melon"] = new ProjectileStats(80, ProjectileType.Melon),
-            ["Spore"] = new ProjectileStats(20, ProjectileType.Puff),
-            ["Frozen Melon"] = new ProjectileStats(80, ProjectileType.Wintermelon),
-            ["Star"] = new ProjectileStats(20, ProjectileType.Star),
-            ["Spike"] = new ProjectileStats(20, ProjectileType.Spike),
-            ["Kernel"] = new ProjectileStats(20, ProjectileType.Kernel),
-            ["Butter"] = new ProjectileStats(40, ProjectileType.Butter)
+            ["Pea"] = ProjectileType.Pea,
+            ["Frozen Pea"] = ProjectileType.Snowpea,
+            ["Cabbage"] = ProjectileType.Cabbage,
+            ["Melon"] = ProjectileType.Melon,
+            ["Spore"] = ProjectileType.Puff,
+            ["Frozen Melon"] = ProjectileType.Wintermelon,
+            ["Star"] = ProjectileType.Star,
+            ["Spike"] = ProjectileType.Spike,
+            ["Kernel"] = ProjectileType.Kernel,
+            ["Butter"] = ProjectileType.Butter
+        };
+
+        public static Dictionary<ProjectileType, int> defaultProjectileDamages = new Dictionary<ProjectileType, int>
+        {
+            [ProjectileType.Pea] = 20,
+            [ProjectileType.Snowpea] = 20,
+            [ProjectileType.Cabbage] = 40,
+            [ProjectileType.Melon] = 80,
+            [ProjectileType.Puff] = 20,
+            [ProjectileType.Wintermelon] = 80,
+            [ProjectileType.Star] = 20,
+            [ProjectileType.Spike] = 20,
+            [ProjectileType.Kernel] = 20,
+            [ProjectileType.Butter] = 40,
+            [ProjectileType.Fireball] = 40
         };
 
         public static string FormatPlantStatChanges(string label, double oldValue, double newValue, bool upIsGood)
@@ -496,7 +517,8 @@ namespace ReplantedArchipelago
             { 117, new LevelLocationsEntry { Name = "Cloudy Day: Level 9", ClearLocation = 1116, FlagLocations = new int[] { 2154 } } },
             { 118, new LevelLocationsEntry { Name = "Cloudy Day: Level 10", ClearLocation = 1117, FlagLocations = new int[] { 2155, 2156 } } },
             { 119, new LevelLocationsEntry { Name = "Cloudy Day: Level 11", ClearLocation = 1118, FlagLocations = new int[] { 2157 } } },
-            { 120, new LevelLocationsEntry { Name = "Cloudy Day: Level 12", ClearLocation = 1119, FlagLocations = new int[] { 2158, 2159 } } }
+            { 120, new LevelLocationsEntry { Name = "Cloudy Day: Level 12", ClearLocation = 1119, FlagLocations = new int[] { 2158, 2159 } } },
+            { 121, new LevelLocationsEntry { Name = "China: The Great Wall", ClearLocation = 1120, FlagLocations = new int[] { 2160 } } }
         };
 
         //Matches GameMode to Level Locations dict
@@ -564,6 +586,8 @@ namespace ReplantedArchipelago
             { GameMode.ChallengeShovel, 107 },
             { GameMode.ChallengeStormyNight, 108 },
             { GameMode.ChallengeBungeeBlitz, 109 },
+
+            { GameMode.BonusChina, 121 }
         };
 
         //Base costs for store items

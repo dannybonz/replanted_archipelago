@@ -14,7 +14,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(LevelEntryData levelEntryData, bool isRipMode, ref bool __result)
             {
-                __result = true; //Default to unlocked
+                __result = true; //Default to locked
                 if (!(levelEntryData == null || !APClient.currentlyConnected))
                 {
                     int levelId = Data.GetLevelIdFromEntryData(levelEntryData);

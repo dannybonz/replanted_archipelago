@@ -14,6 +14,7 @@ using ReplantedArchipelago.Patches;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Collections;
 using static ReplantedArchipelago.Data;
 
 namespace ReplantedArchipelago
@@ -69,6 +70,8 @@ namespace ReplantedArchipelago
         public static JObject firingRates;
         public static JObject projectileDamages;
         public static JObject plantHealths;
+        public static JObject conveyorMap;
+        public static int sunPerUpgrade;
 
         public static bool hugeWaveChecks;
 
@@ -153,6 +156,8 @@ namespace ReplantedArchipelago
                     firingRates = (JObject)slotData["firing_rates"];
                     projectileDamages = (JObject)slotData["projectile_damages"];
                     plantHealths = (JObject)slotData["plant_healths"];
+                    conveyorMap = (JObject)slotData["conveyor_map"];
+                    sunPerUpgrade = Convert.ToInt32(slotData["sun_per_upgrade"]);
 
                     adventureProgression = Convert.ToInt32(slotData["adventure_mode_progression"]);
                     minigameLevels = Convert.ToInt32(slotData["minigame_levels"]);
@@ -162,8 +167,8 @@ namespace ReplantedArchipelago
                     bonusLevels = Convert.ToInt32(slotData["bonus_levels"]);
 
                     //Scout locations and store each level's reward
-                    long[] clearLocationIds = Enumerable.Range(1000, 120).Select(i => (long)i).ToArray();
-                    long[] flagLocationIds = Enumerable.Range(2000, 160).Select(i => (long)i).ToArray();
+                    long[] clearLocationIds = Enumerable.Range(1000, 121).Select(i => (long)i).ToArray();
+                    long[] flagLocationIds = Enumerable.Range(2000, 161).Select(i => (long)i).ToArray();
                     long[] shopLocationIds = Enumerable.Range(5000, shopPrices.Count).Select(i => (long)i).ToArray();
                     long[] locationsArray = clearLocationIds
                         .Concat(flagLocationIds)
@@ -196,45 +201,48 @@ namespace ReplantedArchipelago
                     }
 
                     //Set up plant stats
-                    foreach (var plant in Data.plantStats)
+                    foreach (var plant in plantStats)
                     {
                         SeedType theSeedType = plant.Key;
                         PlantStats theStats = plant.Value;
                         string plantIndex = Array.FindIndex(seedTypes, seedType => seedType == theSeedType).ToString();
-                        string statsString = "";
+                        string nonConveyorStats = "";
+                        string otherStats = "";
+                        theStats.BackupStats();
                         if (sunPrices.ContainsKey(plantIndex))
                         {
                             if (easyUpgradePlants && theStats.EasyUpgradeCost > theStats.Cost)
                             {
-                                statsString += Data.FormatPlantStatChanges("Cost", theStats.EasyUpgradeCost, (double)sunPrices[plantIndex], false);
+                                nonConveyorStats += Data.FormatPlantStatChanges("Cost", theStats.OldStats.EasyUpgradeCost, (double)sunPrices[plantIndex], false);
                             }
                             else
                             {
-                                statsString += Data.FormatPlantStatChanges("Cost", theStats.Cost, (double)sunPrices[plantIndex], false);
+                                nonConveyorStats += Data.FormatPlantStatChanges("Cost", theStats.OldStats.Cost, (double)sunPrices[plantIndex], false);
                             }
                             theStats.Cost = (int)sunPrices[plantIndex];
                         }
                         if (rechargeTimes.ContainsKey(plantIndex))
                         {
-                            statsString += Data.FormatPlantStatChanges("Refresh", theStats.Refresh, (double)rechargeTimes[plantIndex], false);
+                            nonConveyorStats += Data.FormatPlantStatChanges("Refresh", theStats.OldStats.Refresh, (double)rechargeTimes[plantIndex], false);
                             theStats.Refresh = (int)rechargeTimes[plantIndex];
                         }
                         if (plantHealths.ContainsKey(plantIndex))
                         {
-                            statsString += Data.FormatPlantStatChanges("Toughness", theStats.Health, (double)plantHealths[plantIndex], true);
+                            otherStats += Data.FormatPlantStatChanges("Toughness", theStats.OldStats.Health, (double)plantHealths[plantIndex], true);
                             theStats.Health = (int)plantHealths[plantIndex];
                         }
                         if (firingRates.ContainsKey(plantIndex))
                         {
-                            statsString += Data.FormatPlantStatChanges("Rate", theStats.Rate, (double)firingRates[plantIndex], true);
+                            otherStats += Data.FormatPlantStatChanges("Rate", theStats.OldStats.Rate, (double)firingRates[plantIndex], true);
                             theStats.Rate = (int)firingRates[plantIndex];
                         }
                         if (theStats.Projectiles != null)
                         {
                             foreach (string projectileName in theStats.Projectiles)
                             {
-                                ProjectileStats theProjectileStats = Data.projectileStats[projectileName];
-                                string projectileIndex = Array.FindIndex(Data.projectileTypes, projectileType => projectileType == theProjectileStats.ProjectileType).ToString();
+                                ProjectileType theProjectileType = projectileNamesToTypes[projectileName];
+                                int projectileDamage = defaultProjectileDamages[theProjectileType];
+                                string projectileIndex = Array.FindIndex(projectileTypes, projectileType => projectileType == theProjectileType).ToString();
                                 if (projectileDamages.ContainsKey(projectileIndex))
                                 {
                                     string damageName = "Damage";
@@ -242,12 +250,12 @@ namespace ReplantedArchipelago
                                     {
                                         damageName = $"{projectileName} Damage";
                                     }
-                                    statsString += Data.FormatPlantStatChanges(damageName, theProjectileStats.OldDamage, (double)projectileDamages[projectileIndex], true);
-                                    theProjectileStats.Damage = (int)projectileDamages[projectileIndex];
+                                    otherStats += FormatPlantStatChanges(damageName, projectileDamage, (double)projectileDamages[projectileIndex], true);
                                 }
                             }
                         }
-                        theStats.StatsString = statsString;
+                        theStats.StatsString = nonConveyorStats + otherStats;
+                        theStats.ConveyorStatsString = otherStats;
                     }
 
                     currentlyConnected = true; //Connection successful!
@@ -692,6 +700,11 @@ namespace ReplantedArchipelago
                 }
             }
             return null;
+        }
+
+        public static int GetSunUpgradeAmount()
+        {
+            return receivedItems.Count(item => item == 18) * sunPerUpgrade;
         }
     }
 }
