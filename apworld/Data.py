@@ -1,13 +1,15 @@
-GEN_VERSION = "1.4" #Version to match mod
+GEN_VERSION = "1.5" #Version to match mod
 
-LEVEL_TYPE_NAMES = {"adventure": "Adventure", "minigame": "Mini-game", "puzzle": "Puzzle", "survival": "Survival", "bonus": "Bonus Levels", "cloudy": "Cloudy Day"}
+LEVEL_TYPE_NAMES = {"adventure": "Adventure", "minigame": "Mini-game", "puzzle": "Puzzle", "survival": "Survival", "bonus": "Bonus Levels", "cloudy": "Cloudy Day", "china": "China"}
 
 LEVEL_LOCATIONS = {
-    "Day":  {"at_night": False, "has_pool": False, "on_roof": False},
-    "Night": {"at_night": True,  "has_pool": False, "on_roof": False},
-    "Pool": {"at_night": False, "has_pool": True,  "on_roof": False},
-    "Fog":  {"at_night": True,  "has_pool": True,  "on_roof": False},
-    "Roof": {"at_night": False, "has_pool": False, "on_roof": True},
+    "Day":  {"at_night": False, "has_pool": False, "on_roof": False, "china": False},
+    "Night": {"at_night": True,  "has_pool": False, "on_roof": False, "china": False},
+    "Pool": {"at_night": False, "has_pool": True,  "on_roof": False, "china": False},
+    "Fog":  {"at_night": True,  "has_pool": True,  "on_roof": False, "china": False},
+    "Roof": {"at_night": False, "has_pool": False, "on_roof": True, "china": False},
+    "Night Roof": {"at_night": True, "has_pool": False, "on_roof": True, "china": False},
+    "China": {"at_night": False, "has_pool": False, "on_roof": False, "china": True}
 }
 
 LEVELS = {
@@ -77,7 +79,8 @@ LEVELS = {
         "choose": False,
         "type": "adventure",
         "flag_location_ids": [],
-        "clear_location_id": 1004
+        "clear_location_id": 1004,
+        "special": "bowling"
     },
     "1-6": {
         "name": "Day: Level 1-6",
@@ -160,7 +163,8 @@ LEVELS = {
         "flag_location_ids": [
             2002
         ],
-        "clear_location_id": 1009
+        "clear_location_id": 1009,
+        "conveyor": {"Peashooter": 20, "Cherry Bomb": 20, "Wall-nut": 15, "Repeater": 20, "Snow Pea": 10, "Chomper": 5, "Potato Mine": 10}
     },
     "2-1": {
         "name": "Night: Level 2-1",
@@ -242,7 +246,8 @@ LEVELS = {
         "choose": False,
         "type": "adventure",
         "flag_location_ids": [],
-        "clear_location_id": 1014
+        "clear_location_id": 1014,
+        "special": "whack"
     },
     "2-6": {
         "name": "Night: Level 2-6",
@@ -314,14 +319,17 @@ LEVELS = {
             "Normal",
             "Conehead",
             "ScreenDoor",
-            "Flag"
+            "Flag",
+            "Football",
+            "Dancer"
         ],
         "choose": False,
         "type": "adventure",
         "flag_location_ids": [
             2007
         ],
-        "clear_location_id": 1019
+        "clear_location_id": 1019,
+        "conveyor": {"Grave Buster": 20, "Ice-shroom": 15, "Doom-shroom": 15, "Hypno-shroom": 10, "Scaredy-shroom": 15, "Fume-shroom": 15, "Puff-shroom": 10}
     },
     "3-1": {
         "name": "Pool: Level 3-1",
@@ -402,14 +410,16 @@ LEVELS = {
             "Normal",
             "Conehead",
             "Snorkel",
-            "Flag"
+            "Flag",
+            "Football"
         ],
         "choose": False,
         "type": "adventure",
         "flag_location_ids": [
             2012
         ],
-        "clear_location_id": 1024
+        "clear_location_id": 1024,
+        "conveyor": {"Lily Pad": 25, "Wall-nut": 15, "Peashooter": 25, "Cherry Bomb": 35}
     },
     "3-6": {
         "name": "Pool: Level 3-6",
@@ -511,7 +521,8 @@ LEVELS = {
             2019,
             2020
         ],
-        "clear_location_id": 1029
+        "clear_location_id": 1029,
+        "conveyor": {"Lily Pad": 25, "Squash": 5, "Threepeater": 25, "Tangle Kelp": 5, "Jalapeno": 10, "Spikeweed": 10, "Torchwood": 10, "Tall-nut": 10}
     },
     "4-1": {
         "name": "Fog: Level 4-1",
@@ -594,7 +605,8 @@ LEVELS = {
         "choose": False,
         "type": "adventure",
         "flag_location_ids": [],
-        "clear_location_id": 1034
+        "clear_location_id": 1034,
+        "special": "vasebreaker"
     },
     "4-6": {
         "name": "Fog: Level 4-6",
@@ -683,7 +695,8 @@ LEVELS = {
         "flag_location_ids": [
             2025
         ],
-        "clear_location_id": 1039
+        "clear_location_id": 1039,
+        "conveyor": {"Lily Pad": 25, "Sea-shroom": 10, "Magnet-shroom": 5, "Blover": 5, "Cactus": 15, "Starfruit": 25, "Split Pea": 5, "Pumpkin": 10}
     },
     "5-1": {
         "name": "Roof: Level 5-1",
@@ -772,7 +785,8 @@ LEVELS = {
         "flag_location_ids": [
             2030
         ],
-        "clear_location_id": 1044
+        "clear_location_id": 1044,
+        "conveyor": {"Flower Pot": 50, "Chomper": 25, "Pumpkin": 15, "Cherry Bomb": 10}
     },
     "5-6": {
         "name": "Roof: Level 5-6",
@@ -855,20 +869,12 @@ LEVELS = {
         "name": "Roof: Dr. Zomboss",
         "flags": 0,
         "location": "Roof",
-        "zombies": [
-            "Normal",
-            "Conehead",
-            "Buckethead",
-            "JackInTheBox",
-            "Bungee",
-            "Ladder",
-            "Catapult",
-            "Gargantuar"
-        ],
         "choose": False,
         "type": "adventure",
         "flag_location_ids": [],
-        "clear_location_id": 1049
+        "clear_location_id": 1049,
+        "conveyor": {"Flower Pot": 55, "Melon-pult": 10, "Jalapeno": 12, "Cabbage-pult": 10, "Kernel-pult": 5, "Ice-shroom": 8},
+        "special": "boss"
     },
     "ChallengeWarAndPeas": {
         "zombies": [
@@ -901,7 +907,8 @@ LEVELS = {
         "flag_location_ids": [
             2038
         ],
-        "clear_location_id": 1051
+        "clear_location_id": 1051,
+        "special": "bowling"
     },
     "ChallengeSlotMachine": {
         "zombies": [
@@ -915,7 +922,8 @@ LEVELS = {
         "flags": 0,
         "type": "minigame",
         "flag_location_ids": [],
-        "clear_location_id": 1052
+        "clear_location_id": 1052,
+        "special": "slot"
     },
     "ChallengeRainingSeeds": {
         "zombies": [
@@ -938,7 +946,8 @@ LEVELS = {
             2040,
             2041
         ],
-        "clear_location_id": 1053
+        "clear_location_id": 1053,
+        "special": "raining"
     },
     "ChallengeBeghouled": {
         "zombies": [
@@ -955,7 +964,8 @@ LEVELS = {
         "flags": 0,
         "type": "minigame",
         "flag_location_ids": [],
-        "clear_location_id": 1054
+        "clear_location_id": 1054,
+        "special": "beghouled"
     },
     "ChallengeInvisighoul": {
         "zombies": [
@@ -974,7 +984,8 @@ LEVELS = {
         "flag_location_ids": [
             2042
         ],
-        "clear_location_id": 1055
+        "clear_location_id": 1055,
+        "conveyor": {"Peashooter": 25, "Wall-nut": 15, "Kernel-pult": 5, "Squash": 15, "Lily Pad": 30, "Ice-shroom": 10}
     },
     "ChallengeSeeingStars": {
         "zombies": [
@@ -988,7 +999,9 @@ LEVELS = {
         "flags": 0,
         "type": "minigame",
         "flag_location_ids": [],
-        "clear_location_id": 1056
+        "clear_location_id": 1056,
+        "special": "art",
+        "forced": ["Starfruit"]
     },
     "ChallengeZombiquarium": {
         "zombies": [],
@@ -998,7 +1011,8 @@ LEVELS = {
         "flags": 0,
         "type": "minigame",
         "flag_location_ids": [],
-        "clear_location_id": 1057
+        "clear_location_id": 1057,
+        "special": "zombiquarium"
     },
     "ChallengeBeghouledTwist": {
         "zombies": [
@@ -1015,7 +1029,8 @@ LEVELS = {
         "flags": 0,
         "type": "minigame",
         "flag_location_ids": [],
-        "clear_location_id": 1058
+        "clear_location_id": 1058,
+        "special": "beghouled"
     },
     "ChallengeLittleTrouble": {
         "zombies": [
@@ -1033,7 +1048,8 @@ LEVELS = {
             2043,
             2044
         ],
-        "clear_location_id": 1059
+        "clear_location_id": 1059,
+        "conveyor": {"Lily Pad": 25, "Wall-nut": 15, "Peashooter": 25, "Cherry Bomb": 35}
     },
     "ChallengePortalCombat": {
         "zombies": [
@@ -1050,7 +1066,8 @@ LEVELS = {
         "flag_location_ids": [
             2045
         ],
-        "clear_location_id": 1060
+        "clear_location_id": 1060,
+        "conveyor": {"Peashooter": 25, "Repeater": 20, "Torchwood": 10, "Cactus": 15, "Wall-nut": 15, "Cherry Bomb": 15}
     },
     "ChallengeColumn": {
         "zombies": [
@@ -1068,7 +1085,9 @@ LEVELS = {
             2046,
             2047
         ],
-        "clear_location_id": 1061
+        "clear_location_id": 1061,
+        "conveyor": {"Flower Pot": 155, "Melon-Pult": 5, "Chomper": 5, "Pumpkin": 15, "Jalapeno": 10, "Squash": 10},
+        "special": "column"
     },
     "ChallengeBobsledBonanza": {
         "zombies": [
@@ -1117,7 +1136,8 @@ LEVELS = {
         "flags": 0,
         "type": "minigame",
         "flag_location_ids": [],
-        "clear_location_id": 1064
+        "clear_location_id": 1064,
+        "special": "whack"
     },
     "ChallengeLastStand": {
         "zombies": [
@@ -1183,7 +1203,8 @@ LEVELS = {
             2060,
             2061
         ],
-        "clear_location_id": 1067
+        "clear_location_id": 1067,
+        "special": "bowling"
     },
     "ChallengePogoParty": {
         "zombies": [
@@ -1208,7 +1229,9 @@ LEVELS = {
         "flags": 0,
         "type": "minigame",
         "flag_location_ids": [],
-        "clear_location_id": 1069
+        "clear_location_id": 1069,
+        "conveyor": {"Flower Pot": 55, "Melon-pult": 10, "Jalapeno": 12, "Cabbage-pult": 10, "Kernel-pult": 5, "Ice-shroom": 8},
+        "special": "boss"
     },
     "ScaryPotter1": {
         "zombies": [],
@@ -1218,7 +1241,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1070
+        "clear_location_id": 1070,
+        "special": "vasebreaker"
     },
     "ScaryPotter2": {
         "zombies": [],
@@ -1228,7 +1252,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1071
+        "clear_location_id": 1071,
+        "special": "vasebreaker"
     },
     "ScaryPotter3": {
         "zombies": [],
@@ -1238,7 +1263,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1072
+        "clear_location_id": 1072,
+        "special": "vasebreaker"
     },
     "ScaryPotter4": {
         "zombies": [],
@@ -1248,7 +1274,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1073
+        "clear_location_id": 1073,
+        "special": "vasebreaker"
     },
     "ScaryPotter5": {
         "zombies": [],
@@ -1258,7 +1285,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1074
+        "clear_location_id": 1074,
+        "special": "vasebreaker"        
     },
     "ScaryPotter6": {
         "zombies": [],
@@ -1268,7 +1296,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1075
+        "clear_location_id": 1075,
+        "special": "vasebreaker"
     },
     "ScaryPotter7": {
         "zombies": [],
@@ -1278,7 +1307,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1076
+        "clear_location_id": 1076,
+        "special": "vasebreaker"
     },
     "ScaryPotter8": {
         "zombies": [],
@@ -1288,7 +1318,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1077
+        "clear_location_id": 1077,
+        "special": "vasebreaker"
     },
     "ScaryPotter9": {
         "zombies": [],
@@ -1298,7 +1329,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1078
+        "clear_location_id": 1078,
+        "special": "vasebreaker"
     },
     "PuzzleIZombie1": {
         "zombies": [],
@@ -1308,7 +1340,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1079
+        "clear_location_id": 1079,
+        "special": "izombie"
     },
     "PuzzleIZombie2": {
         "zombies": [],
@@ -1318,7 +1351,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1080
+        "clear_location_id": 1080,
+        "special": "izombie"
     },
     "PuzzleIZombie3": {
         "zombies": [],
@@ -1328,7 +1362,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1081
+        "clear_location_id": 1081,
+        "special": "izombie"
     },
     "PuzzleIZombie4": {
         "zombies": [],
@@ -1338,7 +1373,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1082
+        "clear_location_id": 1082,
+        "special": "izombie"
     },
     "PuzzleIZombie5": {
         "zombies": [],
@@ -1348,7 +1384,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1083
+        "clear_location_id": 1083,
+        "special": "izombie"
     },
     "PuzzleIZombie6": {
         "zombies": [],
@@ -1358,7 +1395,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1084
+        "clear_location_id": 1084,
+        "special": "izombie"
     },
     "PuzzleIZombie7": {
         "zombies": [],
@@ -1368,7 +1406,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1085
+        "clear_location_id": 1085,
+        "special": "izombie"
     },
     "PuzzleIZombie8": {
         "zombies": [],
@@ -1378,7 +1417,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1086
+        "clear_location_id": 1086,
+        "special": "izombie"
     },
     "PuzzleIZombie9": {
         "zombies": [],
@@ -1388,7 +1428,8 @@ LEVELS = {
         "flags": 0,
         "type": "puzzle",
         "flag_location_ids": [],
-        "clear_location_id": 1087
+        "clear_location_id": 1087,
+        "special": "izombie"
     },
     "SurvivalNormalStage1": {
         "zombies": [
@@ -1725,7 +1766,9 @@ LEVELS = {
         "flags": 0,
         "type": "bonus",
         "flag_location_ids": [],
-        "clear_location_id": 1098
+        "clear_location_id": 1098,
+        "special": "art",
+        "forced": ["Wall-nut"]
     },
     "ChallengeSunnyDay": {
         "zombies": [
@@ -1799,7 +1842,9 @@ LEVELS = {
         "flags": 0,
         "type": "bonus",
         "flag_location_ids": [],
-        "clear_location_id": 1102
+        "clear_location_id": 1102,
+        "special": "art",
+        "forced": ["Starfruit", "Umbrella Leaf", "Wall-nut"]
     },
     "ChallengeAirRaid": {
         "zombies": [
@@ -1863,7 +1908,8 @@ LEVELS = {
             2141,
             2142
         ],
-        "clear_location_id": 1106
+        "clear_location_id": 1106,
+        "conveyor": {"Peashooter": 100}
     },
     "ChallengeStormyNight": {
         "zombies": [
@@ -1881,7 +1927,8 @@ LEVELS = {
             2143,
             2144
         ],
-        "clear_location_id": 1107
+        "clear_location_id": 1107,
+        "conveyor": {"Lily Pad": 30, "Cactus": 10, "Peashooter": 20, "Puff-shroom": 15, "Cherry Bomb": 25}
     },
     "CloudyDay1": {
         "zombies": [
@@ -2089,6 +2136,25 @@ LEVELS = {
         ],
         "clear_location_id": 1119
     }, 
+    "China": {
+        "zombies": [
+            "Normal",
+            "Conehead",
+            "Buckethead",
+            "Polevaulter",
+            "Bungee",
+            "Football"
+        ],
+        "name": "China: The Great Wall",
+        "location": "China",
+        "choose": True,
+        "flags": 2,
+        "type": "china",
+        "flag_location_ids": [
+            2160
+        ],
+        "clear_location_id": 1120
+    }
 }
 
 level_id = 1 
@@ -2196,7 +2262,8 @@ ALL_PLANTS = [
 ]
 
 ATTACKING_PLANTS = ["Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit"]
-PROGRESSION_PLANTS = ["Lily Pad", "Flower Pot", "Spikeweed", "Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit", "Melon-pult", "Winter Melon", "Sunflower", "Sun-shroom", "Wall-nut", "Tall-nut", "Pumpkin", "Torchwood", "Threepeater", "Fume-shroom", "Coffee Bean", "Puff-shroom", "Scaredy-shroom", "Blover", "Cattail", "Magnet-shroom", "Cherry Bomb", "Squash", "Jalapeno", "Grave Buster"]
+PROGRESSION_PLANTS = ["Lily Pad", "Flower Pot", "Spikeweed", "Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit", "Melon-pult", "Winter Melon", "Sunflower", "Sun-shroom", "Wall-nut", "Tall-nut", "Pumpkin", "Torchwood", "Threepeater", "Fume-shroom", "Coffee Bean", "Puff-shroom", "Scaredy-shroom", "Blover", "Cattail", "Magnet-shroom", "Cherry Bomb", "Squash", "Jalapeno", "Grave Buster", "Hypno-shroom"]
+CONVEYOR_ATTACKERS = ["Peashooter", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit", "Melon-pult", "Threepeater", "Fume-shroom", "Scaredy-shroom", "Puff-shroom", "Winter Melon", "Gatling Pea"]
 
 PLANT_STATS = {
     "Peashooter": {"cost": 100, "refresh": 750, "rate": 150, "health": 300, "projectiles": ["Pea"]},
@@ -2239,14 +2306,14 @@ PLANT_STATS = {
     "Umbrella Leaf": {"cost": 100, "refresh": 750, "health": 300},
     "Marigold": {"cost": 50, "refresh": 3000, "rate": 2500, "health": 300},
     "Melon-pult": {"cost": 300, "refresh": 750, "rate": 300, "health": 300, "projectiles": ["Melon"]},
-    "Gatling Pea": {"cost": 250, "refresh": 5000, "rate": 150, "health": 300, "projectiles": ["Pea"], "easy_upgrade_cost": 450},
-    "Twin Sunflower": {"cost": 150, "refresh": 5000, "rate": 2500, "health": 300, "easy_upgrade_cost": 200},
-    "Gloom-shroom": {"cost": 150, "refresh": 5000, "rate": 200, "health": 300, "easy_upgrade_cost": 225},
-    "Cattail": {"cost": 225, "refresh": 5000, "rate": 150, "health": 300, "projectiles": ["Spike"], "easy_upgrade_cost": 250},
-    "Winter Melon": {"cost": 200, "refresh": 5000, "rate": 300, "health": 300, "projectiles": ["Frozen Melon"], "easy_upgrade_cost": 500},
-    "Gold Magnet": {"cost": 50, "refresh": 5000, "health": 300, "easy_upgrade_cost": 150},
-    "Spikerock": {"cost": 125, "refresh": 5000, "health": 450, "easy_upgrade_cost": 450},
-    "Cob Cannon": {"cost": 500, "refresh": 5000, "rate": 600, "health": 300, "easy_upgrade_cost": 700}
+    "Gatling Pea": {"cost": 250, "refresh": 5000, "rate": 150, "health": 300, "projectiles": ["Pea"], "easy_upgrade_cost": 450, "upgraded": "Repeater"},
+    "Twin Sunflower": {"cost": 150, "refresh": 5000, "rate": 2500, "health": 300, "easy_upgrade_cost": 200, "upgraded": "Sunflower"},
+    "Gloom-shroom": {"cost": 150, "refresh": 5000, "rate": 200, "health": 300, "easy_upgrade_cost": 225, "upgraded": "Fume-shroom"},
+    "Cattail": {"cost": 225, "refresh": 5000, "rate": 150, "health": 300, "projectiles": ["Spike"], "easy_upgrade_cost": 250, "upgraded": "Lily Pad"},
+    "Winter Melon": {"cost": 200, "refresh": 5000, "rate": 300, "health": 300, "projectiles": ["Frozen Melon"], "easy_upgrade_cost": 500, "upgraded": "Melon-pult"},
+    "Gold Magnet": {"cost": 50, "refresh": 5000, "health": 300, "easy_upgrade_cost": 150, "upgraded": "Magnet-shroom"},
+    "Spikerock": {"cost": 125, "refresh": 5000, "health": 450, "easy_upgrade_cost": 450, "upgraded": "Spikeweed"},
+    "Cob Cannon": {"cost": 500, "refresh": 5000, "rate": 600, "health": 300, "easy_upgrade_cost": 700, "upgraded": "Kernel-pult"}
 }
 
 PROJECTILE_STATS = {

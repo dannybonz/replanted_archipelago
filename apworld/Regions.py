@@ -14,7 +14,7 @@ def get_cleared_adventure_levels(state, world, player):
     return state.count("Adventure Level Cleared (Area: Day)", player) + state.count("Adventure Level Cleared (Area: Night)", player) + state.count("Adventure Level Cleared (Area: Pool)", player) + state.count("Adventure Level Cleared (Area: Fog)",  player) + state.count("Adventure Level Cleared (Area: Roof)",  player)
 
 def get_total_cleared_levels(state, world, player):
-    return get_cleared_adventure_levels(state, world, player) + state.count("Mini-game Level Cleared", player) + state.count("I, Zombie Level Cleared", player) + state.count("Vasebreaker Level Cleared", player) + state.count("Survival Level Cleared",  player) + state.count("Cloudy Day Level Cleared",  player) + state.count("Bonus Levels Level Cleared",  player)
+    return get_cleared_adventure_levels(state, world, player) + state.count("Mini-game Level Cleared", player) + state.count("I, Zombie Level Cleared", player) + state.count("Vasebreaker Level Cleared", player) + state.count("Survival Level Cleared",  player) + state.count("Cloudy Day Level Cleared",  player) + state.count("Bonus Levels Level Cleared",  player) + state.count("China Level Cleared", player)
     
 def can_access_level(state, world, player, level_data):
     #Access items
@@ -25,7 +25,7 @@ def can_access_level(state, world, player, level_data):
     elif (level_data["type"] == "minigame" and world.options.minigame_levels.value == 4) or (level_data["type"] == "puzzle" and world.options.puzzle_levels.value == 4) or (level_data["type"] == "survival" and world.options.survival_levels.value == 4) or (level_data["type"] == "cloudy" and world.options.cloudy_day_levels.value == 4) or (level_data["type"] == "bonus" and world.options.bonus_levels.value == 2):
         access_item = level_data["unlock_item_name"]
     else:
-        access_item = {"adventure": None, "minigame": "Mini-games", "cloudy": "Cloudy Day", "puzzle": "Puzzle Mode", "bonus": "Bonus Levels", "survival": "Survival Mode"}[level_data["type"]]
+        access_item = {"adventure": None, "minigame": "Mini-games", "cloudy": "Cloudy Day", "puzzle": "Puzzle Mode", "bonus": "Bonus Levels", "survival": "Survival Mode", "china": "China Access"}[level_data["type"]]
     if access_item != None and not state.has(access_item, player):
         return False
 
@@ -90,6 +90,8 @@ def create_regions(world: World) -> None:
         allowed_types.append("cloudy")
     if world.options.bonus_levels.value != 0:
         allowed_types.append("bonus")
+    if world.options.china_level.value != 0:
+        allowed_types.append("china")
 
     adventure_level_index = 0
     for level in world.modified_levels:
@@ -107,7 +109,7 @@ def create_regions(world: World) -> None:
             level_region = Region(level_data["name"], player, multiworld)
             level_region.locations += [PVZRLocation(player, LOCATION_NAME_FROM_ID[location], location, level_region) for location in region_locations]
 
-            if level_data["type"] in ["minigame", "bonus", "puzzle", "survival", "cloudy"] or (level_data["type"] == "adventure" and (level_data["name"] == "Roof: Dr. Zomboss" or (world.options.adventure_mode_progression.value == 1 and adventure_level_index % 10 == 0) or (world.options.adventure_mode_progression.value in [2, 3]))):
+            if level_data["type"] in ["minigame", "bonus", "puzzle", "survival", "cloudy", "china"] or (level_data["type"] == "adventure" and (level_data["name"] == "Roof: Dr. Zomboss" or (world.options.adventure_mode_progression.value == 1 and adventure_level_index % 10 == 0) or (world.options.adventure_mode_progression.value in [2, 3]))):
                 menu_region.connect(connecting_region = level_region,  rule = make_region_rule(world, player, level_data))
             elif level_data["type"] == "adventure":
                 previous_region.connect(connecting_region = level_region,  rule = make_region_rule(world, player, level_data))

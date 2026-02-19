@@ -27,17 +27,14 @@ class HugeWaveLocations(Toggle):
 
 class ZombieRandomisation(Toggle):
     """
-    Randomises the Zombie types included in each level of Adventure Mode. 
-    For example, you may see Dancing Zombies in 1-2 or Gargantuars in 1-3.
-
-    This currently doesn't affect X-5 or X-10 levels.
+    Randomises the Zombie types included in each level.
     """
     display_name = "Zombie Randomisation"
     default = False
 
 class RandomisedZombies(OptionCounter):
     """
-    Determines which Zombies will be included in randomisation.
+    Determines which Zombie types will be included in randomisation.
     This setting only matters if zombie_randomisation is set to true.
     If zombie_randomisation is set to false, this option will be ignored and no Zombies will be randomised.
 
@@ -79,13 +76,42 @@ class RandomisedZombies(OptionCounter):
         "TrashCan": 0
     }
 
+class ZombieRandomisedModes(OptionCounter):
+    """
+    Determines which levels will have their Zombies randomised.
+    This setting only matters if zombie_randomisation is set to true.
+    If zombie_randomisation is set to false, this option will be ignored and no Zombies will be randomised.
+
+    Any mode set to 1 will feature levels with randomised selection of Zombies.
+    Any mode set to 0 will contain its usual Zombies from the original game.
+    """
+    display_name = "Zombie Randomised Modes"
+    min = 0
+    max = 1
+    valid_keys = ["Adventure", "Mini-games", "Survival", "Cloudy Day", "Bonus Levels"]
+    default = {
+        "Adventure": 1,
+        "Mini-games": 1,
+        "Survival": 1,
+        "Cloudy Day": 0,
+        "Bonus Levels": 1
+    }
+
+class ConveyorRandomisation(Toggle):
+    """
+    Randomises the Seed Packet types present on Conveyor Belt levels.
+    """
+    display_name = "Conveyor Randomisation"
+    default = False
+
 class PlantStatRandomisation(Toggle):
     """
     Randomises the stats of each Plant in the game. 
     This affects Sun Cost, Packet Refresh Time, Toughness, Firing Rate and Projectile Damage.
     Plants should remain relatively balanced while still providing variety.
 
-    This setting applies across modes, however it does not currently affect levels without a "Choose Your Seeds" screen.
+    While this affects the majority of levels in the game, it won't affect Puzzle levels or certain Mini-game levels.
+    It will only affect Conveyor Belt levels if conveyor_randomisation is set to true.
 
     This is a brand new option that has not yet been heavily tested. 
     It may be unwise to bring it to group multiworlds in its current state.
@@ -197,6 +223,22 @@ class BonusLevels(Choice):
     option_level_items = 2
     default = 0
 
+class ChinaLevel(Choice):
+    """
+    Determines how the China level ("The Great Wall") will be incorporated into the game.
+
+    - off: The China level will not be included.
+    - vanilla: The China level will be instantly accessible.
+    - item: The China level will be locked behind an item.
+
+    *This option is forced to "off" if goty_compatability_mode is enabled.
+    """
+    display_name = "China Level"
+    option_off = 0
+    option_vanilla = 1
+    option_item = 2
+    default = 0    
+
 class AdventureLevelsGoal(Range):
     """
     Determines how many unique levels of Adventure Mode (if any) must be cleared before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
@@ -273,10 +315,12 @@ class TotalLevelsGoal(Range):
     """
     Determines how many unique levels (if any) must be cleared across all modes combined before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
     If this option is assigned a number higher than the number of available levels then it will be automatically reduced.
+
+    *This option is limited to 97 if goty_compatability_mode is enabled.
     """
     display_name = "Total Levels Goal"
     range_start = 0
-    range_end = 119
+    range_end = 120
     default = 0
 
 class FastGoal(Toggle):
@@ -360,6 +404,33 @@ class ImitaterBehaviour(Choice):
     option_open = 1
     default = 0
 
+class StartingSunUpgrades(Choice):
+    """
+    Adds "Additional Starting Sun" items to the item pool.
+    Obtaining an "Additional Starting Sun" item increases the amount of Sun you will start a level with.
+    
+    - off: No "Additional Starting Sun" items will be generated.
+    - 5_sun_each: Each "Additional Starting Sun" item you obtain will give you 5 additional Sun at the beginning of each level.
+    - 25_sun_each: Each "Additional Starting Sun" item you obtain will give you 25 additional Sun at the beginning of each level.
+    - 50_sun_each: Each "Additional Starting Sun" item you obtain will give you 50 additional Sun at the beginning of each level.
+    """
+    display_name = "Starting Sun Upgrades"
+    option_off = 0
+    option_5_sun_each = 1
+    option_25_sun_each = 2
+    option_50_sun_each = 3
+    default = 0
+
+class MaximumSunUpgrade(Range):
+    """
+    Determines the maximum amount of additional Sun that "Additional Starting Sun" items can provide.
+    Increasing this number results in more "Additional Starting Sun" items being generated.    
+    """
+    display_name = "Maximum Sun Upgrade"
+    range_start = 50
+    range_end = 150
+    default = 50
+
 class MusicShuffle(Choice):
     """
     Randomises the music played during levels.
@@ -424,12 +495,15 @@ class GotyCompatabilityMode(Toggle):
     display_name = "GOTY Compatability Mode"
     default = False
 
+
 @dataclass
 class PVZROptions(PerGameCommonOptions):
     adventure_mode_progression: AdventureModeProgression
     huge_wave_locations: HugeWaveLocations
     zombie_randomisation: ZombieRandomisation
     randomised_zombies: RandomisedZombies
+    zombie_randomised_modes: ZombieRandomisedModes
+    conveyor_randomisation: ConveyorRandomisation
     plant_stat_randomisation: PlantStatRandomisation
     maintain_vanilla_projectile_strength: MaintainVanillaProjectileStrength
     minigame_levels: MinigameLevels
@@ -437,6 +511,7 @@ class PVZROptions(PerGameCommonOptions):
     survival_levels: SurvivalLevels
     cloudy_day_levels: CloudyDayLevels
     bonus_levels: BonusLevels
+    china_level: ChinaLevel
     adventure_levels_goal: AdventureLevelsGoal
     adventure_areas_goal: AdventureAreasGoal
     minigame_levels_goal: MinigameLevelsGoal
@@ -452,6 +527,8 @@ class PVZROptions(PerGameCommonOptions):
     early_sunflower: EarlySunflower
     early_shovel: EarlyShovel
     easy_upgrade_plants: EasyUpgradePlants
+    starting_sun_upgrades: StartingSunUpgrades
+    maximum_sun_upgrade: MaximumSunUpgrade
     imitater_behaviour: ImitaterBehaviour
     music_shuffle: MusicShuffle
     disable_storm_flashes: DisableStormFlashes
@@ -464,11 +541,11 @@ class PVZROptions(PerGameCommonOptions):
 
 OPTION_GROUPS = [
     OptionGroup("AP Settings", [GotyCompatabilityMode, DeathLink]),
-    OptionGroup("Level Access", [AdventureModeProgression, MinigameLevels, PuzzleLevels, SurvivalLevels, CloudyDayLevels, BonusLevels]),    
+    OptionGroup("Level Access", [AdventureModeProgression, MinigameLevels, PuzzleLevels, SurvivalLevels, CloudyDayLevels, BonusLevels, ChinaLevel]),    
     OptionGroup("Extra Locations", [HugeWaveLocations, ShopItems]),
     OptionGroup("Goal", [AdventureLevelsGoal, AdventureAreasGoal, MinigameLevelsGoal, PuzzleLevelsGoal, SurvivalLevelsGoal, CloudyDayLevelsGoal, BonusLevelsGoal, TotalLevelsGoal, FastGoal]),
-    OptionGroup("Zombie & Plant Randomisation", [ZombieRandomisation, RandomisedZombies, PlantStatRandomisation, MaintainVanillaProjectileStrength]),
-    OptionGroup("Other Tweaks", [EasyUpgradePlants, ImitaterBehaviour, DisableStormFlashes, MusicShuffle]),
+    OptionGroup("Zombie & Plant Randomisation", [ConveyorRandomisation, ZombieRandomisation, ZombieRandomisedModes, RandomisedZombies, PlantStatRandomisation, MaintainVanillaProjectileStrength]),
+    OptionGroup("Other Tweaks", [EasyUpgradePlants, ImitaterBehaviour, StartingSunUpgrades, MaximumSunUpgrade, DisableStormFlashes, MusicShuffle]),
     OptionGroup("Early Items", [StartingPlants, StartingSeedSlots, EarlySunflower, EarlyShovel]),
     OptionGroup("Traps", [TrapPercentage, MowerDeployTrapWeight, SeedPacketCooldownTrapWeight, ZombieAmbushTrapWeight])
 ]
