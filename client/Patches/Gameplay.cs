@@ -223,16 +223,19 @@ namespace ReplantedArchipelago.Patches
                                     if (displayingSeedStatsIndex != seedIndex && Data.seedTypes.Contains(theSeedType))
                                     {
                                         int plantIndex = Array.FindIndex(Data.seedTypes, seedType => seedType == theSeedType);
-                                        tooltipObject.transform.Find("Name").GetComponent<TextMeshProUGUI>().text = Data.plantNames[plantIndex];
-                                        if (hasConveyor)
+                                        if (Data.plantStats.ContainsKey(Data.seedTypes[plantIndex]))
                                         {
-                                            tooltipObject.transform.Find("Description").GetComponent<TextMeshProUGUI>().text = Data.plantStats[Data.seedTypes[plantIndex]].ConveyorStatsString;
+                                            tooltipObject.transform.Find("Name").GetComponent<TextMeshProUGUI>().text = Data.plantNames[plantIndex];
+                                            if (hasConveyor)
+                                            {
+                                                tooltipObject.transform.Find("Description").GetComponent<TextMeshProUGUI>().text = Data.plantStats[Data.seedTypes[plantIndex]].ConveyorStatsString;
+                                            }
+                                            else
+                                            {
+                                                tooltipObject.transform.Find("Description").GetComponent<TextMeshProUGUI>().text = Data.plantStats[Data.seedTypes[plantIndex]].StatsString;
+                                            }
+                                            tooltipObject.SetActive(true);
                                         }
-                                        else
-                                        {
-                                            tooltipObject.transform.Find("Description").GetComponent<TextMeshProUGUI>().text = Data.plantStats[Data.seedTypes[plantIndex]].StatsString;
-                                        }
-                                        tooltipObject.SetActive(true);
                                         displayingSeedStatsTime = Time.time;
                                         displayingSeedStatsIndex = seedIndex;
                                     }
