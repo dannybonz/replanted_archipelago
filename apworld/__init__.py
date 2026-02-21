@@ -469,8 +469,8 @@ class PVZRWorld(World):
                         possible_zombies = [zombie for zombie in possible_zombies if zombie in eligible_zombies]
 
                     level_banned_zombies = []
-                    if "special" in level_data and level_data["special"] == "bowling" and "Bungee" in possible_zombies:
-                        level_banned_zombies.append("Bungee")
+                    if "special" in level_data and level_data["special"] == "bowling":
+                        level_banned_zombies += ["Bungee", "Balloon"]
                     elif level_data["name"] == "Roof: Level 5-5":
                         level_banned_zombies += ["Digger", "Balloon", "Pogo"]
                     

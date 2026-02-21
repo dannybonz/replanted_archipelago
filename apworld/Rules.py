@@ -113,6 +113,10 @@ def create_plant_combinations_for_level(world, level_data):
     if any(zombie in level_data["zombies"] for zombie in ["Gargantuar", "GigaGargantuar"]):
         possible_combinations["garg"] = [["Cherry Bomb", "Squash"], ["Squash", "Jalapeno"], ["Jalapeno", "Cherry Bomb"]]
 
+    #Little
+    if "special" in level_data and level_data["special"] in ["little"]:
+        possible_combinations["little"] = [["Cherry Bomb"], ["Jalapeno"]]
+
     return possible_combinations
 
 def eligible_zombies_from_plants(world, level_data, given_plants): #Used for Zombie rando when Conveyor Rando is disabled. Given a list of plants, it spits out what Zombies you can theoretically win against

@@ -110,8 +110,8 @@ class PlantStatRandomisation(Toggle):
     This affects Sun Cost, Packet Refresh Time, Toughness, Firing Rate and Projectile Damage.
     Plants should remain relatively balanced while still providing variety.
 
-    While this affects the majority of levels in the game, it won't affect Puzzle levels or certain Mini-game levels.
-    It will only affect Conveyor Belt levels if conveyor_randomisation is set to true.
+    While this affects the majority of levels in the game, it doesn't affect Puzzle levels or certain Mini-game levels.
+    It only affects Conveyor Belt levels if conveyor_randomisation is set to true.
 
     This is a brand new option that has not yet been heavily tested. 
     It may be unwise to bring it to group multiworlds in its current state.

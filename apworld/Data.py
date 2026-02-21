@@ -419,7 +419,8 @@ LEVELS = {
             2012
         ],
         "clear_location_id": 1024,
-        "conveyor": {"Lily Pad": 25, "Wall-nut": 15, "Peashooter": 25, "Cherry Bomb": 35}
+        "conveyor": {"Lily Pad": 25, "Wall-nut": 15, "Peashooter": 25, "Cherry Bomb": 35},
+        "special": "little"
     },
     "3-6": {
         "name": "Pool: Level 3-6",
@@ -1049,7 +1050,8 @@ LEVELS = {
             2044
         ],
         "clear_location_id": 1059,
-        "conveyor": {"Lily Pad": 25, "Wall-nut": 15, "Peashooter": 25, "Cherry Bomb": 35}
+        "conveyor": {"Lily Pad": 25, "Wall-nut": 15, "Peashooter": 25, "Cherry Bomb": 35},
+        "special": "little"
     },
     "ChallengePortalCombat": {
         "zombies": [
