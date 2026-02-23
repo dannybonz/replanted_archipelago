@@ -27,7 +27,7 @@ def create_plant_combinations_for_level(world, level_data):
         possible_combinations["cloudy"] = [["Peashooter"], ["Snow Pea"], ["Repeater"], ["Cactus"], ["Cabbage-pult"], ["Kernel-pult"]]
     
     #Sun producers
-    if level_data["choose"] and (level_data["type"] != "adventure" or level_data["flags"] > 1):
+    if level_data["choose"] and (level_data["type"] != "adventure" or level_data["flags"] > 1 or at_night):
         if at_night:
             possible_combinations["sun"] = [["Sun-shroom"]]
         else:
@@ -116,6 +116,10 @@ def create_plant_combinations_for_level(world, level_data):
     #Little
     if "special" in level_data and level_data["special"] in ["little"]:
         possible_combinations["little"] = [["Cherry Bomb"], ["Jalapeno"]]
+
+    #Bungee
+    if level_data["name"] in ["Mini-games: Bobsled Bonanza", "Mini-games: Pogo Party", "Bonus Levels: Air Raid"] and "Bungee" in level_data["zombies"]:
+        possible_combinations["bungee"] = [["Umbrella Leaf"]]
 
     return possible_combinations
 

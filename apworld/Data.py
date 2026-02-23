@@ -2264,7 +2264,7 @@ ALL_PLANTS = [
 ]
 
 ATTACKING_PLANTS = ["Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit"]
-PROGRESSION_PLANTS = ["Lily Pad", "Flower Pot", "Spikeweed", "Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit", "Melon-pult", "Winter Melon", "Sunflower", "Sun-shroom", "Wall-nut", "Tall-nut", "Pumpkin", "Torchwood", "Threepeater", "Fume-shroom", "Coffee Bean", "Puff-shroom", "Scaredy-shroom", "Blover", "Cattail", "Magnet-shroom", "Cherry Bomb", "Squash", "Jalapeno", "Grave Buster", "Hypno-shroom"]
+PROGRESSION_PLANTS = ["Lily Pad", "Flower Pot", "Spikeweed", "Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit", "Melon-pult", "Winter Melon", "Sunflower", "Sun-shroom", "Wall-nut", "Tall-nut", "Pumpkin", "Torchwood", "Threepeater", "Fume-shroom", "Coffee Bean", "Puff-shroom", "Scaredy-shroom", "Blover", "Cattail", "Magnet-shroom", "Cherry Bomb", "Squash", "Jalapeno", "Grave Buster", "Hypno-shroom", "Umbrella Leaf"]
 CONVEYOR_ATTACKERS = ["Peashooter", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit", "Melon-pult", "Threepeater", "Fume-shroom", "Scaredy-shroom", "Puff-shroom", "Winter Melon", "Gatling Pea"]
 
 PLANT_STATS = {
@@ -2314,7 +2314,7 @@ PLANT_STATS = {
     "Cattail": {"cost": 225, "refresh": 5000, "rate": 150, "health": 300, "projectiles": ["Spike"], "easy_upgrade_cost": 250, "upgraded": "Lily Pad"},
     "Winter Melon": {"cost": 200, "refresh": 5000, "rate": 300, "health": 300, "projectiles": ["Frozen Melon"], "easy_upgrade_cost": 500, "upgraded": "Melon-pult"},
     "Gold Magnet": {"cost": 50, "refresh": 5000, "health": 300, "easy_upgrade_cost": 150, "upgraded": "Magnet-shroom"},
-    "Spikerock": {"cost": 125, "refresh": 5000, "health": 450, "easy_upgrade_cost": 450, "upgraded": "Spikeweed"},
+    "Spikerock": {"cost": 125, "refresh": 5000, "health": 450, "easy_upgrade_cost": 225, "upgraded": "Spikeweed"},
     "Cob Cannon": {"cost": 500, "refresh": 5000, "rate": 600, "health": 300, "easy_upgrade_cost": 700, "upgraded": "Kernel-pult"}
 }
 

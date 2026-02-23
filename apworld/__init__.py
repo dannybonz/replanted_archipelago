@@ -472,7 +472,9 @@ class PVZRWorld(World):
                     if "special" in level_data and level_data["special"] == "bowling":
                         level_banned_zombies += ["Bungee", "Balloon"]
                     elif level_data["name"] == "Roof: Level 5-5":
-                        level_banned_zombies += ["Digger", "Balloon", "Pogo"]
+                        level_banned_zombies += ["Digger", "Balloon", "Pogo", "Zomboni"]
+                    elif level_data["name"] in ["Mini-games: Bobsled Bonanza", "Mini-games: Pogo Party", "Bonus Levels: Air Raid"]:
+                        level_banned_zombies += ["GigaGargantuar"]
                     
                     for zombie in level_banned_zombies:
                         if zombie in possible_zombies:
@@ -589,6 +591,7 @@ class PVZRWorld(World):
                 randomised_base_form_cost = self.sun_prices[ALL_PLANTS.index(stats["upgraded"])]
                 difference_in_cost = randomised_base_form_cost - base_form_base_cost
                 base_cost -= difference_in_cost #I think this helps balance out sun costs for upgrade plants
+                base_cost = max(self.random.choice(range(200, 20, -5)), base_cost) #Prevents negative plant costs (lol)
 
             #Prevent Sun cost from exceeding a maximum; if it does, then increase cooldown accordingly instead
             max_price = self.random.choice(range(1000, 970, -5))
@@ -635,6 +638,8 @@ class PVZRWorld(World):
                 conveyor_weights = {}
 
                 banned_plants = ["Sunflower", "Sun-shroom", "Coffee Bean", "Imitater", "Plantern", "Lily Pad", "Flower Pot", "Twin Sunflower"]
+                if on_roof:
+                    banned_plants += ["Spikeweed", "Spikerock"]
                 if level_data["name"] == "Mini-games: Portal Combat":
                     banned_plants += ["Starfruit", "Split Pea"]
                 plants_to_use = [plant for plant in plants_to_use if plant not in banned_plants]

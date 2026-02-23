@@ -495,7 +495,6 @@ class GotyCompatabilityMode(Toggle):
     display_name = "GOTY Compatability Mode"
     default = False
 
-
 @dataclass
 class PVZROptions(PerGameCommonOptions):
     adventure_mode_progression: AdventureModeProgression
@@ -545,7 +544,7 @@ OPTION_GROUPS = [
     OptionGroup("Extra Locations", [HugeWaveLocations, ShopItems]),
     OptionGroup("Goal", [AdventureLevelsGoal, AdventureAreasGoal, MinigameLevelsGoal, PuzzleLevelsGoal, SurvivalLevelsGoal, CloudyDayLevelsGoal, BonusLevelsGoal, TotalLevelsGoal, FastGoal]),
     OptionGroup("Zombie & Plant Randomisation", [ConveyorRandomisation, ZombieRandomisation, ZombieRandomisedModes, RandomisedZombies, PlantStatRandomisation, MaintainVanillaProjectileStrength]),
-    OptionGroup("Other Tweaks", [EasyUpgradePlants, ImitaterBehaviour, StartingSunUpgrades, MaximumSunUpgrade, DisableStormFlashes, MusicShuffle]),
-    OptionGroup("Early Items", [StartingPlants, StartingSeedSlots, EarlySunflower, EarlyShovel]),
+    OptionGroup("Gameplay Tweaks", [EasyUpgradePlants, ImitaterBehaviour, StartingSunUpgrades, MaximumSunUpgrade, DisableStormFlashes, MusicShuffle]),
+    OptionGroup("Other Item Options", [StartingPlants, StartingSeedSlots, EarlySunflower, EarlyShovel, FillerWeights]),
     OptionGroup("Traps", [TrapPercentage, MowerDeployTrapWeight, SeedPacketCooldownTrapWeight, ZombieAmbushTrapWeight])
 ]
