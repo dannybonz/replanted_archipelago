@@ -42,19 +42,39 @@ namespace ReplantedArchipelago.Patches
                 APClient.queuedUpCoins = 0;
             }
 
-            if (APClient.queuedUpPurchases.Count > 0)
+            if (APClient.queuedUpPurchaseItems.Count > 0)
             {
-                foreach (int purchaseId in APClient.queuedUpPurchases)
+                foreach (int itemId in APClient.queuedUpPurchaseItems)
                 {
-                    userService.ActiveUserProfile.mPurchases[purchaseId] = 1;
+                    if (Data.itemIdToPurchaseId.ContainsKey(itemId))
+                    {
+                        userService.SetPurchases(Data.itemIdToPurchaseId[itemId], 1);
+                    }
+                    else if (Data.itemIdToConsumablePurchaseId.ContainsKey(itemId))
+                    {
+                        AddConsumablePurchase(userService, Data.itemIdToConsumablePurchaseId[itemId], 1);
+                    }
                 }
-                APClient.queuedUpPurchases = new List<int>();
+                APClient.queuedUpPurchaseItems = new List<long>(); //Clear list
             }
 
             if (Main.currentScene == "Frontend")
             {
                 Main.Log("Refreshing profile...");
                 userService.SetActiveProfile(userService.ActiveUserIndex);
+            }
+        }
+
+        public static void AddConsumablePurchase(IUserService userService, int purchaseId, int amount)
+        {
+            int currentAmount = userService.GetPurchases(purchaseId);
+            if (currentAmount <= 1000)
+            {
+                userService.SetPurchases(purchaseId, 1001);
+            }
+            else
+            {
+                userService.SetPurchases(purchaseId, currentAmount + 1);
             }
         }
 
@@ -79,7 +99,10 @@ namespace ReplantedArchipelago.Patches
                     Main.Log("Profile Validation: Passed.");
                     profileValidated = true;
                     userService.ActiveUserProfile.mZenGardenTutorialCompleted = true; //Skip Zen Garden tutorial
-                    userService.ActiveUserProfile.mLevel = 40; //Set level to 40
+                    userService.ActiveUserProfile.mLevel = 41; //Set level to 41
+                    userService.SetPurchases(25, 1); //Activate other Zen Garden types
+                    userService.SetPurchases(27, 1);
+                    userService.SetPurchases(18, 1);
                 }
                 else //Current profile does not match desired guids
                 {
@@ -106,7 +129,10 @@ namespace ReplantedArchipelago.Patches
                             RegisterNewestProfile(profiles.Last());
                             userService.SetActiveProfile(profiles.IndexOf(profiles.Last()));
                             userService.ActiveUserProfile.mZenGardenTutorialCompleted = true; //Skip Zen Garden tutorial
-                            userService.ActiveUserProfile.mLevel = 40; //Set level to 40
+                            userService.ActiveUserProfile.mLevel = 41; //Set level to 41
+                            userService.SetPurchases(25, 1); //Activate other Zen Garden types
+                            userService.SetPurchases(27, 1);
+                            userService.SetPurchases(18, 1);
                             profileValidated = true;
                         }
                     }

@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using ReplantedArchipelago.Patches;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Unity.Collections;
 using static ReplantedArchipelago.Data;
@@ -72,16 +73,18 @@ namespace ReplantedArchipelago
         public static JObject plantHealths;
         public static JObject conveyorMap;
         public static int sunPerUpgrade;
-
-        public static bool hugeWaveChecks;
+        public static bool energyLinkEnabled;
+        public static int tacoGoal;
 
         public static int shopPages;
-        public static int shopPagesVisible = 1;
+        public static int shopPagesVisible = 0;
         public static List<int> clearedLevels = new List<int>();
         public static string chooserRefreshState = "none";
         public static int queuedUpCoins = 0;
-        public static List<int> queuedUpPurchases = new List<int>();
+        public static List<long> queuedUpPurchaseItems = new List<long>();
         public static DeathLink receivedDeathLink = null;
+        public static long energyLinkBalance;
+        public static List<double> queuedUpItemEffects = new List<double>();
 
         public static void AttemptConnection(string hostInput, string slotInput, string passwordInput)
         {
@@ -94,7 +97,7 @@ namespace ReplantedArchipelago
 
             try
             {
-                result = apSession.TryConnectAndLogin("Plants vs. Zombies: Replanted", slotInput, ItemsHandlingFlags.AllItems, password: passwordInput, requestSlotData: true);
+                result = apSession.TryConnectAndLogin("Plants vs. Zombies", slotInput, ItemsHandlingFlags.AllItems, password: passwordInput, requestSlotData: true);
             }
             catch (Exception e)
             {
@@ -158,6 +161,20 @@ namespace ReplantedArchipelago
                     plantHealths = (JObject)slotData["plant_healths"];
                     conveyorMap = (JObject)slotData["conveyor_map"];
                     sunPerUpgrade = Convert.ToInt32(slotData["sun_per_upgrade"]);
+                    tacoGoal = Convert.ToInt32(slotData["taco_goal"]);
+
+                    energyLinkEnabled = Convert.ToBoolean(slotData["energylink_enabled"]);
+                    if (energyLinkEnabled) //Set up energy link
+                    {
+                        apSession.DataStorage[$"EnergyLink{APClient.apSession.Players.ActivePlayer.Team}"].Initialize(0);
+                        energyLinkBalance = apSession.DataStorage[$"EnergyLink{APClient.apSession.Players.ActivePlayer.Team}"];
+                        apSession.DataStorage[$"EnergyLink{APClient.apSession.Players.ActivePlayer.Team}"].OnValueChanged += (_, newBalance, none) =>
+                        {
+                            {
+                                energyLinkBalance = (long)newBalance;
+                            }
+                        };
+                    }
 
                     adventureProgression = Convert.ToInt32(slotData["adventure_mode_progression"]);
                     minigameLevels = Convert.ToInt32(slotData["minigame_levels"]);
@@ -186,7 +203,6 @@ namespace ReplantedArchipelago
                     clearedLevels = apSession.DataStorage[Scope.Slot, "clearedLevels"];
 
                     Data.levelOrders = new Dictionary<string, int[]>();
-
                     Data.levelOrders["minigames"] = GetOrderedLevelIDs(minigameUnlocks, 20, 51);
                     Data.levelOrders["survival"] = GetOrderedLevelIDs(survivalUnlocks, 10, 89);
                     Data.levelOrders["puzzle"] = GetOrderedLevelIDs(vasebreakerUnlocks, 9, 71).Concat(GetOrderedLevelIDs(izombieUnlocks, 9, 80)).ToArray();
@@ -326,7 +342,7 @@ namespace ReplantedArchipelago
             {
                 if (!item.Player.Name.Equals(slot))
                 {
-                    string messageLabel = $"Received {item.ItemDisplayName} from {item.Player.Name}";
+                    string messageLabel = $"Received <color={itemColors[GetPrimaryItemClassification(item.Flags)]}>{item.ItemDisplayName}</color> from <color=#EE00EE>{item.Player.Name}</color>";
                     Main.QueuedIngameMessages.Enqueue(new Data.QueuedIngameMessage { MessageLabel = messageLabel, ItemId = item.ItemId, WasReceived = true });
                 }
 
@@ -344,13 +360,24 @@ namespace ReplantedArchipelago
                     queuedUpCoins += 100;
                 }
 
-                //Increase counter for displayed messages (to prevent messages being displayed multiple times)
+                //Add other items
+                if (itemIdToConsumablePurchaseId.ContainsKey(item.ItemId))
+                {
+                    queuedUpPurchaseItems.Add(item.ItemId);
+                }
+
+                if (Data.gameEffectItems.Contains(item.ItemId))
+                {
+                    queuedUpItemEffects.Add(item.ItemId);
+                }
+
+                //Increase counter for displayed messages (to prevent messages being displayed and consumables being given multiple times)
                 displayedIngameMessages++;
             }
 
             receivedItems.Add(item.ItemId); //Add item to inventory
 
-            if (item.ItemId == Data.itemIds["Twiddiedinkies Restock"])
+            if (item.ItemId == 2 || item.ItemId == 15 || item.ItemId == 28)
             {
                 shopPagesVisible++;
                 if (shopPagesVisible > shopPages) //More Twiddydinkies Restocks than there are pages of items (should only occur if using start inventory or admin commands)
@@ -358,17 +385,9 @@ namespace ReplantedArchipelago
                     shopPagesVisible = shopPages;
                 }
             }
-            else if (item.ItemId == Data.itemIds["Wall-nut First Aid"])
+            else if (itemIdToPurchaseId.ContainsKey(item.ItemId))
             {
-                queuedUpPurchases.Add((int)StoreItem.Firstaid);
-            }
-            else if (item.ItemId == Data.itemIds["Pool Cleaners"])
-            {
-                queuedUpPurchases.Add((int)StoreItem.PoolCleaner);
-            }
-            else if (item.ItemId == Data.itemIds["Roof Cleaners"])
-            {
-                queuedUpPurchases.Add((int)StoreItem.RoofCleaner);
+                queuedUpPurchaseItems.Add(item.ItemId);
             }
             else if (item.ItemId >= 100 && item.ItemId < 200)
             {
@@ -435,11 +454,11 @@ namespace ReplantedArchipelago
                     {
                         if (scoutedLocations[locationId].Player.Name.Equals(slot) == false)
                         {
-                            Main.QueuedIngameMessages.Enqueue(new Data.QueuedIngameMessage { MessageLabel = $"Sent {scoutedLocations[locationId].ItemName} to {scoutedLocations[locationId].Player.Name}", ItemId = -1, WasReceived = false });
+                            Main.QueuedIngameMessages.Enqueue(new Data.QueuedIngameMessage { MessageLabel = $"Sent <color={itemColors[GetPrimaryItemClassification(scoutedLocations[locationId].Flags)]}>{scoutedLocations[locationId].ItemName}</color> to <color=#EE00EE>{scoutedLocations[locationId].Player.Name}</color>", ItemId = -1, WasReceived = false });
                         }
                         else
                         {
-                            Main.QueuedIngameMessages.Enqueue(new Data.QueuedIngameMessage { MessageLabel = $"You found your {scoutedLocations[locationId].ItemName}", ItemId = scoutedLocations[locationId].ItemId, WasReceived = true });
+                            Main.QueuedIngameMessages.Enqueue(new Data.QueuedIngameMessage { MessageLabel = $"You found your <color={itemColors[GetPrimaryItemClassification(scoutedLocations[locationId].Flags)]}>{scoutedLocations[locationId].ItemName}</color>", ItemId = scoutedLocations[locationId].ItemId, WasReceived = true });
                         }
                     }
                 }
@@ -498,7 +517,7 @@ namespace ReplantedArchipelago
 
         public static int GetSeedSlots(long[] extraPlants, long[] bannedPlants)
         {
-            int numberOfSlots = receivedItems.Count(item => item == Data.itemIds["Extra Seed Slot"]) + 1;
+            int numberOfSlots = Math.Min(receivedItems.Count(item => item == Data.itemIds["Extra Seed Slot"]) + 1, 10);
             int numberOfPlants = GetHowManyPlants(extraPlants, bannedPlants);
 
             return Math.Min(numberOfPlants, numberOfSlots);
@@ -524,7 +543,7 @@ namespace ReplantedArchipelago
                 }
             }
 
-            return clearedLevels.Count >= overallLevelsGoal && GetClearedAreaCount() >= adventureAreasGoal && clearedLevels.Count(levelId => levelId < 51) >= adventureLevelsGoal && clearedLevels.Count(levelId => levelId >= 51 && levelId < 71) >= minigameLevelsGoal && (clearedLevels.Count(levelId => levelId >= 71 && levelId < 89)) >= puzzleLevelsGoal && clearedLevels.Count(levelId => levelId >= 89 && levelId < 99) >= survivalLevelsGoal && clearedLevels.Count(levelId => levelId >= 109 && levelId < 121) >= cloudyDayLevelsGoal && clearedLevels.Count(levelId => levelId >= 99 && levelId < 109) >= bonusLevelsGoal;
+            return receivedItems.Count(receivedItem => receivedItem == 27) >= APClient.tacoGoal && clearedLevels.Count >= overallLevelsGoal && GetClearedAreaCount() >= adventureAreasGoal && clearedLevels.Count(levelId => levelId < 51) >= adventureLevelsGoal && clearedLevels.Count(levelId => levelId >= 51 && levelId < 71) >= minigameLevelsGoal && (clearedLevels.Count(levelId => levelId >= 71 && levelId < 89)) >= puzzleLevelsGoal && clearedLevels.Count(levelId => levelId >= 89 && levelId < 99) >= survivalLevelsGoal && clearedLevels.Count(levelId => levelId >= 109 && levelId < 121) >= cloudyDayLevelsGoal && clearedLevels.Count(levelId => levelId >= 99 && levelId < 109) >= bonusLevelsGoal;
         }
 
         public static int GetClearedAreaCount()
@@ -685,7 +704,7 @@ namespace ReplantedArchipelago
                     Profile.focusedLevelId += 1;
                 }
             }
-            SendLocation(Data.AllLevelLocations[levelId].ClearLocation, !Menu.showAwardScreen);
+            SendLocation(Data.AllLevelLocations[levelId].ClearLocation, Data.SkipAwardScreen);
         }
 
         public static ItemInfo GetLevelCompleteAward(GameplayActivity gameplayActivity)
@@ -705,6 +724,59 @@ namespace ReplantedArchipelago
         public static int GetSunUpgradeAmount()
         {
             return receivedItems.Count(item => item == 18) * sunPerUpgrade;
+        }
+
+        public static string GetTreeHint()
+        {
+            Hint[] existingHints = apSession.Hints.GetHints();
+            HashSet<long> hintedLocationIds = existingHints.Select(existingHint => existingHint.LocationId).ToHashSet();
+
+            ReadOnlyCollection<long> uncheckedLocations = apSession.Locations.AllMissingLocations;
+            List<long> availableLocations = uncheckedLocations.Where(locationId => !hintedLocationIds.Contains(locationId) && scoutedLocations.ContainsKey(locationId)).ToList();
+            if (availableLocations.Count == 0) //Literally everything has been hinted already
+            {
+                return null;
+            }
+
+            long[] selectedLocation = { availableLocations[random.Next(availableLocations.Count)] };
+            apSession.Hints.CreateHints(apSession.Players.ActivePlayer.Slot, HintStatus.Unspecified, selectedLocation);
+            ScoutedItemInfo itemInfo = scoutedLocations[selectedLocation[0]];
+
+            string locationName = $"<color=#00CC4D>{itemInfo.LocationDisplayName}</color>";
+            string itemName = $"<color={itemColors[GetPrimaryItemClassification(itemInfo.Flags)]}>{itemInfo.ItemDisplayName}</color>";
+
+            string playerName_You = "You";
+            string playerName_your = "your";
+            string playerName_their = "your";
+            string playerName_Your = "Your";
+            string playerName_you = "you";
+            if (itemInfo.Player.Slot != apSession.Players.ActivePlayer.Slot)
+            {
+                playerName_You = $"<color=#EE00EE>{itemInfo.Player}</color>";
+                playerName_your = $"<color=#EE00EE>{itemInfo.Player}</color>'s";
+                playerName_their = "their";
+                playerName_Your = $"<color=#EE00EE>{itemInfo.Player}</color>'s";
+                playerName_you = $"<color=#EE00EE>{itemInfo.Player}</color>";
+            }
+
+            string[] hintStrings =
+            {
+                $"Looking for {playerName_your} {itemName}? Then you probably want to check out {locationName}.",
+                $"I heard a rumour about {locationName}. {playerName_You} may have lost {playerName_their} {itemName} there.",
+                $"A little birdie told me {playerName_your} {itemName} is at {locationName}.",
+                $"I wouldn't waste my time with {locationName}. That is, unless you want to find {playerName_your} {itemName}.",
+                $"Searching for {playerName_your} {itemName}? {locationName} is what you're after.",
+                $"Planning on checking out {locationName}? I hope you're ready for {playerName_your} {itemName}.",
+                $"Curious about {locationName}? Well, legend has it, you might stumble across {playerName_your} {itemName} there.",
+                $"If you're in the market for {playerName_your} {itemName}, {locationName} should be your primary target.",
+                $"You're asking about {itemName}? {playerName_Your} {itemName}? The very same {itemName} that can be found at {locationName}?",
+                $"{playerName_Your} {itemName} has no business being at {locationName}, but I guess it doesn't play by the rules.",
+                $"I think I saw a Zombie drop {playerName_your} {itemName} around {locationName}. It was either that, or one of its own discarded limbs.",
+                $"Clearing {locationName} would probably make {playerName_you} very happy. That is, if {playerName_your} {itemName} is any good.",
+                $"I've always hated {locationName}. Which is unfortunate, because if {playerName_your} {itemName} is any good, then you'll probably need to head over there."
+            };
+
+            return hintStrings[random.Next(hintStrings.Count())];
         }
     }
 }

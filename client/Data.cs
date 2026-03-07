@@ -4,28 +4,31 @@ using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.Services;
 using Il2CppReloaded.TreeStateActivities;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
+using static ReplantedArchipelago.Patches.Store;
 
 namespace ReplantedArchipelago
 {
     public class Data
     {
         //Version to match with generation
-        public static string GenVersion = "1.5";
+        public static string GenVersion = "1.6";
         //Whether cheat keys are enabled
         public static bool CheatKeys = false;
+        public static bool SkipAwardScreen = false;
+
+        public static System.Random random = new System.Random();
 
         //UI templates
         public static GameObject buttonTemplate;
-        public static GameObject headerTemplate;
         public static GameObject panelTemplate;
         public static GameObject errorTemplate;
         public static GameObject clientTemplate;
         public static GameObject logTemplate;
         public static GameObject inputTemplate;
+        public static GameObject subheaderTemplate;
+        public static GameObject headerTemplate;
 
         //Classes
         public class LevelLocationsEntry
@@ -84,75 +87,81 @@ namespace ReplantedArchipelago
             { "Imitater", 148 }
         };
 
+        public static double[] gameEffectItems = { 50, 51, 52, 53, 54, 55, 56, 64, 70, 71, 72 };
+
         public static Dictionary<long, string> itemIdDefaultTooltips = new Dictionary<long, string>
         {
             { 2, "KEYS_DESCRIPTION" },
             { 4, "SHOVEL_DESCRIPTION" },
-            { 5, "SUBURBAN_ALMANAC_DESCRIPTION" }
+            { 5, "SUBURBAN_ALMANAC_DESCRIPTION" },
+            { 6, "WATERING_CAN_DESCRIPTION" },
+            { 60, "ADVICE_CLICKED_ON_COIN" },
+            { 61, "ADVICE_CLICKED_ON_COIN" },
+            { 62, "ADVICE_CLICKED_ON_COIN" }
         };
 
-        public static Dictionary<long, string> itemIdSpriteName = new Dictionary<long, string>
+        public static Dictionary<long, string> itemIdCustomDescriptions = new Dictionary<long, string>
         {
-            { 2, "SPR_CarKeys" },
-            { 4, "SPR_ShovelHiRes" },
-            { 5, "SPR_Almanac" },
-
-            { 100, "SPR_Almanac_Seedpackets_PeaShooter"},
-            { 101, "SPR_Almanac_Seedpackets_Sunflower"},
-            { 102, "SPR_Almanac_Seedpackets_CherryBomb"},
-            { 103, "SPR_Almanac_Seedpackets_Wall-Nut"},
-            { 104, "SPR_Almanac_Seedpackets_PotatoMine"},
-            { 105, "SPR_Almanac_Seedpackets_SnowPea"},
-            { 106, "SPR_Almanac_Seedpackets_Chomper"},
-            { 107, "SPR_Almanac_Seedpackets_Repeater"},
-            { 108, "SPR_Almanac_Seedpackets_Puff-shroom"},
-            { 109, "SPR_Almanac_Seedpackets_Sun-shroom"},
-            { 110, "SPR_Almanac_Seedpackets_Fume-shroom"},
-            { 111, "SPR_Almanac_Seedpackets_GraveBuster"},
-            { 112, "SPR_Almanac_Seedpackets_Hypno-shroom"},
-            { 113, "SPR_Almanac_Seedpackets_Scaredy-shroom"},
-            { 114, "SPR_Almanac_Seedpackets_Ice-shroom"},
-            { 115, "SPR_Almanac_Seedpackets_Doom-shroom"},
-            { 116, "SPR_Almanac_Seedpackets_LilyPad"},
-            { 117, "SPR_Almanac_Seedpackets_Squash"},
-            { 118, "SPR_Almanac_Seedpackets_Threepeater"},
-            { 119, "SPR_Almanac_Seedpackets_TangleKelp"},
-            { 120, "SPR_Almanac_Seedpackets_Jalapeno"},
-            { 121, "SPR_Almanac_Seedpackets_Spikeweed"},
-            { 122, "SPR_Almanac_Seedpackets_Torchwood"},
-            { 123, "SPR_Almanac_Seedpackets_Tall-nut"},
-            { 124, "SPR_Almanac_Seedpackets_Sea-shroom"},
-            { 125, "SPR_Almanac_Seedpackets_Plantern"},
-            { 126, "SPR_Almanac_Seedpackets_Cactus"},
-            { 127, "SPR_Almanac_Seedpackets_Blover"},
-            { 128, "SPR_Almanac_Seedpackets_SplitPea"},
-            { 129, "SPR_Almanac_Seedpackets_Starfruit"},
-            { 130, "SPR_Almanac_Seedpackets_Pumpkin"},
-            { 131, "SPR_Almanac_Seedpackets_Magnet-shroom"},
-            { 132, "SPR_Almanac_Seedpackets_Cabbage-pult"},
-            { 133, "SPR_Almanac_Seedpackets_FlowerPot"},
-            { 134, "SPR_Almanac_Seedpackets_Kernel-pult"},
-            { 135, "SPR_Almanac_Seedpackets_CoffeeBean"},
-            { 136, "SPR_Almanac_Seedpackets_Garlic"},
-            { 137, "SPR_Almanac_Seedpackets_UmbrellaLeaf"},
-            { 138, "SPR_Almanac_Seedpackets_Marigold"},
-            { 139, "SPR_Almanac_Seedpackets_Melon-pult"},
-            { 140, "SPR_Almanac_Seedpackets_GatlingPea"},
-            { 141, "SPR_Almanac_Seedpackets_TwinSunflower"},
-            { 142, "SPR_Almanac_Seedpackets_Gloom-shroom"},
-            { 143, "SPR_Almanac_Seedpackets_Cattail"},
-            { 144, "SPR_Almanac_Seedpackets_WinterMelon"},
-            { 145, "SPR_Almanac_Seedpackets_GoldMagnet"},
-            { 146, "SPR_Almanac_Seedpackets_Spikerock"},
-            { 147, "SPR_Almanac_Seedpackets_CobCannon"},
-            { 148, "SPR_Almanac_Seedpackets_Imitater"}
+            { 3, "Lets you carry an extra plant" },
+            { 7, "You can now play Mini-games" },
+            { 8, "You can now play Puzzle mode" },
+            { 9, "You can now play Survival mode" },
+            { 10, "You can now play Cloudy Day" },
+            { 11, "You can now play Bonus Levels" },
+            { 12, "Adds an extra line of defense for roof levels" },
+            { 13, "Adds an extra line of defense on levels with a pool" },
+            { 15, "More items are available in Crazy Dave's shop" },
+            { 18, "Lets you start with more sun" },
+            { 19, "Increases the reward received from lawn mowers" },
+            { 20, "You can now play Adventure: Day" },
+            { 21, "You can now play Adventure: Night" },
+            { 22, "You can now play Adventure: Pool" },
+            { 23, "You can now play Adventure: Fog" },
+            { 24, "You can now play Adventure: Roof" },
+            { 25, "You can now play China: The Great Wall" },
+            { 27, "Required to unlock the final level" },
+            { 30, "A useful Zen Garden item" },
+            { 31, "A useful Zen Garden item" },
+            { 32, "A useful Zen Garden item" },
+            { 33, "A useful Zen Garden item" },
+            { 34, "A useful Zen Garden item" },
+            { 63, "It won't help against the zombies, but everyone loves bacon!" },
+            { 64, "Drops a random seed packet" },
+            { 65, "Used to grow your Tree of Wisdom" },
+            { 66, "Used to grow Zen Garden plants" },
+            { 67, "Used to keep Zen Garden plants happy" },
+            { 68, "Fed to Stinky or your Zen Garden plants" },
+            { 70, "Instantly deploys your lawn mowers" },
+            { 71, "Puts all seeds on cooldown" },
+            { 72, "Summons an ambush of zombies" },
         };
 
         public static Dictionary<long, CoinType> awardCoinTypes = new Dictionary<long, CoinType>
         {
             { 2, CoinType.CarKeys },
             { 4, CoinType.Shovel },
-            { 5, CoinType.Almanac }
+            { 5, CoinType.Almanac },
+            { 6, CoinType.WateringCan }
+        };
+
+        public static Dictionary<long, int> itemIdToPurchaseId = new Dictionary<long, int>
+        {
+            { 12, (int)StoreItem.RoofCleaner },
+            { 13, (int)StoreItem.PoolCleaner },
+            { 16, (int)StoreItem.Firstaid },
+            { 30, (int)StoreItem.GardeningGlove },
+            { 31, (int)StoreItem.GoldWateringcan },
+            { 32, (int)StoreItem.Phonograph },
+            { 33, (int)StoreItem.StinkyTheSnail },
+            { 34, (int)StoreItem.WheelBarrow }
+        };
+
+        public static Dictionary<long, int> itemIdToConsumablePurchaseId = new Dictionary<long, int>
+        {
+            { 68, (int)StoreItem.Chocolate },
+            { 66, (int)StoreItem.Fertilizer },
+            { 67, (int)StoreItem.BugSpray },
+            { 65, (int)StoreItem.TreeFood }
         };
 
         //Common Game Data
@@ -240,7 +249,7 @@ namespace ReplantedArchipelago
             [SeedType.Cattail] = new PlantStats { Cost = 225, Refresh = 5000, Rate = 150, Health = 300, Projectiles = new List<string> { "Spike" }, EasyUpgradeCost = 250 },
             [SeedType.Wintermelon] = new PlantStats { Cost = 200, Refresh = 5000, Rate = 300, Health = 300, Projectiles = new List<string> { "Frozen Melon" }, EasyUpgradeCost = 500 },
             [SeedType.GoldMagnet] = new PlantStats { Cost = 50, Refresh = 5000, Health = 300, EasyUpgradeCost = 150 },
-            [SeedType.Spikerock] = new PlantStats { Cost = 125, Refresh = 5000, Health = 450, EasyUpgradeCost = 450 },
+            [SeedType.Spikerock] = new PlantStats { Cost = 125, Refresh = 5000, Health = 450, EasyUpgradeCost = 225 },
             [SeedType.Cobcannon] = new PlantStats { Cost = 500, Refresh = 5000, Rate = 600, Health = 300, EasyUpgradeCost = 700 }
         };
 
@@ -685,40 +694,6 @@ namespace ReplantedArchipelago
             return levelId;
         }
 
-        public static Sprite FindSpriteByName(string spriteName)
-        {
-            foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
-            {
-                if (sprite.name == spriteName)
-                {
-                    return sprite;
-                }
-            }
-            return null;
-        }
-
-        private static byte[] LoadEmbeddedResource(string resourceName)
-        {
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            Stream stream = assembly.GetManifestResourceStream(resourceName);
-            MemoryStream memoryStream = new MemoryStream();
-
-            stream.CopyTo(memoryStream);
-            return memoryStream.ToArray();
-        }
-
-        public static Sprite LoadEmbeddedSprite(string resourceName, int pixelsPerUnit)
-        {
-            byte[] data = LoadEmbeddedResource(resourceName);
-
-            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            texture.LoadImage(data);
-            texture.filterMode = FilterMode.Bilinear;
-            texture.wrapMode = TextureWrapMode.Clamp;
-
-            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
-        }
-
         public static string GetTransitionNameFromLevelId(int levelId)
         {
             string result = "LevelSelect";
@@ -740,5 +715,111 @@ namespace ReplantedArchipelago
             }
             return result;
         }
+
+        public static long EnergyLinkWithdrawMultiplier = 100000000; //per 10 coins
+        public static long EnergyLinkDepositMultiplier = (long)(EnergyLinkWithdrawMultiplier * 0.75);
+        public static string FormatEnergyString(long energyAmount)
+        {
+            if (energyAmount < 1000)
+            {
+                return $"{energyAmount} J";
+            }
+            else if (energyAmount < 1000000)
+            {
+                return $"{energyAmount / 1000.0:0.##} kJ";
+            }
+            else if (energyAmount < 1000000000)
+            {
+                return $"{energyAmount / 1000000.0:0.##} MJ";
+            }
+            else
+            {
+                return $"{energyAmount / 1000000000.0:0.##} GJ";
+            }
+        }
+
+        public static SeedType GetFreeSeedType(Board board)
+        {
+            //Any level
+            List<SeedType> freeSeedTypes = new List<SeedType> { SeedType.Cherrybomb, SeedType.Wallnut, SeedType.Potatomine, SeedType.Chomper, SeedType.Squash, SeedType.Jalapeno, SeedType.Tallnut, SeedType.Pumpkinshell, SeedType.Cabbagepult, SeedType.Kernelpult, SeedType.Garlic, SeedType.Marigold, SeedType.Melonpult };
+
+            //Sun producers - not on conveyor levels
+            if (!board.HasConveyorBeltSeedBank())
+            {
+                freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Sunflower }).ToList();
+                if (APClient.easyUpgradePlants)
+                {
+                    freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Twinsunflower }).ToList();
+                }
+            }
+
+            //Upgrade plants - any level
+            if (APClient.easyUpgradePlants)
+            {
+                freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Wintermelon, SeedType.GoldMagnet, SeedType.Cobcannon }).ToList();
+            }
+
+            //Nocturnal
+            if (board.mBackground == BackgroundType.Night || board.mBackground == BackgroundType.Fog)
+            {
+                freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Puffshroom, SeedType.Sunshroom, SeedType.Fumeshroom, SeedType.Hypnoshroom, SeedType.Scaredyshroom, SeedType.Iceshroom, SeedType.Doomshroom, SeedType.Magnetshroom }).ToList();
+                if (APClient.easyUpgradePlants)
+                {
+                    freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Gloomshroom }).ToList();
+                }
+            }
+
+            //Aquatic
+            if (board.mBackground == BackgroundType.Pool || board.mBackground == BackgroundType.Fog)
+            {
+                freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Lilypad, SeedType.Tanglekelp }).ToList();
+                if (board.mBackground == BackgroundType.Fog)
+                {
+                    freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Seashroom, SeedType.Plantern }).ToList();
+                }
+                if (APClient.easyUpgradePlants)
+                {
+                    freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Cattail }).ToList();
+                }
+            }
+
+            //No Roof
+            if (board.mBackground != BackgroundType.Roof)
+            {
+                freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Peashooter, SeedType.Snowpea, SeedType.Repeater, SeedType.Threepeater, SeedType.Torchwood, SeedType.Spikeweed, SeedType.Cactus, SeedType.Splitpea, SeedType.Starfruit }).ToList();
+                if (APClient.easyUpgradePlants)
+                {
+                    freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Gatlingpea, SeedType.Spikerock }).ToList();
+                }
+            }
+            else //Roof
+            {
+                freeSeedTypes = freeSeedTypes.Concat(new List<SeedType> { SeedType.Flowerpot }).ToList();
+            }
+
+            return freeSeedTypes[random.Next(freeSeedTypes.Count)];
+        }
+
+        public static CustomStoreEntry[] zenGardenStoreEntries = {
+            new CustomStoreEntry { Name = "Fertilizer", Class = ItemFlags.None, Cost = 750 },
+            new CustomStoreEntry { Name = "Bug Spray", Class = ItemFlags.None, Cost = 1000 },
+            new CustomStoreEntry { Name = "Tree Food", Class = ItemFlags.None, Cost = 1000 }
+        };
+
+        public static Dictionary<int, string> zenGardenItemStrings = new Dictionary<int, string>
+        {
+            { 5000, "CRAZY_DAVE_2020" },
+            { 5001, "CRAZY_DAVE_2022" },
+            { 5002, "CRAZY_DAVE_2031" }
+        };
+
+        //AP Client item text colors
+        public static Dictionary<ItemFlags, string> itemColors = new Dictionary<ItemFlags, string>()
+        {
+            { ItemFlags.Trap, "#FA8072" },
+            { ItemFlags.Advancement, "#AF99EF" },
+            { ItemFlags.NeverExclude, "#6D8BE8" },
+            { ItemFlags.None, "#00BCBC" }
+        };
     }
 }

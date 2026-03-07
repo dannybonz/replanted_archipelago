@@ -8,7 +8,6 @@ using Il2CppReloaded.UI;
 using Il2CppSource.Binders;
 using Il2CppSource.DataModels;
 using Il2CppSource.TreeStateActivities;
-using Il2CppSource.Utils;
 using Il2CppTekly.DataModels.Binders;
 using Il2CppTekly.DataModels.Models;
 using Il2CppTekly.Localizations;
@@ -33,7 +32,9 @@ namespace ReplantedArchipelago.Patches
         public static GameObject messageInput;
         public static int cachedMessageCount = 0;
         private static bool darkerLog = false; //keep track of odd/even entries
-        public static bool showAwardScreen = true;
+        public static GameObject EnergyLinkPanel;
+        public static GameObject EnergyAmountInput;
+        public static GameObject EnergyLinkText;
 
         public static GameObject RemoveUnwantedComponents(GameObject gameObject, bool aggressive)
         {
@@ -93,20 +94,32 @@ namespace ReplantedArchipelago.Patches
                 Data.inputTemplate = __instance.transform.parent.Find("P_UsersPanel_Rename/Canvas/Layout/Center/Rename/NameInputField").gameObject;
                 Data.logTemplate = RemoveUnwantedComponents(__instance.transform.parent.Find("P_UsersPanel/Canvas/Layout/Center/Main/InsetWindow/P_UsersPanel_UserEntry").gameObject, true);
                 Data.buttonTemplate = RemoveUnwantedComponents(__instance.transform.parent.Find("P_UsersPanel/Canvas/Layout/Center/Main/Buttons/P_BacicButton_Rename").gameObject, false);
+                Data.subheaderTemplate = RemoveUnwantedComponents(__instance.transform.parent.Find("P_UsersPanel_InvalidName/Canvas/Layout/Center/NameConflict/SubheadingText").gameObject, false);
+                Data.headerTemplate = RemoveUnwantedComponents(__instance.transform.parent.Find("P_UsersPanel_InvalidName/Canvas/Layout/Center/NameConflict/HeaderText").gameObject, false);
 
                 GameObject apSettingsButton = CreateButton("Text Client", __instance.transform.Find("Canvas/Layout/Center/Main/Menu"), ShowClientPanel);
                 RectTransform apSettingsRect = apSettingsButton.GetComponent<RectTransform>();
                 apSettingsRect.anchorMin = new Vector2(0, 1);
                 apSettingsRect.anchorMax = new Vector2(0, 1);
                 apSettingsRect.pivot = new Vector2(0, 1);
-                apSettingsRect.anchoredPosition = new Vector2(310f, -20f);
+                apSettingsRect.anchoredPosition = new Vector2(310, -20);
 
                 GameObject apGoalButton = CreateButton("View Goal", __instance.transform.Find("Canvas/Layout/Center/Main/Menu"), ShowGoalPanel);
                 RectTransform apGoalRect = apGoalButton.GetComponent<RectTransform>();
                 apGoalRect.anchorMin = new Vector2(0, 1);
                 apGoalRect.anchorMax = new Vector2(0, 1);
                 apGoalRect.pivot = new Vector2(0, 1);
-                apGoalRect.anchoredPosition = new Vector2(310f, -200f);
+                apGoalRect.anchoredPosition = new Vector2(310, -200);
+
+                if (APClient.energyLinkEnabled)
+                {
+                    GameObject energyLinkButton = CreateButton("Energy Link", __instance.transform.Find("Canvas/Layout/Center/Main/Menu"), ShowEnergyLinkPanel);
+                    RectTransform energyLinkRect = energyLinkButton.GetComponent<RectTransform>();
+                    energyLinkRect.anchorMin = new Vector2(0, 1);
+                    energyLinkRect.anchorMax = new Vector2(0, 1);
+                    energyLinkRect.pivot = new Vector2(0, 1);
+                    energyLinkRect.anchoredPosition = new Vector2(310, -380);
+                }
 
                 if (!APClient.currentlyConnected)
                 {
@@ -121,7 +134,7 @@ namespace ReplantedArchipelago.Patches
                 if (Profile.cachedUserService != null)
                 {
                     Main.Log("Adjusting Level...");
-                    Profile.cachedUserService.ActiveUserProfile.mLevel = 40; //Set level back to 40 (prevents the forced 1-1?)
+                    Profile.cachedUserService.ActiveUserProfile.mLevel = 41; //Set level back to 41 (prevents the forced 1-1?)
                 }
 
                 Main.Log("Main Menu Panel View modified.");
@@ -166,7 +179,7 @@ namespace ReplantedArchipelago.Patches
                         ShowErrorPanel("Lost Connection", "You have been disconnected from the server.");
                     }
 
-                    if (APClient.currentlyConnected && ClientPanel != null && ClientPanel.active && APClient.receivedMessages.Count > cachedMessageCount)
+                    if (APClient.currentlyConnected && ClientPanel != null && APClient.receivedMessages.Count > cachedMessageCount)
                     {
                         for (int i = cachedMessageCount; i < APClient.receivedMessages.Count; i++)
                         {
@@ -284,6 +297,10 @@ namespace ReplantedArchipelago.Patches
             {
                 goalText += $"Total Levels: {APClient.clearedLevels.Count()}/{APClient.overallLevelsGoal}<br>";
             }
+            if (APClient.tacoGoal > 0)
+            {
+                goalText += $"Taco Hunt: {APClient.receivedItems.Count(receivedItem => receivedItem == 27)}/{APClient.tacoGoal}<br>";
+            }
 
             if (APClient.fastGoal == false)
             {
@@ -314,7 +331,6 @@ namespace ReplantedArchipelago.Patches
             ShowErrorPanel("Goal", goalText);
         }
 
-
         public static void ShowErrorPanel(string header, string text)
         {
             ErrorPanel = GameObject.Instantiate(Data.errorTemplate, Data.errorTemplate.transform.parent);
@@ -341,105 +357,261 @@ namespace ReplantedArchipelago.Patches
 
         public static void ShowClientPanel()
         {
-            ClientPanel = GameObject.Instantiate(Data.clientTemplate, Data.clientTemplate.transform.parent);
-            ClientPanel.name = "ClientPanel";
-            ClientPanel.SetActive(true);
-
-            Transform main = ClientPanel.transform.Find("Canvas/Layout/Center/Main");
-            GameObject headerObject = RemoveUnwantedComponents(main.Find("HeaderText").gameObject, true);
-            headerObject.GetComponent<TextMeshProUGUI>().text = "Text Client";
-
-            //Delete old entries
-            Transform insetWindow = main.Find("InsetWindow");
-            for (int i = insetWindow.childCount - 1; i >= 0; i--)
+            if (ClientPanel != null)
             {
-                Transform child = insetWindow.GetChild(i);
-                if (child.name.StartsWith("P_UsersPanel"))
+                ClientPanel.SetActive(true);
+            }
+            else
+            {
+                ClientPanel = GameObject.Instantiate(Data.clientTemplate, Data.clientTemplate.transform.parent);
+                ClientPanel.name = "ClientPanel";
+                ClientPanel.SetActive(true);
+
+                Transform main = ClientPanel.transform.Find("Canvas/Layout/Center/Main");
+                GameObject headerObject = RemoveUnwantedComponents(main.Find("HeaderText").gameObject, true);
+                headerObject.GetComponent<TextMeshProUGUI>().text = "Text Client";
+
+                //Delete old entries
+                Transform insetWindow = main.Find("InsetWindow");
+                for (int i = insetWindow.childCount - 1; i >= 0; i--)
                 {
-                    GameObject.DestroyImmediate(child.gameObject);
+                    Transform child = insetWindow.GetChild(i);
+                    if (child.name.StartsWith("P_UsersPanel"))
+                    {
+                        GameObject.DestroyImmediate(child.gameObject);
+                    }
+                }
+
+                //Create scrolling container for log entries
+                RectTransform insetRect = insetWindow.GetComponent<RectTransform>();
+                if (insetRect.GetComponent<RectMask2D>() == null)
+                    insetRect.gameObject.AddComponent<RectMask2D>();
+
+                GameObject clientLogsContainer = new GameObject("ClientLogs");
+                RectTransform clientLogsRect = clientLogsContainer.AddComponent<RectTransform>();
+                clientLogsRect.SetParent(insetRect, false);
+                clientLogsRect.anchorMin = new Vector2(0, 1);
+                clientLogsRect.anchorMax = new Vector2(1, 1);
+                clientLogsRect.pivot = new Vector2(0.5f, 1);
+                clientLogsRect.anchoredPosition = Vector2.zero;
+                clientLogsRect.sizeDelta = Vector2.zero;
+
+                VerticalLayoutGroup layout = clientLogsContainer.AddComponent<VerticalLayoutGroup>();
+                layout.childAlignment = TextAnchor.UpperLeft;
+                layout.childControlWidth = true;
+                layout.childControlHeight = true;
+                layout.childForceExpandWidth = true;
+                layout.childForceExpandHeight = false;
+
+                ContentSizeFitter fitter = clientLogsContainer.AddComponent<ContentSizeFitter>();
+                fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                ScrollRect scrollRect = main.gameObject.AddComponent<ScrollRect>();
+                scrollRect.viewport = insetRect;
+                scrollRect.content = clientLogsRect;
+                scrollRect.horizontal = false;
+                scrollRect.vertical = true;
+                scrollRect.movementType = ScrollRect.MovementType.Clamped;
+                scrollRect.scrollSensitivity = 20f;
+
+                //Delete old buttons
+                GameObject.DestroyImmediate(main.Find("Buttons").gameObject);
+
+                //Add text input
+                messageInput = GameObject.Instantiate(Data.inputTemplate, main);
+                messageInput.name = "MessageInput";
+                messageInput.SetActive(true);
+                messageInput.GetComponent<TMP_InputField>().onValueChanged = new TMP_InputField.OnChangeEvent();
+                messageInput.GetComponent<TMP_InputField>().characterLimit = 200;
+
+                //Position text input
+                RectTransform inputRect = messageInput.GetComponent<RectTransform>();
+                inputRect.anchoredPosition = new Vector2(-220, -490);
+                inputRect.anchorMin = new Vector2(0.5f, 0.5f); //Anchor in the center
+                inputRect.anchorMax = new Vector2(0.5f, 0.5f);
+                inputRect.pivot = new Vector2(0.5f, 0.5f);     //Pivot in the center
+
+                //Add Send button
+                GameObject sendButton = CreateButton("Send", main, SendClientMessage);
+                RectTransform sendRect = sendButton.GetComponent<RectTransform>();
+                sendRect.anchoredPosition = new Vector2(725, -485);
+                sendRect.anchorMin = new Vector2(0.5f, 0.5f);
+                sendRect.anchorMax = new Vector2(0.5f, 0.5f);
+                sendRect.pivot = new Vector2(0.5f, 0.5f);
+                sendRect.sizeDelta = new Vector2(420f, sendRect.sizeDelta.y);
+
+                //Add Close button
+                GameObject closeButton = CreateButton("Close", main, HideClientPanel);
+                RectTransform closeRect = closeButton.GetComponent<RectTransform>();
+                closeRect.anchoredPosition = new Vector2(0, -650);
+                closeRect.anchorMin = new Vector2(0.5f, 0.5f); //Anchor in the center
+                closeRect.anchorMax = new Vector2(0.5f, 0.5f);
+                closeRect.pivot = new Vector2(0.5f, 0.5f);     //Pivot in the center
+                closeRect.sizeDelta = new Vector2(1880f, closeRect.sizeDelta.y);
+
+                //Force layout rebuild
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(clientLogsRect);
+
+                //Build previously received messages
+                cachedMessageCount = APClient.receivedMessages.Count;
+                foreach (string message in APClient.receivedMessages)
+                {
+                    AddClientMessage(message);
                 }
             }
+        }
 
-            //Create scrolling container for log entries
-            RectTransform insetRect = insetWindow.GetComponent<RectTransform>();
-            if (insetRect.GetComponent<RectMask2D>() == null)
-                insetRect.gameObject.AddComponent<RectMask2D>();
-
-            GameObject clientLogsContainer = new GameObject("ClientLogs");
-            RectTransform clientLogsRect = clientLogsContainer.AddComponent<RectTransform>();
-            clientLogsRect.SetParent(insetRect, false);
-            clientLogsRect.anchorMin = new Vector2(0, 1);
-            clientLogsRect.anchorMax = new Vector2(1, 1);
-            clientLogsRect.pivot = new Vector2(0.5f, 1);
-            clientLogsRect.anchoredPosition = Vector2.zero;
-            clientLogsRect.sizeDelta = Vector2.zero;
-
-            VerticalLayoutGroup layout = clientLogsContainer.AddComponent<VerticalLayoutGroup>();
-            layout.childAlignment = TextAnchor.UpperLeft;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-
-            ContentSizeFitter fitter = clientLogsContainer.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            ScrollRect scrollRect = main.gameObject.AddComponent<ScrollRect>();
-            scrollRect.viewport = insetRect;
-            scrollRect.content = clientLogsRect;
-            scrollRect.horizontal = false;
-            scrollRect.vertical = true;
-            scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            scrollRect.scrollSensitivity = 20f;
-
-            //Delete old buttons
-            Transform buttonArea = main.Find("Buttons");
-            GameObject.DestroyImmediate(buttonArea.Find("P_BacicButton_OK").gameObject);
-            GameObject.DestroyImmediate(buttonArea.Find("P_BacicButton_Cancel").gameObject);
-            GameObject.DestroyImmediate(buttonArea.Find("P_BacicButton_Delete").gameObject);
-            GameObject.DestroyImmediate(buttonArea.Find("P_BacicButton_Rename").gameObject);
-
-            //Add text input
-            messageInput = GameObject.Instantiate(Data.inputTemplate, main);
-            messageInput.name = "MessageInput";
-            messageInput.SetActive(true);
-            messageInput.GetComponent<TMP_InputField>().onValueChanged = new TMP_InputField.OnChangeEvent();
-            messageInput.GetComponent<TMP_InputField>().characterLimit = 200;
-
-            //Position text input
-            RectTransform inputRect = messageInput.GetComponent<RectTransform>();
-            inputRect.anchoredPosition = new Vector2(-220, -490);
-            inputRect.anchorMin = new Vector2(0.5f, 0.5f); //Anchor in the center
-            inputRect.anchorMax = new Vector2(0.5f, 0.5f);
-            inputRect.pivot = new Vector2(0.5f, 0.5f);     //Pivot in the center
-
-            //Add Send button
-            GameObject sendButton = CreateButton("Send", main, SendClientMessage);
-            RectTransform sendRect = sendButton.GetComponent<RectTransform>();
-            sendRect.anchoredPosition = new Vector2(725, -485);
-            sendRect.anchorMin = new Vector2(0.5f, 0.5f);
-            sendRect.anchorMax = new Vector2(0.5f, 0.5f);
-            sendRect.pivot = new Vector2(0.5f, 0.5f);
-            sendRect.sizeDelta = new Vector2(420f, sendRect.sizeDelta.y);
-
-            //Add Close button
-            GameObject closeButton = CreateButton("Close", main, HideClientPanel);
-            RectTransform closeRect = closeButton.GetComponent<RectTransform>();
-            closeRect.anchoredPosition = new Vector2(0, -650);
-            closeRect.anchorMin = new Vector2(0.5f, 0.5f); //Anchor in the center
-            closeRect.anchorMax = new Vector2(0.5f, 0.5f);
-            closeRect.pivot = new Vector2(0.5f, 0.5f);     //Pivot in the center
-            closeRect.sizeDelta = new Vector2(1880f, closeRect.sizeDelta.y);
-
-            //Force layout rebuild
-            Canvas.ForceUpdateCanvases();
-            LayoutRebuilder.ForceRebuildLayoutImmediate(clientLogsRect);
-
-            //Build previously received messages
-            cachedMessageCount = APClient.receivedMessages.Count;
-            foreach (string message in APClient.receivedMessages)
+        public static void ShowEnergyLinkPanel()
+        {
+            if (EnergyLinkPanel != null)
             {
-                AddClientMessage(message);
+                EnergyLinkPanel.SetActive(true);
+            }
+            else
+            {
+                EnergyLinkPanel = GameObject.Instantiate(Data.clientTemplate, Data.clientTemplate.transform.parent);
+                EnergyLinkPanel.name = "EnergyLinkPanel";
+                EnergyLinkPanel.SetActive(true);
+
+                Transform main = EnergyLinkPanel.transform.Find("Canvas/Layout/Center/Main");
+                GameObject headerObject = RemoveUnwantedComponents(main.Find("HeaderText").gameObject, true);
+                headerObject.GetComponent<TextMeshProUGUI>().text = "Energy Link";
+                headerObject.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 415);
+
+                //Delete old buttons
+                GameObject.DestroyImmediate(main.Find("Buttons").gameObject);
+
+                //Add number input
+                EnergyAmountInput = GameObject.Instantiate(Data.inputTemplate, main);
+                EnergyAmountInput.name = "EnergyAmountInput";
+                EnergyAmountInput.SetActive(true);
+                EnergyAmountInput.GetComponent<TMP_InputField>().characterLimit = 6;
+                EnergyAmountInput.GetComponent<TMP_InputField>().contentType = TMP_InputField.ContentType.IntegerNumber; //Numbers only
+                EnergyAmountInput.GetComponent<TMP_InputField>().onValueChanged = new TMP_InputField.OnChangeEvent();
+                EnergyAmountInput.GetComponent<TMP_InputField>().onValueChanged.AddListener((UnityEngine.Events.UnityAction<string>)OnEnergyInputChanged);
+                EnergyAmountInput.GetComponent<TMP_InputField>().placeholder.GetComponent<TextMeshProUGUI>().text = "Enter amount...";
+                RectTransform inputRect = EnergyAmountInput.GetComponent<RectTransform>();
+                inputRect.anchoredPosition = new Vector2(-610, -305);
+                inputRect.anchorMin = new Vector2(0.5f, 0.5f);
+                inputRect.anchorMax = new Vector2(0.5f, 0.5f);
+                inputRect.pivot = new Vector2(0.5f, 0.5f);
+                inputRect.sizeDelta = new Vector2(640, inputRect.sizeDelta.y);
+
+                //Add Deposit button
+                GameObject sendButton = CreateButton("Deposit", main, DepositEnergy);
+                RectTransform sendRect = sendButton.GetComponent<RectTransform>();
+                sendRect.anchoredPosition = new Vector2(20, -300);
+                sendRect.anchorMin = new Vector2(0.5f, 0.5f);
+                sendRect.anchorMax = new Vector2(0.5f, 0.5f);
+                sendRect.pivot = new Vector2(0.5f, 0.5f);
+                sendRect.sizeDelta = new Vector2(600, sendRect.sizeDelta.y);
+
+                //Add Withdraw button
+                GameObject withdrawButton = CreateButton("Withdraw", main, WithdrawEnergy);
+                RectTransform withdrawRect = withdrawButton.GetComponent<RectTransform>();
+                withdrawRect.anchoredPosition = new Vector2(640, -300);
+                withdrawRect.anchorMin = new Vector2(0.5f, 0.5f);
+                withdrawRect.anchorMax = new Vector2(0.5f, 0.5f);
+                withdrawRect.pivot = new Vector2(0.5f, 0.5f);
+                withdrawRect.sizeDelta = new Vector2(600, withdrawRect.sizeDelta.y);
+
+                //Add Close button
+                GameObject closeButton = CreateButton("Close", main, HideEnergyLinkPanel);
+                RectTransform closeRect = closeButton.GetComponent<RectTransform>();
+                closeRect.anchoredPosition = new Vector2(0, -470);
+                closeRect.anchorMin = new Vector2(0.5f, 0.5f);
+                closeRect.anchorMax = new Vector2(0.5f, 0.5f);
+                closeRect.pivot = new Vector2(0.5f, 0.5f);
+                closeRect.sizeDelta = new Vector2(1880f, closeRect.sizeDelta.y);
+
+                //Add Text
+                GameObject.DestroyImmediate(main.Find("InsetWindow").gameObject);
+                EnergyLinkText = CreateSubheader("EnergyLinkText", main);
+                UpdateEnergyLinkText();
+                RectTransform energyLinkBalanceRect = EnergyLinkText.GetComponent<RectTransform>();
+                energyLinkBalanceRect.anchoredPosition = new Vector2(0, 100);
+                energyLinkBalanceRect.anchorMin = new Vector2(0.5f, 0.5f);
+                energyLinkBalanceRect.anchorMax = new Vector2(0.5f, 0.5f);
+                energyLinkBalanceRect.pivot = new Vector2(0.5f, 0.5f);
+
+                //Resize Window
+                RectTransform windowRect = main.Find("P_Dialog").gameObject.GetComponent<RectTransform>();
+                windowRect.sizeDelta = new Vector2(2187, 1250);
+            }
+        }
+
+        public static void OnEnergyInputChanged(string value)
+        {
+            if (value != "")
+            {
+                UpdateEnergyLinkText();
+            }
+        }
+
+        public static void UpdateEnergyLinkText()
+        {
+            string inputText = EnergyAmountInput.GetComponent<TMP_InputField>().text;
+            long coinAmount = 1;
+            if (inputText != "")
+            {
+                coinAmount = inputText.ToInt64() / 10;
+            }
+
+            EnergyLinkText.GetComponentInChildren<TextMeshProUGUI>().text = $"Your Balance: ${Profile.cachedUserService.GetCoins() * 10}<br>Energy Link: {Data.FormatEnergyString(APClient.energyLinkBalance)}<br><br>Deposit ${coinAmount * 10} = +{Data.FormatEnergyString(coinAmount * Data.EnergyLinkDepositMultiplier)}<br>Withdraw ${coinAmount * 10} = -{Data.FormatEnergyString(coinAmount * Data.EnergyLinkWithdrawMultiplier)}";
+        }
+
+        public static void HideEnergyLinkPanel()
+        {
+            if (EnergyLinkPanel != null)
+            {
+                EnergyLinkPanel.SetActive(false);
+            }
+        }
+
+        public static void WithdrawEnergy()
+        {
+            if (EnergyAmountInput.GetComponent<TMP_InputField>().text != "")
+            {
+                long coinsToWithdraw = Convert.ToInt64(EnergyAmountInput.GetComponent<TMP_InputField>().text) / 10;
+                if (coinsToWithdraw > 0)
+                {
+                    long energyAmount = coinsToWithdraw * Data.EnergyLinkWithdrawMultiplier;
+                    if (energyAmount > APClient.energyLinkBalance)
+                    {
+                        ShowErrorPanel("Insufficient Energy", "There isn't enough energy to do that.");
+                    }
+                    else
+                    {
+                        APClient.apSession.DataStorage[$"EnergyLink{APClient.apSession.Players.ActivePlayer.Team}"] -= energyAmount;
+                        Profile.cachedUserService.AddCoins((int)coinsToWithdraw);
+                        ShowErrorPanel("Success!", $"You withdrew {Data.FormatEnergyString(energyAmount)} and gained ${coinsToWithdraw * 10}.");
+                        UpdateEnergyLinkText();
+                    }
+                }
+            }
+        }
+
+        public static void DepositEnergy()
+        {
+            if (EnergyAmountInput.GetComponent<TMP_InputField>().text != "")
+            {
+                long coinsDeposited = Convert.ToInt64(EnergyAmountInput.GetComponent<TMP_InputField>().text) / 10;
+                if (coinsDeposited > 0)
+                {
+                    if (coinsDeposited > Profile.cachedUserService.GetCoins())
+                    {
+                        ShowErrorPanel("Insufficient Balance", "You don't have enough money to do that.");
+                    }
+                    else
+                    {
+                        long energyAmount = coinsDeposited * Data.EnergyLinkDepositMultiplier;
+                        APClient.apSession.DataStorage[$"EnergyLink{APClient.apSession.Players.ActivePlayer.Team}"] += energyAmount;
+                        Profile.cachedUserService.AddCoins((int)coinsDeposited * -1);
+                        ShowErrorPanel("Success!", $"You deposited ${coinsDeposited * 10} and generated {Data.FormatEnergyString(energyAmount)}.");
+                        UpdateEnergyLinkText();
+                    }
+                }
             }
         }
 
@@ -470,11 +642,11 @@ namespace ReplantedArchipelago.Patches
             {
                 if (darkerLog)
                 {
-                    img.color = new Color(0f, 0f, 0f, 1f);
+                    img.color = new UnityEngine.Color(0f, 0f, 0f, 1f);
                 }
                 else
                 {
-                    img.color = new Color(0f, 0f, 0f, 0.0f);
+                    img.color = new UnityEngine.Color(0f, 0f, 0f, 0.0f);
                 }
             }
 
@@ -506,40 +678,20 @@ namespace ReplantedArchipelago.Patches
             return button;
         }
 
+        public static GameObject CreateSubheader(string label, Transform parent)
+        {
+            GameObject subheading = GameObject.Instantiate(Data.subheaderTemplate, parent);
+            subheading.name = label;
+            subheading.GetComponentInChildren<TextMeshProUGUI>().text = label;
+            return subheading;
+        }
+
         [HarmonyPatch(typeof(GameplayService), nameof(GameplayService.OnActiveProfileChanged))] //Triggers when changing active profile
         public class ProfileChangedPatch
         {
             private static void Postfix(GameplayService __instance)
             {
                 __instance.HasWatchedIntro = true;
-            }
-        }
-
-        [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.CheckForGameEnd))] //Checks if the level is over - if it is, decides what happens next
-        public class GameEndPatch
-        {
-            private static bool Prefix(GameplayActivity __instance)
-            {
-                if (__instance.m_board != null && __instance.m_board.mLevelComplete)
-                {
-                    if (__instance.IsSurvivalMode() && !__instance.m_board.IsFinalSurvivalStage())
-                    {
-                        return true;
-                    }
-
-                    APClient.CompletedLevel(Data.GetLevelIdFromGameplayActivity(__instance)); //Re-send the completion check in case it was somehow missed until now (might help fix the Last Stand problem people are facing?)
-
-                    __instance.KillBoard();
-                    if (showAwardScreen)
-                    {
-                        __instance.ShowAwardScreen();
-                    }
-                    else
-                    {
-                        StateTransitionUtils.Transition(Data.GetTransitionNameFromLevelId(Data.GetLevelIdFromGameplayActivity(__instance)));
-                    }
-                }
-                return false;
             }
         }
 
@@ -664,13 +816,15 @@ namespace ReplantedArchipelago.Patches
                                     }
                                 }
                             }
+
+                            //Update Clear icon
                             if (APClient.clearedLevels.Contains(levelId) && child.Find("ClearIndicator") == null)
                             {
                                 GameObject clearIndicator = new GameObject("ClearIndicator");
                                 clearIndicator.transform.SetParent(child, false);
 
                                 Image clearIndicatorImage = clearIndicator.AddComponent<Image>();
-                                Sprite clearIndicatorSprite = Data.FindSpriteByName("SPR_Challenges_ItemWindow_Trophy");
+                                Sprite clearIndicatorSprite = Graphics.GetGraphic("SPR_Challenges_ItemWindow_Trophy");
                                 clearIndicatorImage.sprite = clearIndicatorSprite;
                                 if (x >= 5) //For some reason, Cloudy Day and Bonus levels have their frames at a different offset
                                 {
@@ -680,10 +834,11 @@ namespace ReplantedArchipelago.Patches
                                 {
                                     clearIndicator.transform.localPosition = new Vector3(-145, -227, 0);
                                 }
-                                clearIndicator.transform.localScale = new Vector3((float)2.28, (float)2.28, (float)2.28);
+                                clearIndicator.transform.localScale = new Vector3(2.28f, 2.28f, 2.28f);
 
                                 clearIndicator.transform.SetSiblingIndex(4);
                             }
+
                             levelPosition += 1;
                         }
                     }
@@ -697,7 +852,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Prefix(LevelSelectScreen __instance)
             {
-                __instance.m_selectedCarouselGroup = __instance.CarouselGroups[3];
+                __instance.m_selectedCarouselGroup = __instance.CarouselGroups[4];
             }
         }
 
@@ -743,7 +898,7 @@ namespace ReplantedArchipelago.Patches
                     repickButton.transform.SetParent(layout.transform, false);
 
                     Image repickImage = repickButton.AddComponent<Image>();
-                    repickImage.sprite = Data.LoadEmbeddedSprite("ReplantedArchipelago.Assets.Repick.png", 920);
+                    repickImage.sprite = Graphics.GetGraphic("Repick");
 
                     Button buttonComponent = repickButton.AddComponent<Button>();
                     buttonComponent.onClick.AddListener(new Action(OnClick));

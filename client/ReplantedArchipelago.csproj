@@ -478,6 +478,7 @@
   <ItemGroup>
     <Compile Include="APClient.cs" />
     <Compile Include="APSettings.cs" />
+    <Compile Include="Graphics.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Patches\AwardScreen.cs" />
@@ -485,6 +486,7 @@
     <Compile Include="Patches\LevelEntry.cs" />
     <Compile Include="Patches\Menu.cs" />
     <Compile Include="Patches\Profile.cs" />
+    <Compile Include="Patches\ZenGard.cs" />
     <Compile Include="Patches\Secrets.cs" />
     <Compile Include="Patches\Store.cs" />
     <Compile Include="Patches\Unlocks.cs" />
@@ -494,6 +496,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\Repick.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Archipelago.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Key.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

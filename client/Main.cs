@@ -30,19 +30,21 @@ namespace ReplantedArchipelago
         public static string currentMessage;
         public static string currentScene;
 
-        private void OnSceneUnloaded(Scene scene)
+        public static void OnSceneUnloaded(Scene scene)
         {
             currentScene = null;
             cachedGameplayActivity = null;
             cachedLevelDataModel = null;
             RepickUI.Hide();
+            Menu.ClientPanel = null;
             Log($"Scene Unload: {scene.name}");
         }
 
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        public static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             Log($"Scene Load: {scene.name}");
             currentScene = scene.name;
+            Graphics.RefreshGraphics();
         }
 
         public override void OnInitializeMelon()

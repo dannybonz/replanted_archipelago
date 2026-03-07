@@ -14,14 +14,14 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(LevelEntryData levelEntryData, bool isRipMode, ref bool __result)
             {
-                __result = true; //Default to locked
+                __result = false; //Default to unlocked
                 if (!(levelEntryData == null || !APClient.currentlyConnected))
                 {
                     int levelId = Data.GetLevelIdFromEntryData(levelEntryData);
 
                     if (levelId != -1)
                     {
-                        __result = !APClient.CanPlayLevel(levelId);
+                        __result = !APClient.CanPlayLevel(levelId); //Lock level if APClient doesn't have access
                     }
                 }
                 return false; //Don't run default method

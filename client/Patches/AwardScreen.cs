@@ -1,9 +1,11 @@
-﻿using Archipelago.MultiClient.Net.Models;
+﻿using Archipelago.MultiClient.Net.Enums;
+using Archipelago.MultiClient.Net.Models;
 using HarmonyLib;
 using Il2CppReloaded.Data;
 using Il2CppReloaded.DataModels;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.TreeStateActivities;
+using Il2CppSource.Utils;
 using Il2CppTekly.DataModels.Models;
 using Il2CppTMPro;
 using UnityEngine;
@@ -28,10 +30,19 @@ namespace ReplantedArchipelago.Patches
                 itemInfo = APClient.scoutedLocations[clearLocationId];
             }
 
+            //Remove Main Menu button
+            GameObject.Find("GlobalPanels(Clone)/P_AwardScreen/Canvas/Layout/Center/Panel/MainMenu").SetActive(false);
+
+            //Change text on continue button
+            GameObject.Find("GlobalPanels(Clone)/P_AwardScreen/Canvas/Layout/Center/Panel/VisiblityBinderContainer/ViewPlantsButton/ButtonText").GetComponent<TMP_Text>().text = "Continue";
+            Button continueButton = GameObject.Find("GlobalPanels(Clone)/P_AwardScreen/Canvas/Layout/Center/Panel/VisiblityBinderContainer/ViewPlantsButton").GetComponent<Button>();
+            continueButton.onClick.RemoveAllListeners();
+            continueButton.onClick.AddListener((System.Action)ContinueButtonClicked);
+
             if (itemInfo != null)
             {
                 //Set header
-                string headerText = "You sent an item!";
+                string headerText = "You found an item!";
                 if (itemInfo.Player.Name == APClient.slot)
                 {
                     headerText = "You got an item!";
@@ -44,49 +55,97 @@ namespace ReplantedArchipelago.Patches
                 awardScreen.transform.Find("Canvas/Layout/Center/Panel/Header/HeaderBackground/HeaderText").GetComponentInChildren<TMP_Text>(true).text = headerText;
 
                 //Set subheader
-                awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetHeaderText").GetComponentInChildren<TMP_Text>(true).text = itemInfo.ItemName;
+                awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetHeaderText").GetComponentInChildren<TMP_Text>(true).text = itemInfo.ItemDisplayName;
 
                 //Set description
-                if (itemInfo.Player.Name != APClient.slot)
-                {
-                    awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetBodyText").GetComponentInChildren<TMP_Text>(true).text = $"Sent {itemInfo.ItemName} to {itemInfo.Player.Name}.";
-                }
-                else if (itemInfo.ItemId >= 100 && itemInfo.ItemId < 200)
+                bool isForMe = (itemInfo.Player.Slot == APClient.apSession.Players.ActivePlayer.Slot);
+                if (isForMe && itemInfo.ItemId >= 100 && itemInfo.ItemId < 200)
                 {
                     PlantDefinition plantDefinition = gameplayActivity.m_dataService.GetPlantDefinition(Data.seedTypes[itemInfo.ItemId - 100]);
                     string descriptionText = Common.TodStringTranslate($"${plantDefinition.m_plantToolTip}");
                     awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetBodyText").GetComponentInChildren<TMP_Text>(true).text = descriptionText;
                 }
-                else if (Data.itemIdDefaultTooltips.ContainsKey(itemInfo.ItemId))
+                else if (isForMe && Data.itemIdDefaultTooltips.ContainsKey(itemInfo.ItemId))
                 {
                     string descriptionText = Common.TodStringTranslate($"${Data.itemIdDefaultTooltips[itemInfo.ItemId]}");
                     awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetBodyText").GetComponentInChildren<TMP_Text>(true).text = descriptionText;
                 }
+                else if (isForMe && itemInfo.ItemId >= 200 && itemInfo.ItemId < 500)
+                {
+                    int levelId = (int)itemInfo.ItemId - 200;
+                    awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetHeaderText").GetComponentInChildren<TMP_Text>(true).text = "Level Unlock";
+                    awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetBodyText").GetComponentInChildren<TMP_Text>(true).text = $"{Data.AllLevelLocations[levelId].Name}";
+                }
+                else if (isForMe && Data.itemIdCustomDescriptions.ContainsKey(itemInfo.ItemId))
+                {
+                    awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetBodyText").GetComponentInChildren<TMP_Text>(true).text = Data.itemIdCustomDescriptions[itemInfo.ItemId];
+                }
                 else
                 {
-                    string descriptionText = $"You found your {itemInfo.ItemName}!";
-                    awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetBodyText").GetComponentInChildren<TMP_Text>(true).text = descriptionText;
+                    ItemFlags itemClassification = APClient.GetPrimaryItemClassification(itemInfo.Flags);
+                    string itemText = "A filler item";
+                    if (itemClassification == ItemFlags.Advancement)
+                    {
+                        itemText = "A progression item";
+                    }
+                    else if (itemClassification == ItemFlags.NeverExclude)
+                    {
+                        itemText = "A useful item";
+                    }
+                    else if (itemClassification == ItemFlags.Trap)
+                    {
+                        itemText = "A trap";
+                    }
+
+                    string playerText = "";
+                    if (!isForMe)
+                    {
+                        playerText = $"for {itemInfo.Player.Name}";
+                    }
+
+                    awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetBodyText").GetComponentInChildren<TMP_Text>(true).text = $"{itemText} {playerText}";
                 }
 
                 //Set image
+                Transform awardItem = awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/SeedPacket");
                 if (itemInfo.Player.Name == APClient.slot)
                 {
-                    if (Data.itemIdSpriteName.ContainsKey(itemInfo.ItemId))
+                    if (Graphics.itemIdSpriteName.ContainsKey(itemInfo.ItemId))
                     {
-                        awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/SeedPacket").GetComponentInChildren<Image>(true).sprite = Data.FindSpriteByName(Data.itemIdSpriteName[itemInfo.ItemId]);
+                        if (itemInfo.ItemId >= 60 && itemInfo.ItemId <= 61)
+                        {
+                            awardItem.localScale = new Vector3(1.25f, 1.25f, 1);
+                        }
+                        else if (itemInfo.ItemId < 100)
+                        {
+                            awardItem.localScale = new Vector3(1.8f, 1.8f, 1);
+                        }
+                        awardItem.GetComponentInChildren<Image>(true).sprite = Graphics.GetGraphic(Graphics.itemIdSpriteName[itemInfo.ItemId]);
+                    }
+                    else if (itemInfo.ItemId >= 200 && itemInfo.ItemId < 500)
+                    {
+                        awardItem.GetComponentInChildren<Image>(true).sprite = Graphics.GetGraphic("Key");
+                        awardItem.localScale = new Vector3(1.8f, 1.8f, 1);
                     }
                     else
                     {
-                        awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/SeedPacket").GetComponentInChildren<Image>(true).sprite = Data.FindSpriteByName("SPR_PresentOpen");
+                        awardItem.GetComponentInChildren<Image>(true).sprite = Graphics.GetGraphic("SPR_PresentOpen");
                     }
                 }
                 else
                 {
-                    awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/SeedPacket").GetComponentInChildren<Image>(true).sprite = Data.FindSpriteByName("SPR_Present");
+                    awardItem.GetComponentInChildren<Image>(true).sprite = Graphics.GetGraphic("Archipelago");
                 }
+                awardItem.gameObject.GetComponentInChildren<Image>(true).enabled = true;
             }
         }
 
+        public static void ContinueButtonClicked()
+        {
+            string transitionName = Data.GetTransitionNameFromLevelId(Data.GetLevelIdFromGameplayActivity(Main.cachedGameplayActivity));
+            Main.Log($"Transition Requested: {transitionName}");
+            StateTransitionUtils.Transition(transitionName);
+        }
 
         [HarmonyPatch(typeof(AwardScreenDataModel), nameof(AwardScreenDataModel.UpdateEntries))]
         public class AwardScreenDataPatch
