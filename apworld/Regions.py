@@ -19,7 +19,7 @@ def get_total_cleared_levels(state, world, player):
 def can_access_level(state, world, player, level_data):
     #Access items
     if level_data["type"] == "adventure" and world.options.adventure_mode_progression.value in [1, 2]:
-        access_item = f"{level_data["location"]} Access"
+        access_item = f"{["Day", "Night", "Pool", "Fog", "Roof"][int((level_data["clear_location_id"] - 1000) / 10)]} Access"
     elif level_data["type"] == "adventure" and world.options.adventure_mode_progression.value == 3 and not level_data["name"] == "Roof: Dr. Zomboss":
         access_item = level_data["unlock_item_name"]
     elif (level_data["type"] == "minigame" and world.options.minigame_levels.value == 4) or (level_data["type"] == "puzzle" and world.options.puzzle_levels.value == 4) or (level_data["type"] == "survival" and world.options.survival_levels.value == 4) or (level_data["type"] == "cloudy" and world.options.cloudy_day_levels.value == 4) or (level_data["type"] == "bonus" and world.options.bonus_levels.value == 2):
@@ -63,6 +63,8 @@ def can_access_level(state, world, player, level_data):
         if world.bonus_levels_goal > 0 and state.has("Bonus Levels Level Cleared", player, world.bonus_levels_goal) == False:
             return False
         if world.overall_levels_goal > 0 and get_total_cleared_levels(state, world, player) < world.overall_levels_goal:
+            return False
+        if world.taco_goal > 0 and not state.has("Taco", player, world.taco_goal):
             return False
 
     return True
@@ -126,6 +128,9 @@ def create_regions(world: World) -> None:
                 level_clear_event_item_name = f"{LEVEL_TYPE_NAMES[level_data["type"]]} Level Cleared"
             level_clear_event_location.place_locked_item(PVZRItem(level_clear_event_item_name, ItemClassification.progression, None, player))
             level_region.locations.append(level_clear_event_location)
+
+            if level_data["name"] == "Roof: Dr. Zomboss":
+                multiworld.register_indirect_condition(level_region, level_region.entrances[0])
 
             previous_region = level_region
 

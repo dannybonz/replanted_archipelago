@@ -1,4 +1,4 @@
-GEN_VERSION = "1.5" #Version to match mod
+GEN_VERSION = "1.6" #Version to match mod
 
 LEVEL_TYPE_NAMES = {"adventure": "Adventure", "minigame": "Mini-game", "puzzle": "Puzzle", "survival": "Survival", "bonus": "Bonus Levels", "cloudy": "Cloudy Day", "china": "China"}
 
@@ -869,13 +869,14 @@ LEVELS = {
     "5-10": {
         "name": "Roof: Dr. Zomboss",
         "flags": 0,
-        "location": "Roof",
+        "location": "Night Roof",
         "choose": False,
         "type": "adventure",
         "flag_location_ids": [],
         "clear_location_id": 1049,
         "conveyor": {"Flower Pot": 55, "Melon-pult": 10, "Jalapeno": 12, "Cabbage-pult": 10, "Kernel-pult": 5, "Ice-shroom": 8},
-        "special": "boss"
+        "special": "boss",
+        "conveyor_default": 4
     },
     "ChallengeWarAndPeas": {
         "zombies": [
@@ -986,7 +987,8 @@ LEVELS = {
             2042
         ],
         "clear_location_id": 1055,
-        "conveyor": {"Peashooter": 25, "Wall-nut": 15, "Kernel-pult": 5, "Squash": 15, "Lily Pad": 30, "Ice-shroom": 10}
+        "conveyor": {"Peashooter": 25, "Wall-nut": 15, "Kernel-pult": 5, "Squash": 15, "Lily Pad": 30, "Ice-shroom": 10},
+        "conveyor_default": 2
     },
     "ChallengeSeeingStars": {
         "zombies": [
@@ -1089,7 +1091,8 @@ LEVELS = {
         ],
         "clear_location_id": 1061,
         "conveyor": {"Flower Pot": 155, "Melon-Pult": 5, "Chomper": 5, "Pumpkin": 15, "Jalapeno": 10, "Squash": 10},
-        "special": "column"
+        "special": "column",
+        "conveyor_default": 6
     },
     "ChallengeBobsledBonanza": {
         "zombies": [
@@ -1226,14 +1229,15 @@ LEVELS = {
     "ChallengeFinalBoss": {
         "zombies": [],
         "name": "Mini-games: Dr. Zomboss's Revenge",
-        "location": "Roof",
+        "location": "Night Roof",
         "choose": False,
         "flags": 0,
         "type": "minigame",
         "flag_location_ids": [],
         "clear_location_id": 1069,
         "conveyor": {"Flower Pot": 55, "Melon-pult": 10, "Jalapeno": 12, "Cabbage-pult": 10, "Kernel-pult": 5, "Ice-shroom": 8},
-        "special": "boss"
+        "special": "boss",
+        "conveyor_default": 4
     },
     "ScaryPotter1": {
         "zombies": [],
@@ -2264,7 +2268,7 @@ ALL_PLANTS = [
 ]
 
 ATTACKING_PLANTS = ["Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit"]
-PROGRESSION_PLANTS = ["Lily Pad", "Flower Pot", "Spikeweed", "Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit", "Melon-pult", "Winter Melon", "Sunflower", "Sun-shroom", "Wall-nut", "Tall-nut", "Pumpkin", "Torchwood", "Threepeater", "Fume-shroom", "Coffee Bean", "Puff-shroom", "Scaredy-shroom", "Blover", "Cattail", "Magnet-shroom", "Cherry Bomb", "Squash", "Jalapeno", "Grave Buster", "Hypno-shroom", "Umbrella Leaf"]
+PROGRESSION_PLANTS = ["Lily Pad", "Flower Pot", "Spikeweed", "Peashooter", "Chomper", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit", "Melon-pult", "Winter Melon", "Sunflower", "Sun-shroom", "Wall-nut", "Tall-nut", "Pumpkin", "Torchwood", "Threepeater", "Fume-shroom", "Coffee Bean", "Puff-shroom", "Scaredy-shroom", "Blover", "Cattail", "Magnet-shroom", "Cherry Bomb", "Squash", "Jalapeno", "Grave Buster", "Hypno-shroom", "Umbrella Leaf", "Ice-shroom", "Potato Mine"]
 CONVEYOR_ATTACKERS = ["Peashooter", "Snow Pea", "Repeater", "Split Pea", "Cactus", "Cabbage-pult", "Kernel-pult", "Starfruit", "Melon-pult", "Threepeater", "Fume-shroom", "Scaredy-shroom", "Puff-shroom", "Winter Melon", "Gatling Pea"]
 
 PLANT_STATS = {
@@ -2302,7 +2306,7 @@ PLANT_STATS = {
     "Magnet-shroom": {"cost": 100, "refresh": 750, "health": 300},
     "Cabbage-pult": {"cost": 100, "refresh": 750, "rate": 300, "health": 300, "projectiles": ["Cabbage"]},
     "Flower Pot": {"cost": 25, "refresh": 750, "health": 300},
-    "Kernel-pult": {"cost": 100, "refresh": 750, "rate": 300, "health": 300, "projectiles": ["Kernel", "Butter"]},
+    "Kernel-pult": {"cost": 100, "refresh": 750, "rate": 300, "health": 300, "projectiles": ["Kernel", "Butter"], "projectile_chances": {"Kernel": 0.75, "Butter": 0.25}},
     "Coffee Bean": {"cost": 75, "refresh": 750},
     "Garlic": {"cost": 50, "refresh": 750, "health": 400},
     "Umbrella Leaf": {"cost": 100, "refresh": 750, "health": 300},

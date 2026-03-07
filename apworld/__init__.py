@@ -31,9 +31,9 @@ class PVZRWebWorld(WebWorld):
 
 class PVZRWorld(World):
     """
-    Plants vs. Zombies: Replanted
+    Plants vs. Zombies
     """
-    game = "Plants vs. Zombies: Replanted"
+    game = "Plants vs. Zombies"
     web = PVZRWebWorld()
     options_dataclass = PVZROptions
     options: PVZROptions
@@ -47,7 +47,7 @@ class PVZRWorld(World):
     ut_can_gen_without_yaml = False
 
     def pick_progression_items(self):
-        progression_items = ["Roof Cleaners"]
+        progression_items = ["Roof Cleaners", "Shovel"]
         if not self.options.minigame_levels.value in [0, 4]:
             progression_items.append("Mini-games")
         if not self.options.puzzle_levels.value in [0, 4]:
@@ -85,7 +85,12 @@ class PVZRWorld(World):
         return progression_items
 
     def pick_useful_items(self, remaining_locations):
-        useful_items = ["Shovel", "Suburban Almanac", "Pool Cleaners", "Wall-nut First Aid"]
+        useful_items = ["Suburban Almanac", "Pool Cleaners", "Wall-nut First Aid"]
+
+        if self.options.zen_garden_items.value:
+            useful_items += ["Zen Garden", "Phonograph", "Gardening Glove", "Wheelbarrow", "Stinky", "Gold Watering Can"]
+        if self.options.mower_reward_upgrades.value > 0:
+            useful_items += ["Mower Reward Upgrade"] * self.options.mower_reward_upgrades.value
 
         remaining_plants = copy.copy(ALL_PLANTS)
         self.random.shuffle(remaining_plants)
@@ -115,6 +120,9 @@ class PVZRWorld(World):
         filler_items = []
 
         filler_unlocks = ["Mustache Mode", "Future Zombies Mode", "Tricked Out Mode", "Daisies Mode", "Pinata Mode", "Alternate Brains Sound"] #"Dancing Zombies Mode"
+        if self.random.random() <= 0.1:
+            filler_unlocks.append("Bacon") #It won't help against the zombies, but everyone loves bacon!
+
         self.random.shuffle(filler_unlocks)
         
         while len(filler_unlocks) > 0 and len(filler_items) < remaining_locations:
@@ -124,6 +132,18 @@ class PVZRWorld(World):
             filler_items.append(self.get_filler_item_name())
 
         return filler_items
+
+    def update_taco_count(self, remaining_locations):
+        self.taco_goal = 0
+        self.taco_amount = self.options.taco_hunt_items.value
+
+        if (self.options.taco_hunt_percentage.value > 0 and self.options.taco_hunt_items.value > 0):
+            if self.taco_amount > remaining_locations:
+                self.taco_amount = remaining_locations
+            self.taco_goal = int(self.taco_amount * (self.options.taco_hunt_percentage.value / 100))
+
+        if self.taco_goal == 0:
+            self.taco_amount = 0
 
     def create_items(self) -> None:
         starting_plant = self.random.choice(ATTACKING_PLANTS)
@@ -152,7 +172,11 @@ class PVZRWorld(World):
             self.multiworld.early_items[self.player]["Sun-shroom"] = 1
         if self.options.early_shovel.value:
             self.multiworld.early_items[self.player]["Shovel"] = 1
+        if self.options.early_zen_garden.value and self.options.zen_garden_items.value:
+            self.multiworld.early_items[self.player]["Zen Garden"] = 1
 
+        if self.options.starting_seed_slots.value < 3:
+            self.multiworld.early_items[self.player]["Extra Seed Slot"] = 3 - self.options.starting_seed_slots.value
         if self.options.shop_items.value > 16:
             self.multiworld.early_items[self.player]["Crazy Dave's Car Keys"] = 1
 
@@ -174,6 +198,8 @@ class PVZRWorld(World):
 
         self.progression_item_names = self.pick_progression_items()
         self.useful_item_names = self.pick_useful_items(total_locations - len(self.progression_item_names))
+        self.update_taco_count(total_locations - len(self.progression_item_names + self.useful_item_names)) #Update Taco numbers to meet remaining locations
+        self.progression_item_names += ["Taco"] * self.taco_amount
 
         if len(self.progression_item_names + self.useful_item_names) > total_locations:
             overflowing_item_count = len(self.progression_item_names + self.useful_item_names) - total_locations
@@ -290,7 +316,7 @@ class PVZRWorld(World):
                 self.overall_levels_goal = total_levels
             else:
                 self.overall_levels_goal = self.options.total_levels_goal.value
-        
+
         self.zombie_map = {}
         if hasattr(self.multiworld, "re_gen_passthrough"): #If generated through Universal Tracker passthrough
             slot_data: dict = self.multiworld.re_gen_passthrough[self.game]
@@ -360,15 +386,24 @@ class PVZRWorld(World):
         if self.options.conveyor_randomisation.value:
             self.randomise_conveyors()
 
-        return {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal, "easy_upgrade_plants": self.options.easy_upgrade_plants.value, "cloudy_day_levels_goal": self.cloudy_day_levels_goal, "bonus_levels_goal": self.bonus_levels_goal, "overall_levels_goal": self.overall_levels_goal, "cloudy_day_unlocks": self.cloudy_day_unlocks, "zombie_map": self.zombie_map, "minigame_levels": self.options.minigame_levels.value, "puzzle_levels": self.options.puzzle_levels.value, "survival_levels": self.options.survival_levels.value, "bonus_levels": self.options.bonus_levels.value, "cloudy_day_levels": self.options.cloudy_day_levels.value, "sun_prices": self.sun_prices, "recharge_times": self.recharge_times, "firing_rates": self.firing_rates, "projectile_damages": self.projectile_damages, "plant_healths": self.plant_healths, "conveyor_map": self.conveyor_map, "china_level": self.options.china_level.value, "sun_per_upgrade": self.sun_per_upgrade}
+        return {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal, "easy_upgrade_plants": self.options.easy_upgrade_plants.value, "cloudy_day_levels_goal": self.cloudy_day_levels_goal, "bonus_levels_goal": self.bonus_levels_goal, "overall_levels_goal": self.overall_levels_goal, "cloudy_day_unlocks": self.cloudy_day_unlocks, "zombie_map": self.zombie_map, "minigame_levels": self.options.minigame_levels.value, "puzzle_levels": self.options.puzzle_levels.value, "survival_levels": self.options.survival_levels.value, "bonus_levels": self.options.bonus_levels.value, "cloudy_day_levels": self.options.cloudy_day_levels.value, "sun_prices": self.sun_prices, "recharge_times": self.recharge_times, "firing_rates": self.firing_rates, "projectile_damages": self.projectile_damages, "plant_healths": self.plant_healths, "conveyor_map": self.conveyor_map, "sun_per_upgrade": self.sun_per_upgrade, "energylink_enabled": self.options.energy_link.value, "taco_goal": self.taco_goal}
 
     @staticmethod
     def interpret_slot_data(slot_data: dict[str:Any]) -> dict[str:Any]:
         return slot_data
 
     def get_filler_item_name(self) -> str:
-        items = ["Silver Coin", "Gold Coin", "Diamond"]
-        weights = [3, 2, 1]
+        random = self.random.random()
+        if random >= 0.8 and self.options.random_seed_filler.value:
+            items = ["Random Seed Packet"]
+            weights = [1]
+        elif random <= 0.2 and self.options.zen_garden_items.value:
+            items = ["Fertilizer", "Tree Food", "Bug Spray", "Chocolate"]
+            weights = [3, 2, 1, 1]
+        else:
+            items = ["Silver Coin", "Gold Coin", "Diamond"]
+            weights = [3, 2, 1]
+
         return self.random.choices(items, weights=weights, k=1)[0]
     
     def create_item(self, name: str) -> PVZRItem:
@@ -407,7 +442,7 @@ class PVZRWorld(World):
             spoiler_string += "\nRandomised Conveyor Belts:\n"
             for level in [level for level in self.modified_levels if self.modified_levels[level]["id"] in self.conveyor_map]:
                 conveyor_string = ""
-                conveyor_map = self.conveyor_map[self.modified_levels[level]["id"]]
+                conveyor_map = self.conveyor_map[self.modified_levels[level]["id"]]["weights"]
                 for plant_index in conveyor_map:
                     conveyor_string += f"{ALL_PLANTS[plant_index]} ({conveyor_map[plant_index]}), "
                 spoiler_string += f"\n{self.modified_levels[level]["name"]}: {conveyor_string.strip(", ")}"
@@ -471,11 +506,15 @@ class PVZRWorld(World):
                     level_banned_zombies = []
                     if "special" in level_data and level_data["special"] == "bowling":
                         level_banned_zombies += ["Bungee", "Balloon"]
+                    elif level_data["name"] == "Mini-games: Column Like You See 'Em":
+                        level_banned_zombies += ["Balloon"]
                     elif level_data["name"] == "Roof: Level 5-5":
                         level_banned_zombies += ["Digger", "Balloon", "Pogo", "Zomboni"]
                     elif level_data["name"] in ["Mini-games: Bobsled Bonanza", "Mini-games: Pogo Party", "Bonus Levels: Air Raid"]:
                         level_banned_zombies += ["GigaGargantuar"]
-                    
+                    elif level_data["name"] == "Mini-games: It's Raining Seeds":
+                        level_banned_zombies += ["Balloon"]
+
                     for zombie in level_banned_zombies:
                         if zombie in possible_zombies:
                             possible_zombies.remove(zombie)
@@ -526,7 +565,15 @@ class PVZRWorld(World):
 
             #If applicable, calculate average projectile damage
             if "projectiles" in stats:
-                avg_projectile_mult = sum(projectile_mults[p] for p in stats["projectiles"]) / len(stats["projectiles"])
+                if "projectile_chances" in PLANT_STATS[plant]:
+                    weight_to_projectile_mult = {}
+                    for projectile_name in PLANT_STATS[plant]["projectiles"]:
+                        weight_to_projectile_mult[PLANT_STATS[plant]["projectile_chances"][projectile_name]] = self.projectile_damages[ALL_PROJECTILES.index(projectile_name)]/PROJECTILE_STATS[projectile_name]["damage"]
+                    combined_weights = sum(weight_to_projectile_mult.keys())
+                    avg_projectile_mult = sum(weight * projectile_mult for weight, projectile_mult in weight_to_projectile_mult.items()) / combined_weights
+                else:
+                    projectile_name = PLANT_STATS[plant]["projectiles"][0]
+                    avg_projectile_mult = self.projectile_damages[ALL_PROJECTILES.index(projectile_name)]/PROJECTILE_STATS[projectile_name]["damage"]
             else:
                 avg_projectile_mult = 1.0
 
@@ -538,7 +585,9 @@ class PVZRWorld(World):
                     rate_mult = self.apply_randomness_intensity(max(0.3, self.random.lognormvariate(0.0, 1)), randomness_intensity)
 
                 if (not self.options.easy_upgrade_plants.value) and plant in ["Gatling Pea", "Twin Sunflower"]:
-                    rate_mult = max(self.firing_rates[ALL_PLANTS.index(stats["upgraded"])], rate_mult) #Rate won't drop below base form
+                    rate_mult = min(self.firing_rates[ALL_PLANTS.index(stats["upgraded"])] * 1.2, rate_mult) #Rate won't drop too far below base form
+                if plant in ["Gatling Pea", "Gloom-shroom"]:
+                    rate_mult = max(0.45, rate_mult)
 
                 self.firing_rates[plant_index] = round(stats["rate"] * rate_mult)
             else:
@@ -552,7 +601,9 @@ class PVZRWorld(World):
                 health_mult = 1
 
             if health_mult == 1 and rate_mult == 1 and not "projectiles" in stats:
-                sun_cost_mult = self.random.lognormvariate(0.0, randomness_intensity) #Random multiplier for sun 
+                sun_cost_mult = self.random.lognormvariate(0.0, randomness_intensity) #Random multiplier for sun
+                if sun_cost_mult > 1 and PLANT_STATS[plant]["refresh"] <= 750: #If it's a quick recharge plant
+                    sun_cost_mult = sun_cost_mult / 5 #Halve effect of randomness
                 packet_cd_mult = 1/sun_cost_mult #Do the inverse on recharge time
                 self.plant_powers[plant] = 1
             else:
@@ -608,6 +659,31 @@ class PVZRWorld(World):
             base_refresh = stats["refresh"]
             self.recharge_times[plant_index] = 5 * round((base_refresh * packet_cd_mult) / 5)
     
+    def plant_stats_are_suitable_for_conveyor(self, plant):
+        if self.options.plant_stat_randomisation.value == False:
+            return True
+        
+        plant_index = ALL_PLANTS.index(plant)
+
+        fire_rate_mult = 1
+        if plant_index in self.firing_rates:
+            fire_rate_mult = 1/self.firing_rates[plant_index]/PLANT_STATS[plant]["rate"]
+
+        projectile_damage_mult = 1
+        if "projectiles" in PLANT_STATS[plant]:
+            if "projectile_chances" in PLANT_STATS[plant]:
+                projectile_damage_mults = {}
+                old_average_projectile_damage = sum(PROJECTILE_STATS[projectile_name]["damage"] * PLANT_STATS[plant]["projectile_chances"][projectile_name] for projectile_name in PLANT_STATS[plant]["projectiles"])
+                new_average_projectile_damage = sum(self.projectile_damages[ALL_PROJECTILES.index(projectile_name)] * PLANT_STATS[plant]["projectile_chances"][projectile_name] for projectile_name in PLANT_STATS[plant]["projectiles"])
+                projectile_damage_mult = new_average_projectile_damage/old_average_projectile_damage
+            else:
+                projectile_name = PLANT_STATS[plant]["projectiles"][0]
+                projectile_damage_mult = self.projectile_damages[ALL_PROJECTILES.index(projectile_name)]/PROJECTILE_STATS[projectile_name]["damage"]
+
+        if (projectile_damage_mult >= 0.6 and fire_rate_mult >= 0.9 and self.plant_powers[plant] >= 0.8):
+            return True
+        return False
+
     def randomise_conveyors(self): #Much more simple than seed stat rando :)
         for level in self.modified_levels:
             level_data = self.modified_levels[level]
@@ -626,10 +702,10 @@ class PVZRWorld(World):
                         possible_plant_combos = possible_threat_counters[threat]
 
                         chosen_combo = self.random.choice(possible_plant_combos)
-                        if self.options.plant_stat_randomisation.value: #Handles Seed Stat rando by prioritising plants with >= 0.8 DPS.
-                            highest_decent_percentage = max(sum(self.plant_powers[plant] >= 0.8 for plant in combo) / len(combo) for combo in possible_plant_combos)
-                            if highest_decent_percentage > 0:
-                                best_combos = [combo for combo in possible_plant_combos if sum(self.plant_powers[plant] >= 0.8 for plant in combo) / len(combo) == highest_decent_percentage]
+                        if self.options.plant_stat_randomisation.value: #Handle Seed Stat rando
+                            highest_suitable_percentage = max(sum(self.plant_stats_are_suitable_for_conveyor(plant) for plant in combo) / len(combo) for combo in possible_plant_combos)
+                            if highest_suitable_percentage > 0:
+                                best_combos = [combo for combo in possible_plant_combos if sum(self.plant_stats_are_suitable_for_conveyor(plant) for plant in combo) / len(combo) == highest_suitable_percentage]
                                 chosen_combo = self.random.choice(best_combos)
                         plants_to_use += chosen_combo         
                                     
@@ -645,11 +721,14 @@ class PVZRWorld(World):
                 plants_to_use = [plant for plant in plants_to_use if plant not in banned_plants]
 
                 attackers = []
+                has_decent_attacker = False
                 for plant in plants_to_use:
                     if plant in CONVEYOR_ATTACKERS:
                         attackers.append(plant)
-                
-                if len(attackers) == 0: #If you somehow got this far without an appropriate attacking plant, add one
+                        if self.plant_stats_are_suitable_for_conveyor(plant):
+                            has_decent_attacker = True
+
+                if not has_decent_attacker: #If you somehow got this far without an appropriate attacking plant, add one
                     available_attackers = CONVEYOR_ATTACKERS.copy()
                     if not at_night:
                         available_attackers = [plant for plant in available_attackers if not "-shroom" in plant]
@@ -658,7 +737,11 @@ class PVZRWorld(World):
                         available_attackers.remove("Winter Melon")
                     if on_roof:
                         available_attackers = [plant for plant in available_attackers if "-pult" in plant]
-                    attackers.append(self.random.choice(available_attackers))
+                    decent_attackers = [plant for plant in available_attackers if self.plant_stats_are_suitable_for_conveyor(plant)]
+                    if len(decent_attackers) > 0:
+                        attackers.insert(0, self.random.choice(decent_attackers))
+                    else:
+                        attackers.append(self.random.choice(available_attackers))
 
                 conveyor_weights[attackers[0]] = 15 #Set your primary attacker weight to 15
                 for attacker in attackers[1:]:
@@ -672,7 +755,7 @@ class PVZRWorld(World):
                     conveyor_weights["Lily Pad"] = self.random.randint(28, 32)
                 if on_roof:
                     conveyor_weights["Flower Pot"] = self.random.randint(48, 52)
-                if at_night and not has_pool:
+                if at_night and not (has_pool or on_roof):
                     conveyor_weights["Grave Buster"] = self.random.randint(15, 20)
 
                 if "special" in level_data:
@@ -688,9 +771,12 @@ class PVZRWorld(World):
                     handy_conveyor_plants = ["Squash", "Cherry Bomb", "Jalapeno", "Wall-nut", "Pumpkin", "Tall-nut"]
                     if at_night:
                         handy_conveyor_plants += ["Ice-shroom", "Doom-shroom", "Hypno-shroom"]
+                    if "special" in level_data and level_data["special"] == "boss":
+                        handy_conveyor_plants = ["Melon-pult", "Kernel-pult", "Cabbage-pult", "Winter Melon"]
+
                     handy_conveyor_plants = [plant for plant in handy_conveyor_plants if not plant in conveyor_weights]
                     if len(handy_conveyor_plants) > 0:
-                        conveyor_weights[self.random.choice(handy_conveyor_plants)] = self.random.randint(1,10)
+                        conveyor_weights[self.random.choice(handy_conveyor_plants)] = self.random.randint(5,10)
 
                     if len(level_data["conveyor"]) - len(conveyor_weights) >= 1: #Until the conveyor is full, add random plants (with some restrictions)
                         possible_plants = ALL_PLANTS.copy()
@@ -702,7 +788,7 @@ class PVZRWorld(World):
                                 (plant in ["Tangle Kelp", "Sea-shroom", "Cattail"] and not has_pool) or
                                 (plant == "Umbrella Leaf" and not ("zombies" in level_data and ("Bungee" in level_data["zombies"] or "Catapult" in level_data["zombies"]))) or
                                 (plant == "Blover" and "zombies" in level_data and "Balloon" not in level_data["zombies"]) or
-                                (plant == "Grave Buster" and not (at_night and not has_pool)) or
+                                (plant == "Grave Buster" and not (at_night and not (has_pool or on_roof))) or
                                 (plant == "Torchwood" and not ("Peashooter" in conveyor_weights or "Repeater" in conveyor_weights or "Threepeater" in conveyor_weights))):
                                 del possible_plants[i]
                         self.random.shuffle(possible_plants)
@@ -713,4 +799,9 @@ class PVZRWorld(World):
                 mapped_conveyor_weights = {}
                 for plant in conveyor_weights:
                     mapped_conveyor_weights[ALL_PLANTS.index(plant)] = conveyor_weights[plant]
-                self.conveyor_map[self.modified_levels[level]["id"]] = mapped_conveyor_weights
+
+                default_seeds = []
+                if ("conveyor_default" in level_data):
+                    default_seeds = list(mapped_conveyor_weights.keys())[:level_data["conveyor_default"]]
+
+                self.conveyor_map[self.modified_levels[level]["id"]] = {"weights": mapped_conveyor_weights, "default": default_seeds}

@@ -38,14 +38,23 @@ def create_plant_combinations_for_level(world, level_data):
         possible_combinations["wall"] = [["Wall-nut"], ["Tall-nut"], ["Pumpkin"]]
 
     #AOE plants
-    if level_data["type"] == "survival" or level_data["name"] in ["Mini-games: Last Stand", "Mini-games: Column Like You See 'Em"]  or "GigaGargantuar" in level_data["zombies"]:
-        possible_combinations["aoe"] = [["Repeater", "Torchwood"], ["Threepeater", "Torchwood"], ["Melon-pult"]]
+    if level_data["type"] == "survival" or level_data["name"] in ["Mini-games: Last Stand", "Mini-games: Column Like You See 'Em"]  or "GigaGargantuar" in level_data["zombies"] or (level_data["name"] in ["Mini-games: Pogo Party", "Mini-games: Bobsled Bonanza", "Bonus Levels: Air Raid"] and "Gargantuar" in level_data["zombies"]):
+        possible_combinations["aoe"] = [["Melon-pult"]]
+        if not (on_roof and not "conveyor" in level_data):
+            possible_combinations["aoe"] += [["Repeater", "Torchwood"], ["Threepeater", "Torchwood"]]
         if world.options.easy_upgrade_plants.value:
             possible_combinations["aoe"].append(["Winter Melon"])
         if at_night:
             possible_combinations["aoe"].append(["Fume-shroom"])
         elif not "conveyor" in level_data:
             possible_combinations["aoe"].append(["Fume-shroom", "Coffee Bean"])
+
+   #Garg bonanza
+    if level_data["name"] in ["Mini-games: Pogo Party", "Mini-games: Bobsled Bonanza", "Bonus Levels: Air Raid"] and "Gargantuar" in level_data["zombies"]:
+        if at_night:
+            possible_combinations["garg_bonanza"] = [["Ice-shroom", "Sun-shroom", "Doom-shroom", "Kernel-pult", "Potato Mine"]]
+        else:
+            possible_combinations["garg_bonanza"] = [["Ice-shroom", "Doom-shroom", "Kernel-pult", "Potato Mine"]]
 
     #Night plants
     if at_night and level_data["choose"]:
@@ -54,6 +63,10 @@ def create_plant_combinations_for_level(world, level_data):
     #Multi-lane
     if level_data["name"] == "Bonus Levels: Unsodded":
         possible_combinations["lanes"] = [["Threepeater"], ["Starfruit"]]
+    
+    #Bomb
+    if level_data["name"] == "Bonus Levels: Unsodded":
+        possible_combinations["bomb"] = [["Cherry Bomb"], ["Doom-shroom", "Coffee Bean"], ["Ice-shroom", "Coffee Bean"]]
 
     #Balloon
     if "Balloon" in level_data["zombies"]:
@@ -103,6 +116,10 @@ def create_plant_combinations_for_level(world, level_data):
         elif not "conveyor" in level_data:
             possible_combinations["football"] += [["Magnet-shroom", "Coffee Bean"], ["Hypno-shroom", "Coffee Bean"]]
 
+    #Magnet
+    if level_data["name"] in ["Bonus Levels: Unsodded"] and any(zombie in level_data["zombies"] for zombie in ["Football", "Buckethead", "Pogo", "ScreenDoor"]):        
+        possible_combinations["magnet"] = [["Magnet-shroom", "Coffee Bean"]]
+
     #Zomboni
     if any(zombie in level_data["zombies"] for zombie in ["Zomboni"]):
         possible_combinations["zomboni"] = [["Cherry Bomb"], ["Squash"], ["Jalapeno"]]
@@ -113,9 +130,13 @@ def create_plant_combinations_for_level(world, level_data):
     if any(zombie in level_data["zombies"] for zombie in ["Gargantuar", "GigaGargantuar"]):
         possible_combinations["garg"] = [["Cherry Bomb", "Squash"], ["Squash", "Jalapeno"], ["Jalapeno", "Cherry Bomb"]]
 
-    #Little
-    if "special" in level_data and level_data["special"] in ["little"]:
+    #Cherry Bomb/Jalapeno guarantee
+    if ("special" in level_data and level_data["special"] in ["little"]) or level_data["name"] in ["Mini-games: Column Like You See 'Em"]:
         possible_combinations["little"] = [["Cherry Bomb"], ["Jalapeno"]]
+
+    #Insta-kill for Roof: Level 5-5
+    if level_data["name"] == "Roof: Level 5-5":
+        possible_combinations["bungeeblitz"] = [["Cherry Bomb"], ["Jalapeno"], ["Squash"], ["Chomper"]]
 
     #Bungee
     if level_data["name"] in ["Mini-games: Bobsled Bonanza", "Mini-games: Pogo Party", "Bonus Levels: Air Raid"] and "Bungee" in level_data["zombies"]:
@@ -160,12 +181,14 @@ def can_clear_level(state, world, player, level_data):
             forced_items.append("Lily Pad")
         if on_roof or location_data["china"]:
             forced_items.append("Flower Pot")
-        if on_roof and (level_data["name"] == "Mini-games: Pogo Party" or "GigaGargantuar" in level_data["zombies"]):
+        if on_roof and (level_data["name"] in ["Mini-games: Pogo Party", "Mini-games: Column Like You See 'Em"] or "GigaGargantuar" in level_data["zombies"]):
             forced_items.append("Roof Cleaners")
         if level_data["name"] == "Bonus Levels: Grave Danger" or (level_data["type"] == "survival" and at_night and not has_pool):
             forced_items.append("Grave Buster")
         if level_data["name"] == "Mini-games: Bobsled Bonanza" and "Zomboni" in level_data["zombies"]:
             forced_items.append("Spikeweed")
+        if level_data["name"] in ["Mini-games: Pogo Party", "Mini-games: Bobsled Bonanza", "Bonus Levels: Air Raid"] and "Gargantuar" in level_data["zombies"]:
+            forced_items.append("Shovel")
 
         if not all(state.has(item, player) for item in forced_items):
             return False

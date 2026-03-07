@@ -3,7 +3,7 @@ from BaseClasses import Location
 from .Data import LEVELS
 
 class PVZRLocation(Location):
-    game: str = "Plants vs. Zombies: Replanted"
+    game: str = "Plants vs. Zombies"
 
 LOCATION_ID_FROM_NAME: Dict[str, int] = {}
 for level in LEVELS:

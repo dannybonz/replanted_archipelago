@@ -323,6 +323,27 @@ class TotalLevelsGoal(Range):
     range_end = 120
     default = 0
 
+class TacoHuntItems(Range):
+    """
+    Determines the total number of Taco items to be included in the item pool.
+    If necessary, this number will be automatically reduced to match the amount of remaining locations.
+    """
+    display_name = "Taco Hunt Items"
+    range_start = 0
+    range_end = 30
+    default = 0
+
+class TacoHuntPercentage(Range):
+    """
+    Determines what percentage of Taco items must be obtained before you can play the final battle with Dr. Zomboss in Roof: Level 5-10.
+
+    *This option requires that taco_hunt_items be set to a number higher than 0.
+    """
+    display_name = "Taco Hunt Percentage"
+    range_start = 1
+    range_end = 100
+    default = 100
+
 class FastGoal(Toggle):
     """
     If this option is enabled, you can instantly fight Dr. Zomboss in Roof: Level 5-10 as soon as your custom goal requirements are met.
@@ -363,6 +384,8 @@ class StartingPlants(Range):
 class StartingSeedSlots(Range):
     """
     How many seed slots to begin the game with.
+
+    *Choosing to start with fewer than three seed slots may result in generation failures.
     """
     display_name = "Starting Seed Slots"
     range_start = 1
@@ -382,6 +405,34 @@ class EarlyShovel(Toggle):
     """
     display_name = "Early Shovel"
     default = False    
+
+class EarlyZenGarden(Toggle):
+    """
+    Attempts to place Zen Garden in the first sphere.
+    """
+    display_name = "Early Zen Garden"
+    default = False
+
+class ZenGardenItems(Toggle):
+    """
+    Determines whether to include Zen Garden items.
+
+    Enabling Zen Garden items adds the following useful items to your game: Zen Garden, Phonograph, Gardening Glove, Wheelbarrow, Stinky and Gold Watering Can.
+    It also adds the following filler items: Fertilizer, Bug Spray, Chocolate and Tree Food.
+    Fertilizer, Bug Spray and Tree Food will be infinitely repurchaseable in Crazy Dave's shop.
+    
+    There are no AP locations related to Zen Garden, but growing your Tree of Wisdom can provide item hints.
+    """
+    display_name = "Zen Garden Items"
+    default = True
+
+class RandomSeedFiller(Toggle):
+    """
+    Determines whether to include "Random Seed Packet" filler items.
+    This item drops a random Seed Packet onto the lawn which can be freely picked up and planted, just like the ones you see in Vasebreaker.
+    """
+    display_name = "Random Seed Packet Filler"
+    default = False
 
 class EasyUpgradePlants(Toggle):
     """
@@ -430,6 +481,16 @@ class MaximumSunUpgrade(Range):
     range_start = 50
     range_end = 150
     default = 50
+
+class MowerRewardUpgrades(Range):
+    """
+    Determines the number of "Mower Reward Upgrade" items to include in the item pool.
+    Obtaining an "Mower Reward Upgrade" item increases the number of Gold Coins you receive for each remaining Lawn Mower at the end of a level.
+    """
+    display_name = "Mower Reward Upgrades"
+    range_start = 0
+    range_end = 5
+    default = 0
 
 class MusicShuffle(Choice):
     """
@@ -489,10 +550,18 @@ class ZombieAmbushTrapWeight(Range):
 
 class GotyCompatabilityMode(Toggle):
     """
-    Forces your options to comply with the restrictions of Victor Tran's GOTY client.
-    Setting this to true will automatically adjust your options to ensure they remain compatible.
+    This APWorld is primarily designed to be used with Plants vs. Zombies: Replanted.
+    If you wish to connect to this world using GOTY, you can - but there are certain limitations.    
+    Enabling this option will automatically adjust your YAML to ensure it is compatible with the restrictions of Victor Tran's GOTY client.
     """
     display_name = "GOTY Compatability Mode"
+    default = False
+
+class EnergyLink(Toggle):
+    """
+    Adds an "Energy Link" button, allowing you to deposit and withdraw money via Energy Link.
+    """
+    display_name = "Energy Link"
     default = False
 
 @dataclass
@@ -519,32 +588,39 @@ class PVZROptions(PerGameCommonOptions):
     cloudy_day_levels_goal: CloudyDayLevelsGoal
     bonus_levels_goal: BonusLevelsGoal
     total_levels_goal: TotalLevelsGoal
+    taco_hunt_items: TacoHuntItems
+    taco_hunt_percentage: TacoHuntPercentage
     fast_goal: FastGoal
     shop_items: ShopItems
     starting_plants: StartingPlants
     starting_seed_slots: StartingSeedSlots
+    zen_garden_items: ZenGardenItems
+    random_seed_filler: RandomSeedFiller
     early_sunflower: EarlySunflower
     early_shovel: EarlyShovel
+    early_zen_garden: EarlyZenGarden
     easy_upgrade_plants: EasyUpgradePlants
     starting_sun_upgrades: StartingSunUpgrades
+    mower_reward_upgrades: MowerRewardUpgrades
     maximum_sun_upgrade: MaximumSunUpgrade
     imitater_behaviour: ImitaterBehaviour
     music_shuffle: MusicShuffle
     disable_storm_flashes: DisableStormFlashes
     goty_compatability_mode: GotyCompatabilityMode 
     death_link: DeathLink
+    energy_link: EnergyLink
     trap_percentage: TrapPercentage
     mower_deploy_trap_weight: MowerDeployTrapWeight
     seed_packet_cooldown_trap_weight: SeedPacketCooldownTrapWeight
     zombie_ambush_trap_weight: ZombieAmbushTrapWeight
 
 OPTION_GROUPS = [
-    OptionGroup("AP Settings", [GotyCompatabilityMode, DeathLink]),
+    OptionGroup("AP Settings", [GotyCompatabilityMode, DeathLink, EnergyLink]),
     OptionGroup("Level Access", [AdventureModeProgression, MinigameLevels, PuzzleLevels, SurvivalLevels, CloudyDayLevels, BonusLevels, ChinaLevel]),    
     OptionGroup("Extra Locations", [HugeWaveLocations, ShopItems]),
-    OptionGroup("Goal", [AdventureLevelsGoal, AdventureAreasGoal, MinigameLevelsGoal, PuzzleLevelsGoal, SurvivalLevelsGoal, CloudyDayLevelsGoal, BonusLevelsGoal, TotalLevelsGoal, FastGoal]),
+    OptionGroup("Goal", [AdventureLevelsGoal, AdventureAreasGoal, MinigameLevelsGoal, PuzzleLevelsGoal, SurvivalLevelsGoal, CloudyDayLevelsGoal, BonusLevelsGoal, TotalLevelsGoal, TacoHuntItems, TacoHuntPercentage, FastGoal]),
     OptionGroup("Zombie & Plant Randomisation", [ConveyorRandomisation, ZombieRandomisation, ZombieRandomisedModes, RandomisedZombies, PlantStatRandomisation, MaintainVanillaProjectileStrength]),
-    OptionGroup("Gameplay Tweaks", [EasyUpgradePlants, ImitaterBehaviour, StartingSunUpgrades, MaximumSunUpgrade, DisableStormFlashes, MusicShuffle]),
-    OptionGroup("Other Item Options", [StartingPlants, StartingSeedSlots, EarlySunflower, EarlyShovel, FillerWeights]),
+    OptionGroup("Gameplay Tweaks", [EasyUpgradePlants, ImitaterBehaviour, DisableStormFlashes, MusicShuffle]),
+    OptionGroup("Item Generation", [ZenGardenItems, StartingSunUpgrades, MaximumSunUpgrade, MowerRewardUpgrades, RandomSeedFiller, StartingPlants, StartingSeedSlots, EarlySunflower, EarlyShovel, EarlyZenGarden]),
     OptionGroup("Traps", [TrapPercentage, MowerDeployTrapWeight, SeedPacketCooldownTrapWeight, ZombieAmbushTrapWeight])
 ]
