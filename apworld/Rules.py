@@ -1,8 +1,6 @@
 from worlds.AutoWorld import World
 from .Data import ALL_PLANTS, LEVEL_LOCATIONS, ZOMBIE_TYPES
-import itertools
 
-expected_level_loadouts = {}
 
 def create_plant_combinations_for_level(world, level_data):
     location_data = LEVEL_LOCATIONS[level_data["location"]]
@@ -228,7 +226,7 @@ def can_clear_level(state, world, player, level_data):
             else: #You cannot fit the requirement in
                 return False
 
-        expected_level_loadouts[level_data['name']] = selected_plants
+        world.expected_level_loadouts[level_data['name']] = selected_plants
     return True
 
 def set_rules(world: World) -> None:

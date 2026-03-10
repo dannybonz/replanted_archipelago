@@ -26,7 +26,7 @@ def can_access_level(state, world, player, level_data):
         access_item = level_data["unlock_item_name"]
     else:
         access_item = {"adventure": None, "minigame": "Mini-games", "cloudy": "Cloudy Day", "puzzle": "Puzzle Mode", "bonus": "Bonus Levels", "survival": "Survival Mode", "china": "China Access"}[level_data["type"]]
-    if access_item != None and not state.has(access_item, player):
+    if access_item is not None and not state.has(access_item, player):
         return False
 
     #Clears
@@ -109,6 +109,7 @@ def create_regions(world: World) -> None:
                     region_locations.append(flag_location)
 
             level_region = Region(level_data["name"], player, multiworld)
+            multiworld.regions.append(level_region)
             level_region.locations += [PVZRLocation(player, LOCATION_NAME_FROM_ID[location], location, level_region) for location in region_locations]
 
             if level_data["type"] in ["minigame", "bonus", "puzzle", "survival", "cloudy", "china"] or (level_data["type"] == "adventure" and (level_data["name"] == "Roof: Dr. Zomboss" or (world.options.adventure_mode_progression.value == 1 and adventure_level_index % 10 == 0) or (world.options.adventure_mode_progression.value in [2, 3]))):
@@ -130,7 +131,7 @@ def create_regions(world: World) -> None:
             level_region.locations.append(level_clear_event_location)
 
             if level_data["name"] == "Roof: Dr. Zomboss":
-                multiworld.register_indirect_condition(level_region, level_region.entrances[0])
+                multiworld.register_indirect_condition(multiworld.get_region("Roof: Level 5-9", player), level_region.entrances[0])
 
             previous_region = level_region
 
@@ -138,6 +139,7 @@ def create_regions(world: World) -> None:
                 adventure_level_index += 1
 
     shop_region = Region("Crazy Dave's Twiddydinkies", player, multiworld)
+    multiworld.regions.append(shop_region)
     for x in range(0, world.options.shop_items.value):
         shop_region.locations += [PVZRLocation(player, f"Crazy Dave's Twiddydinkies: Item #{str(x + 1)}", 5000 + x, shop_region)]
     menu_region.connect(connecting_region = shop_region, rule = lambda state: state.has("Crazy Dave's Car Keys", player))

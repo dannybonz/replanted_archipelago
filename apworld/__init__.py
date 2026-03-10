@@ -6,7 +6,7 @@ from worlds.LauncherComponents import Component, components, launch_subprocess, 
 from .Items import PVZRItem, item_ids
 from .Locations import LOCATION_ID_FROM_NAME
 from .Options import PVZROptions, OPTION_GROUPS
-from .Rules import set_rules, expected_level_loadouts, create_plant_combinations_for_level, eligible_zombies_from_plants
+from .Rules import set_rules, create_plant_combinations_for_level, eligible_zombies_from_plants
 from .Regions import create_regions
 from Options import OptionError
 from .Data import ALL_PLANTS, ATTACKING_PLANTS, PROGRESSION_PLANTS, LEVELS, GEN_VERSION, ZOMBIE_TYPES, NO_RANDO_ZOMBIES, POOL_ONLY_ZOMBIES, PLANT_STATS, ALL_PROJECTILES, PROJECTILE_STATS, LEVEL_LOCATIONS, CONVEYOR_ATTACKERS
@@ -226,7 +226,7 @@ class PVZRWorld(World):
             self.options.cloudy_day_levels.value = 0
             self.options.bonus_levels.value = 0
             self.options.china_level.value = 0
-            NO_RANDO_ZOMBIES.append("TrashCan")
+
 
         #Setup level unlock order randomisation
         self.minigame_unlocks = { 51: 0, 52: 0, 53: 0, 54: 1, 55: 2, 56: 3, 57: 4, 58: 5, 59: 6, 60: 7, 61: 8, 62: 9, 63: 10, 64: 11, 65: 12, 66: 13, 67: 14, 68: 15, 69: 16, 70: 17}
@@ -347,6 +347,7 @@ class PVZRWorld(World):
             self.overall_levels_goal = slot_data["overall_levels_goal"]
 
         #Setup zombie rando
+        self.expected_level_loadouts = {}
         self.modified_levels = copy.deepcopy(LEVELS)
         if (self.options.zombie_randomisation):
             self.randomise_zombies()
@@ -373,7 +374,7 @@ class PVZRWorld(World):
         self.firing_rates = {}
         self.projectile_damages = {}
         self.plant_healths = {}
-        self.important_plants = list({plant for loadout in expected_level_loadouts.values() for plant in loadout})
+        self.important_plants = {plant for loadout in self.expected_level_loadouts.values() for plant in loadout}
         self.plant_powers = {}
         if self.options.plant_stat_randomisation.value:
             self.randomise_plant_stats()
@@ -389,7 +390,7 @@ class PVZRWorld(World):
         return {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal, "easy_upgrade_plants": self.options.easy_upgrade_plants.value, "cloudy_day_levels_goal": self.cloudy_day_levels_goal, "bonus_levels_goal": self.bonus_levels_goal, "overall_levels_goal": self.overall_levels_goal, "cloudy_day_unlocks": self.cloudy_day_unlocks, "zombie_map": self.zombie_map, "minigame_levels": self.options.minigame_levels.value, "puzzle_levels": self.options.puzzle_levels.value, "survival_levels": self.options.survival_levels.value, "bonus_levels": self.options.bonus_levels.value, "cloudy_day_levels": self.options.cloudy_day_levels.value, "sun_prices": self.sun_prices, "recharge_times": self.recharge_times, "firing_rates": self.firing_rates, "projectile_damages": self.projectile_damages, "plant_healths": self.plant_healths, "conveyor_map": self.conveyor_map, "sun_per_upgrade": self.sun_per_upgrade, "energylink_enabled": self.options.energy_link.value, "taco_goal": self.taco_goal}
 
     @staticmethod
-    def interpret_slot_data(slot_data: dict[str:Any]) -> dict[str:Any]:
+    def interpret_slot_data(slot_data: dict[str, Any]) -> dict[str, Any]:
         return slot_data
 
     def get_filler_item_name(self) -> str:
@@ -429,7 +430,7 @@ class PVZRWorld(World):
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
         spoiler_string = ""
-        if self.zombie_map != {}:
+        if self.zombie_map:
             spoiler_string += "\nRandomised Zombies:\n"
             for level in [level for level in self.modified_levels if self.modified_levels[level]["id"] in self.zombie_map]:
                 zombie_string = ""
@@ -438,7 +439,7 @@ class PVZRWorld(World):
                 spoiler_string += f"\n{self.modified_levels[level]["name"]}: {zombie_string.strip(", ")}"
             spoiler_string += "\n"
         
-        if self.conveyor_map != {}:
+        if self.conveyor_map:
             spoiler_string += "\nRandomised Conveyor Belts:\n"
             for level in [level for level in self.modified_levels if self.modified_levels[level]["id"] in self.conveyor_map]:
                 conveyor_string = ""
@@ -448,7 +449,7 @@ class PVZRWorld(World):
                 spoiler_string += f"\n{self.modified_levels[level]["name"]}: {conveyor_string.strip(", ")}"
             spoiler_string += "\n"
 
-        if self.recharge_times != {}:
+        if self.recharge_times:
             spoiler_string += "\nRandomised Plant Stats:\n"
             for plant_index in self.sun_prices:
                 plant = ALL_PLANTS[plant_index]
@@ -469,17 +470,19 @@ class PVZRWorld(World):
                         spoiler_string += f" / x{self.projectile_damages[ALL_PROJECTILES.index(projectile)]/PROJECTILE_STATS[projectile]["damage"]:.2f} {projectile} Damage"
             spoiler_string += "\n"
 
-        if expected_level_loadouts != {}:
+        if self.expected_level_loadouts:
             spoiler_string += "\nExpected Level Loadouts:\n"
             for level in LEVELS:
-                if LEVELS[level]["name"] in expected_level_loadouts:              
-                    spoiler_string += f"\n{LEVELS[level]["name"]}: {(", ").join(expected_level_loadouts[LEVELS[level]["name"]]).strip(", ")}"
+                if LEVELS[level]["name"] in self.expected_level_loadouts:
+                    spoiler_string += f"\n{LEVELS[level]["name"]}: {(", ").join(self.expected_level_loadouts[LEVELS[level]["name"]]).strip(", ")}"
             spoiler_string += "\n"
 
         spoiler_handle.write(spoiler_string[:-1])
 
     def randomise_zombies(self) -> None:
-        zombie_blacklist = NO_RANDO_ZOMBIES
+        zombie_blacklist = list(NO_RANDO_ZOMBIES)
+        if self.options.goty_compatability_mode.value:
+            zombie_blacklist.append("TrashCan")
         for zombie in self.options.randomised_zombies.value:
             if self.options.randomised_zombies[zombie] == 0:
                 zombie_blacklist.append(zombie)
@@ -709,7 +712,7 @@ class PVZRWorld(World):
                                 chosen_combo = self.random.choice(best_combos)
                         plants_to_use += chosen_combo         
                                     
-                    plants_to_use = list(set(plants_to_use))
+                    plants_to_use = sorted(set(plants_to_use))
 
                 conveyor_weights = {}
 
