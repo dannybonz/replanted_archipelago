@@ -28,6 +28,7 @@ namespace ReplantedArchipelago.Patches
             }
             else
             {
+                Main.Log("Updating User Service.");
                 cachedUserService = userService;
             }
 
@@ -58,11 +59,13 @@ namespace ReplantedArchipelago.Patches
                 APClient.queuedUpPurchaseItems = new List<long>(); //Clear list
             }
 
-            if (Main.currentScene == "Frontend")
+            if (Main.currentScene == "Frontend" && Menu.menuLoaded)
             {
                 Main.Log("Refreshing profile...");
                 userService.SetActiveProfile(userService.ActiveUserIndex);
             }
+
+            Main.Log("Updated User Service.");
         }
 
         public static void AddConsumablePurchase(IUserService userService, int purchaseId, int amount)
@@ -70,11 +73,11 @@ namespace ReplantedArchipelago.Patches
             int currentAmount = userService.GetPurchases(purchaseId);
             if (currentAmount <= 1000)
             {
-                userService.SetPurchases(purchaseId, 1001);
+                userService.SetPurchases(purchaseId, 1000 + amount);
             }
             else
             {
-                userService.SetPurchases(purchaseId, currentAmount + 1);
+                userService.SetPurchases(purchaseId, currentAmount + amount);
             }
         }
 

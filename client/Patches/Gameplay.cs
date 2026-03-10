@@ -560,10 +560,17 @@ namespace ReplantedArchipelago.Patches
             {
                 if (__instance.mType == CoinType.PresentMinigames)
                 {
-                    int clearedWaves = __instance.mBoard.mCurrentWave;
-                    int wavesPerFlag = __instance.mBoard.GetNumWavesPerFlag();
-                    int completedFlags = clearedWaves / wavesPerFlag;
-                    APClient.SendWaveLocation(__instance.mApp.LevelData, completedFlags - 1);
+                    if (__instance.mApp.IsSurvivalMode())
+                    {
+                        APClient.SendWaveLocation(__instance.mApp.LevelData, __instance.mBoard.GetSurvivalFlagsCompleted() - 1);
+                    }
+                    else
+                    {
+                        int clearedWaves = __instance.mBoard.mCurrentWave;
+                        int wavesPerFlag = __instance.mBoard.GetNumWavesPerFlag();
+                        int completedFlags = clearedWaves / wavesPerFlag;
+                        APClient.SendWaveLocation(__instance.mApp.LevelData, completedFlags - 1);
+                    }
                     __instance.Die();
                     return false;
                 }
@@ -677,11 +684,25 @@ namespace ReplantedArchipelago.Patches
             {
                 if (APClient.scoutedLocations.ContainsKey(2000)) //Flag locations are enabled
                 {
-                    int clearedWaves = __instance.mBoard.mCurrentWave;
-                    int wavesPerFlag = __instance.mBoard.GetNumWavesPerFlag();
-                    if (clearedWaves >= wavesPerFlag && clearedWaves < __instance.mBoard.mNumWaves && __instance.mApp.GameMode != GameMode.ChallengeLastStand && !__instance.mApp.IsSurvivalMode())
+                    int completedFlags = 0;
+                    if (__instance.mApp.GameMode != GameMode.ChallengeLastStand)
                     {
-                        int completedFlags = clearedWaves / wavesPerFlag;
+                        int clearedWaves = __instance.mBoard.mCurrentWave;
+                        int wavesPerFlag = __instance.mBoard.GetNumWavesPerFlag();
+                        if (clearedWaves >= wavesPerFlag && clearedWaves < __instance.mBoard.mNumWaves)
+                        {
+                            if (__instance.mApp.IsSurvivalMode())
+                            {
+                                completedFlags = __instance.mBoard.GetSurvivalFlagsCompleted();
+                            }
+                            else
+                            {
+                                completedFlags = clearedWaves / wavesPerFlag;
+                            }
+                        }
+                    }
+                    if (completedFlags > 0)
+                    {
                         if (!spawnedFlagItems.Contains(completedFlags)) //First, check if we already spawned the item in this session
                         {
                             foreach (var coin in __instance.mBoard.m_coins.m_list) //Next, check if any presents already exist on the lawn

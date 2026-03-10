@@ -424,5 +424,14 @@ namespace ReplantedArchipelago.Patches
                 pageUpdateQueued = 1;
             }
         }
+
+        [HarmonyPatch(typeof(ZenGarden), nameof(ZenGarden.OpenedStore))]
+        public static class ZenGardenToStorePatch
+        {
+            private static void Postfix(ZenGarden __instance)
+            {
+                pageUpdateQueued = 1;
+            }
+        }
     }
 }

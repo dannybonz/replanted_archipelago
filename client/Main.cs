@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using static ReplantedArchipelago.Patches.Menu;
 
-[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.6.0", "dannybonz")]
+[assembly: MelonInfo(typeof(ReplantedArchipelago.Main), "Replanted Archipelago", "1.6.1", "dannybonz")]
 [assembly: MelonGame("PopCap Games", "PvZ Replanted")]
 
 namespace ReplantedArchipelago
@@ -37,6 +37,7 @@ namespace ReplantedArchipelago
             cachedLevelDataModel = null;
             RepickUI.Hide();
             Menu.ClientPanel = null;
+            Menu.menuLoaded = false;
             Log($"Scene Unload: {scene.name}");
         }
 

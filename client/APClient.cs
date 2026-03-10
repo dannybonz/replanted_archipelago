@@ -338,6 +338,7 @@ namespace ReplantedArchipelago
 
         public static void ProcessItemInfo(ItemInfo item)
         {
+            Main.Log($"Item #{item.ItemId}");
             if (displayedIngameMessages <= receivedItems.Count)
             {
                 if (!item.Player.Name.Equals(slot))
@@ -402,13 +403,17 @@ namespace ReplantedArchipelago
 
         public static void RunOnItemReceived(ReceivedItemsHelper itemHandler)
         {
+            Main.Log("Item received.");
             ProcessItemInfo(itemHandler.DequeueItem());
             apSession.DataStorage[Scope.Slot, "displayedIngameMessages"] = displayedIngameMessages;
+            Main.Log("Item handled successfully.");
         }
 
         public static void HandleMessage(LogMessage message)
         {
+            Main.Log("Message received.");
             receivedMessages.Add(message.ToString());
+            Main.Log("Message handled successfully.");
         }
 
         public static void HandleDisconnect(string reason)

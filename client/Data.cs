@@ -153,7 +153,8 @@ namespace ReplantedArchipelago
             { 31, (int)StoreItem.GoldWateringcan },
             { 32, (int)StoreItem.Phonograph },
             { 33, (int)StoreItem.StinkyTheSnail },
-            { 34, (int)StoreItem.WheelBarrow }
+            { 34, (int)StoreItem.WheelBarrow },
+            { 148, (int)StoreItem.PlantImitater }
         };
 
         public static Dictionary<long, int> itemIdToConsumablePurchaseId = new Dictionary<long, int>

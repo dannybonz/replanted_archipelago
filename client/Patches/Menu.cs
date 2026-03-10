@@ -35,6 +35,7 @@ namespace ReplantedArchipelago.Patches
         public static GameObject EnergyLinkPanel;
         public static GameObject EnergyAmountInput;
         public static GameObject EnergyLinkText;
+        public static bool menuLoaded = false;
 
         public static GameObject RemoveUnwantedComponents(GameObject gameObject, bool aggressive)
         {
@@ -138,6 +139,7 @@ namespace ReplantedArchipelago.Patches
                 }
 
                 Main.Log("Main Menu Panel View modified.");
+                menuLoaded = true;
             }
         }
 
@@ -155,7 +157,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(MainMenuPanelView __instance)
             {
-                if (Main.currentScene == "Frontend")
+                if (Main.currentScene == "Frontend" && menuLoaded)
                 {
                     GameObject usersPanel = __instance.transform.parent.Find("P_UsersPanel").gameObject;
                     if (usersPanel != null)
@@ -720,10 +722,6 @@ namespace ReplantedArchipelago.Patches
                             }
                         }
                     }
-                }
-                else if (__instance.m_isImitaterUnlocked.m_value == true)
-                {
-                    __instance.m_isImitaterUnlocked.m_value = false;
                 }
 
                 if (APClient.chooserRefreshState == "update" && __instance.m_isVisibleModel.Value)
