@@ -75,6 +75,7 @@ namespace ReplantedArchipelago
         public static int sunPerUpgrade;
         public static bool energyLinkEnabled;
         public static int tacoGoal;
+        public static bool plantStatRandomisationEnabled;
 
         public static int shopPages;
         public static int shopPagesVisible = 0;
@@ -162,6 +163,8 @@ namespace ReplantedArchipelago
                     conveyorMap = (JObject)slotData["conveyor_map"];
                     sunPerUpgrade = Convert.ToInt32(slotData["sun_per_upgrade"]);
                     tacoGoal = Convert.ToInt32(slotData["taco_goal"]);
+
+                    plantStatRandomisationEnabled = (firingRates.Count > 0 || rechargeTimes.Count > 0 || projectileDamages.Count > 0);
 
                     energyLinkEnabled = Convert.ToBoolean(slotData["energylink_enabled"]);
                     if (energyLinkEnabled) //Set up energy link
@@ -270,13 +273,17 @@ namespace ReplantedArchipelago
                                 }
                             }
                         }
+                        if (nonConveyorStats == "" && otherStats == "")
+                        {
+                            otherStats = "◌ No Changes";
+                        }
                         theStats.StatsString = nonConveyorStats + otherStats;
                         theStats.ConveyorStatsString = otherStats;
                     }
 
                     currentlyConnected = true; //Connection successful!
 
-                    Profile.DoProfileCheck();
+                    Profile.ProcessUserService();
 
                     if (currentlyConnected) //If didn't disconnect due to lack of profile slots...
                     {
@@ -284,7 +291,7 @@ namespace ReplantedArchipelago
                         apSession.Items.ItemReceived += RunOnItemReceived; //Set handler for any items received in this session
                         Menu.HideConnectionPanel();
 
-                        Profile.ProcessIUserService();
+                        Profile.ProcessUserService();
 
                         if (Main.cachedLevelDataModel != null)
                         {
@@ -404,8 +411,14 @@ namespace ReplantedArchipelago
         public static void RunOnItemReceived(ReceivedItemsHelper itemHandler)
         {
             Main.Log("Item received.");
-            ProcessItemInfo(itemHandler.DequeueItem());
+            ItemInfo itemInfo = itemHandler.DequeueItem();
+            ProcessItemInfo(itemInfo);
             apSession.DataStorage[Scope.Slot, "displayedIngameMessages"] = displayedIngameMessages;
+            if (Main.currentScene == "Frontend" && Menu.menuLoaded && Data.menuUpdateItems.Contains(itemInfo.ItemId))
+            {
+                Main.Log("Menu refresh item detected.");
+                Menu.refreshRequired = true;
+            }
             Main.Log("Item handled successfully.");
         }
 
@@ -776,7 +789,7 @@ namespace ReplantedArchipelago
                 $"If you're in the market for {playerName_your} {itemName}, {locationName} should be your primary target.",
                 $"You're asking about {itemName}? {playerName_Your} {itemName}? The very same {itemName} that can be found at {locationName}?",
                 $"{playerName_Your} {itemName} has no business being at {locationName}, but I guess it doesn't play by the rules.",
-                $"I think I saw a Zombie drop {playerName_your} {itemName} around {locationName}. It was either that, or one of its own discarded limbs.",
+                $"I think I saw a zombie drop {playerName_your} {itemName} around {locationName}. It was either that, or one of its own discarded limbs.",
                 $"Clearing {locationName} would probably make {playerName_you} very happy. That is, if {playerName_your} {itemName} is any good.",
                 $"I've always hated {locationName}. Which is unfortunate, because if {playerName_your} {itemName} is any good, then you'll probably need to head over there."
             };

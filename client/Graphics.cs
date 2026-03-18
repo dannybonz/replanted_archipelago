@@ -161,6 +161,14 @@ namespace ReplantedArchipelago
             }
         }
 
+        public static void LoadCustomGraphics()
+        {
+            foreach (KeyValuePair<string, string> customSprite in customSprites)
+            {
+                GetGraphic(customSprite.Key);
+            }
+        }
+
         public static Dictionary<long, string> itemIdSpriteName = new Dictionary<long, string> //Can be dropped as end-of-level awards/triggers award screen
         {
             { 2, "SPR_CarKeys" },
@@ -294,7 +302,8 @@ namespace ReplantedArchipelago
             { "moneybag", 0.5f },
             { "SPR_Scary_Pot_4", 0.35f },
             { "SPR_Scary_Pot_5", 0.35f },
-            { "SPR_Taco", 0.35f }
+            { "SPR_Taco", 0.35f },
+            { "Key", 0.125f }
         };
 
         public static (Sprite sprite, float scale) GetSpriteAndScaleForItemDrop(ItemInfo itemInfo)

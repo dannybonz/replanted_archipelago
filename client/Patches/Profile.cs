@@ -2,6 +2,7 @@
 using HarmonyLib;
 using Il2CppReloaded.Data;
 using Il2CppReloaded.Services;
+using Il2CppReloaded.TreeStateActivities;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,62 +11,71 @@ namespace ReplantedArchipelago.Patches
 {
     public class Profile
     {
-        public static IUserService cachedUserService;
         public static bool profileValidated = false;
         public static int focusedLevelId = 1;
 
-        public static void ProcessIUserService(IUserService userService = null) //Checks with APClient to see if anything has to be done related to the given userService
+        public static IUserService FindUserService()
         {
-            if (userService == null)
+            Main.Log("Finding UserServiceActivity...");
+
+            UserServiceActivity userServiceActivity = UnityEngine.Object.FindObjectOfType<UserServiceActivity>();
+            if (userServiceActivity != null)
             {
-                if (cachedUserService == null)
+                Main.Log("UserServiceActivity found!");
+                return userServiceActivity.m_service;
+            }
+
+            Main.Log("Failed to find UserServiceActivity.");
+            return null;
+        }
+
+        public static void ProcessUserService()
+        {
+            IUserService userService = FindUserService();
+            if (userService != null)
+            {
+                if (profileValidated == false)
                 {
-                    Main.Log("No User Service has been found.");
-                    return;
+                    Main.Log("Profile not validated.");
+                    DoProfileCheck(userService);
                 }
-                Main.Log("Using cached User Service.");
-                userService = cachedUserService;
-            }
-            else
-            {
-                Main.Log("Updating User Service.");
-                cachedUserService = userService;
-            }
 
-            if (profileValidated == false)
-            {
-                DoProfileCheck(userService);
-            }
-
-            if (APClient.queuedUpCoins > 0)
-            {
-                userService.AddCoins(APClient.queuedUpCoins);
-                APClient.queuedUpCoins = 0;
-            }
-
-            if (APClient.queuedUpPurchaseItems.Count > 0)
-            {
-                foreach (int itemId in APClient.queuedUpPurchaseItems)
+                if (profileValidated)
                 {
-                    if (Data.itemIdToPurchaseId.ContainsKey(itemId))
+                    if (Main.currentScene == "Frontend" && Menu.menuLoaded)
                     {
-                        userService.SetPurchases(Data.itemIdToPurchaseId[itemId], 1);
+                        Main.Log("Refreshing profile...");
+                        userService.SetActiveProfile(userService.ActiveUserIndex);
+                        userService.ActiveUserProfile.mLevel = 41; //Set level back to 41 (prevents the forced 1-1?)
                     }
-                    else if (Data.itemIdToConsumablePurchaseId.ContainsKey(itemId))
+
+                    if (APClient.queuedUpCoins > 0)
                     {
-                        AddConsumablePurchase(userService, Data.itemIdToConsumablePurchaseId[itemId], 1);
+                        Main.Log($"Adding {APClient.queuedUpCoins} coins...");
+                        userService.AddCoins(APClient.queuedUpCoins);
+                        APClient.queuedUpCoins = 0;
                     }
+
+                    if (APClient.queuedUpPurchaseItems.Count > 0)
+                    {
+                        foreach (int itemId in APClient.queuedUpPurchaseItems)
+                        {
+                            Main.Log($"Adding purchase #{itemId}...");
+                            if (Data.itemIdToPurchaseId.ContainsKey(itemId))
+                            {
+                                userService.SetPurchases(Data.itemIdToPurchaseId[itemId], 1);
+                            }
+                            else if (Data.itemIdToConsumablePurchaseId.ContainsKey(itemId))
+                            {
+                                AddConsumablePurchase(userService, Data.itemIdToConsumablePurchaseId[itemId], 1);
+                            }
+                        }
+                        APClient.queuedUpPurchaseItems = new List<long>(); //Clear list
+                    }
+
+                    Main.Log("Processed UserService.");
                 }
-                APClient.queuedUpPurchaseItems = new List<long>(); //Clear list
             }
-
-            if (Main.currentScene == "Frontend" && Menu.menuLoaded)
-            {
-                Main.Log("Refreshing profile...");
-                userService.SetActiveProfile(userService.ActiveUserIndex);
-            }
-
-            Main.Log("Updated User Service.");
         }
 
         public static void AddConsumablePurchase(IUserService userService, int purchaseId, int amount)
@@ -81,20 +91,10 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
-        public static void DoProfileCheck(IUserService userService = null) //Profile validation - ensures you are using the correct profile for AP
+        public static void DoProfileCheck(IUserService userService) //Profile validation - ensures you are using the correct profile for AP
         {
             if (APClient.currentlyConnected)
             {
-                if (userService == null)
-                {
-                    if (cachedUserService == null)
-                    {
-                        Main.Log("No user service has been found.");
-                        return;
-                    }
-                    userService = cachedUserService;
-                }
-
                 List<string> desiredGuids = APClient.apSession.DataStorage[Scope.Slot, "profileGuids"]; //Previously used profiles in this run
 
                 if (desiredGuids.Contains(userService.ActiveUserProfile.mGuid)) //If currently playing as an acceptable profile

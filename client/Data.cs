@@ -298,6 +298,7 @@ namespace ReplantedArchipelago
             if (oldValue == newValue)
             {
                 multiplier = 1;
+                return "";
             }
 
             string textColor = "<color=black>◌ ";

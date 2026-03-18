@@ -36,6 +36,7 @@ namespace ReplantedArchipelago.Patches
         public static GameObject EnergyAmountInput;
         public static GameObject EnergyLinkText;
         public static bool menuLoaded = false;
+        public static bool refreshRequired = false;
 
         public static GameObject RemoveUnwantedComponents(GameObject gameObject, bool aggressive)
         {
@@ -131,13 +132,6 @@ namespace ReplantedArchipelago.Patches
                     ShowErrorPanel("Goal Unlocked", "You have unlocked the final battle with Dr. Zomboss! Go fight him to complete your game!");
                 }
 
-                Profile.ProcessIUserService();
-                if (Profile.cachedUserService != null)
-                {
-                    Main.Log("Adjusting Level...");
-                    Profile.cachedUserService.ActiveUserProfile.mLevel = 41; //Set level back to 41 (prevents the forced 1-1?)
-                }
-
                 Main.Log("Main Menu Panel View modified.");
                 menuLoaded = true;
             }
@@ -148,7 +142,8 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(MainMenuActivity __instance)
             {
-                Profile.ProcessIUserService(__instance.m_userService);
+                Main.Log("MainMenuActivity started.");
+                Profile.ProcessUserService();
             }
         }
 
@@ -159,6 +154,12 @@ namespace ReplantedArchipelago.Patches
             {
                 if (Main.currentScene == "Frontend" && menuLoaded)
                 {
+                    if (refreshRequired)
+                    {
+                        Profile.ProcessUserService();
+                        refreshRequired = false;
+                    }
+
                     GameObject usersPanel = __instance.transform.parent.Find("P_UsersPanel").gameObject;
                     if (usersPanel != null)
                     {
@@ -560,7 +561,7 @@ namespace ReplantedArchipelago.Patches
                 coinAmount = inputText.ToInt64() / 10;
             }
 
-            EnergyLinkText.GetComponentInChildren<TextMeshProUGUI>().text = $"Your Balance: ${Profile.cachedUserService.GetCoins() * 10}<br>Energy Link: {Data.FormatEnergyString(APClient.energyLinkBalance)}<br><br>Deposit ${coinAmount * 10} = +{Data.FormatEnergyString(coinAmount * Data.EnergyLinkDepositMultiplier)}<br>Withdraw ${coinAmount * 10} = -{Data.FormatEnergyString(coinAmount * Data.EnergyLinkWithdrawMultiplier)}";
+            EnergyLinkText.GetComponentInChildren<TextMeshProUGUI>().text = $"Your Balance: ${Profile.FindUserService().GetCoins() * 10}<br>Energy Link: {Data.FormatEnergyString(APClient.energyLinkBalance)}<br><br>Deposit ${coinAmount * 10} = +{Data.FormatEnergyString(coinAmount * Data.EnergyLinkDepositMultiplier)}<br>Withdraw ${coinAmount * 10} = -{Data.FormatEnergyString(coinAmount * Data.EnergyLinkWithdrawMultiplier)}";
         }
 
         public static void HideEnergyLinkPanel()
@@ -586,7 +587,7 @@ namespace ReplantedArchipelago.Patches
                     else
                     {
                         APClient.apSession.DataStorage[$"EnergyLink{APClient.apSession.Players.ActivePlayer.Team}"] -= energyAmount;
-                        Profile.cachedUserService.AddCoins((int)coinsToWithdraw);
+                        Profile.FindUserService().AddCoins((int)coinsToWithdraw);
                         ShowErrorPanel("Success!", $"You withdrew {Data.FormatEnergyString(energyAmount)} and gained ${coinsToWithdraw * 10}.");
                         UpdateEnergyLinkText();
                     }
@@ -601,7 +602,7 @@ namespace ReplantedArchipelago.Patches
                 long coinsDeposited = Convert.ToInt64(EnergyAmountInput.GetComponent<TMP_InputField>().text) / 10;
                 if (coinsDeposited > 0)
                 {
-                    if (coinsDeposited > Profile.cachedUserService.GetCoins())
+                    if (coinsDeposited > Profile.FindUserService().GetCoins())
                     {
                         ShowErrorPanel("Insufficient Balance", "You don't have enough money to do that.");
                     }
@@ -609,7 +610,7 @@ namespace ReplantedArchipelago.Patches
                     {
                         long energyAmount = coinsDeposited * Data.EnergyLinkDepositMultiplier;
                         APClient.apSession.DataStorage[$"EnergyLink{APClient.apSession.Players.ActivePlayer.Team}"] += energyAmount;
-                        Profile.cachedUserService.AddCoins((int)coinsDeposited * -1);
+                        Profile.FindUserService().AddCoins((int)coinsDeposited * -1);
                         ShowErrorPanel("Success!", $"You deposited ${coinsDeposited * 10} and generated {Data.FormatEnergyString(energyAmount)}.");
                         UpdateEnergyLinkText();
                     }
@@ -969,7 +970,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(AlmanacPlantBinder __instance)
             {
-                if (APClient.rechargeTimes.Count > 0)
+                if (APClient.plantStatRandomisationEnabled)
                 {
                     GameObject description = GameObject.Find("GlobalPanels(Clone)/P_Almanac_Plants/Canvas/Layout/Center/Panel/SelectedItem/Scroll View/Viewport/SelectedItemInfoBox/SelectedItemInfoLabel");
                     if (description != null && Data.plantStats.ContainsKey(__instance.m_plant.mSeedType))

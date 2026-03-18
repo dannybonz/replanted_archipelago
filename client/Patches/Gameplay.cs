@@ -73,7 +73,10 @@ namespace ReplantedArchipelago.Patches
                     }
                 }
 
-                Profile.ProcessIUserService(__instance.m_userService);
+                if (APClient.queuedUpCoins > 0 || APClient.queuedUpPurchaseItems.Count > 0)
+                {
+                    Profile.ProcessUserService();
+                }
 
                 //Cheat keys
                 Board board = __instance.m_board; //Represents the lawn and its contents
@@ -165,7 +168,7 @@ namespace ReplantedArchipelago.Patches
 
                 if (__instance.GameScene == GameScenes.LevelIntro && __instance.Board.mSeedBank.mIsChoosing)
                 {
-                    if (APClient.rechargeTimes.Count > 0)
+                    if (APClient.plantStatRandomisationEnabled)
                     {
                         Menu.AddCustomTooltips();
                     }
@@ -209,7 +212,8 @@ namespace ReplantedArchipelago.Patches
                         Menu.RepickUI.Hide();
                     }
                 }
-                if (APClient.rechargeTimes.Count > 0) //Show tooltips in gameplay
+
+                if (APClient.plantStatRandomisationEnabled) //Show tooltips in gameplay
                 {
                     int levelId = Data.GetLevelIdFromGameplayActivity(__instance);
                     if (levelId != -1 && (board.ChooseSeedsOnCurrentLevel() || APClient.conveyorMap.ContainsKey(levelId.ToString())))
@@ -286,12 +290,15 @@ namespace ReplantedArchipelago.Patches
                     {
                         if (itemId == 64) //Random seed packet
                         {
-                            int xPos = Data.random.Next(100, 650);
-                            int yPos = Data.random.Next(60, 500);
-                            Coin droppedSeed = __instance.m_board.AddCoin(xPos, yPos, CoinType.UsableSeedPacket, CoinMotion.FromPlant);
+                            if (__instance.GameMode != GameMode.ChallengeBeghouled && __instance.GameMode != GameMode.ChallengeBeghouledTwist && !__instance.IsWallnutBowlingLevel())
+                            {
+                                int xPos = Data.random.Next(100, 650);
+                                int yPos = Data.random.Next(60, 500);
+                                Coin droppedSeed = __instance.m_board.AddCoin(xPos, yPos, CoinType.UsableSeedPacket, CoinMotion.FromPlant);
 
-                            droppedSeed.mUsableSeedType = Data.GetFreeSeedType(board);
-                            __instance.m_audioService.PlaySample(Il2CppReloaded.Constants.Sound.SOUND_SEEDLIFT);
+                                droppedSeed.mUsableSeedType = Data.GetFreeSeedType(board);
+                                __instance.m_audioService.PlaySample(Il2CppReloaded.Constants.Sound.SOUND_SEEDLIFT);
+                            }
                         }
                         else if (itemId == 71) //Seed Packet Cooldown Trap
                         {
@@ -749,6 +756,8 @@ namespace ReplantedArchipelago.Patches
                         __instance.m_zenGarden._setTutorialDataState(false, false, false);
                     }
                 }
+
+                Graphics.LoadCustomGraphics();
             }
         }
 
@@ -1154,11 +1163,11 @@ namespace ReplantedArchipelago.Patches
                 {
                     if (__instance.GameMode == GameMode.ChallengeWarAndPeas || __instance.GameMode == GameMode.ChallengeWarAndPeas2)
                     {
-                        __result.m_value = 1; //Default Peahead weight
+                        __result.m_value = 1; //Default Peahead point cost
                     }
                     else
                     {
-                        __result.m_value = 3; //Re-weights Peahead to not be so pervasive with Zombie rando enabled - we could also use this in future for Zombie value rando
+                        __result.m_value = 3; //Re-values Peahead to not be so pervasive with Zombie rando enabled
                     }
 
                 }
