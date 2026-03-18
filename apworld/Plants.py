@@ -193,7 +193,7 @@ class Plant:
         if self.firing_cooldown != self.unmodified.firing_cooldown: #If firing rate has changed
             firing_cooldown_mult = self.firing_cooldown / self.unmodified.firing_cooldown
             if firing_cooldown_mult > 1: #Firing cooldown increased:
-                sun_multiplier *= 1 + (1 - firing_cooldown_mult) * 0.05
+                sun_multiplier *= 1 + (1 - firing_cooldown_mult) * 0.01
             else: #Firing cooldown decreased
                 sun_multiplier *= 1 + (1 - firing_cooldown_mult) * 0.10
 
