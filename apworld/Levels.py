@@ -179,8 +179,8 @@ class Level:
 
             #Get unlocked combinations to counter threat
             unlocked_combinations = {}
-            for threat, combinations in self.plant_combinations.items():
-                unlocked_combinations_for_threat = [combination for combination in combinations if combination.issubset(unlocked_plants)]
+            for threat in sorted(self.plant_combinations):
+                unlocked_combinations_for_threat = [combination for combination in self.plant_combinations[threat] if combination.issubset(unlocked_plants)]
                 if not unlocked_combinations_for_threat: #Cannot counter this threat
                     return False
                 unlocked_combinations[threat] = unlocked_combinations_for_threat
@@ -193,7 +193,7 @@ class Level:
             #Create a loadout from unlocked combinations while considering seed slot count
             selected_plants = set()
             for req in sorted(unlocked_combinations, key=lambda r: len(unlocked_combinations[r])):
-                combos = sorted(unlocked_combinations[req], key=lambda combo: len([p for p in combo if p not in selected_plants])) #Try to re-use plants where possible
+                combos = sorted(unlocked_combinations[req], key=lambda combo: (len([p for p in combo if p not in selected_plants]), sorted(combo))) #Try to re-use plants where possible
                 for combo in combos:
                     new_plants = [p for p in combo if p not in selected_plants]
                     if len(selected_plants) + len(new_plants) <= number_of_seed_slots:
@@ -1874,7 +1874,7 @@ def randomise_zombie_lists(world):
     permitted_zombie_rando_modes = []
     for mode in world.options.zombie_randomised_modes.value:
         if world.options.zombie_randomised_modes.value[mode] == 1:
-            permitted_zombie_rando_modes.append({"Adventure": "Adventure", "Mini-games": "Mini-games", "Survival": "Survival", "Cloudy Day": "Cloudy Day", "Bonus Levels": "Bonus Levels"}[mode])
+            permitted_zombie_rando_modes.append(mode)
 
     for level in world.included_levels:
         level_data = world.included_levels[level]

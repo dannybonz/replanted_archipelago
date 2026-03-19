@@ -202,8 +202,9 @@ class PVZRWorld(World):
 
         self.progression_item_names = self.pick_progression_items()
         self.useful_item_names = self.pick_useful_items(total_locations - len(self.progression_item_names))
-        self.update_taco_count(total_locations - len(self.progression_item_names + self.useful_item_names)) #Update Taco numbers to meet remaining locations
-        self.progression_item_names += ["Taco"] * self.taco_amount
+        if not hasattr(self.multiworld, "re_gen_passthrough"):
+            self.update_taco_count(total_locations - len(self.progression_item_names + self.useful_item_names)) #Update Taco numbers to meet remaining locations
+            self.progression_item_names += ["Taco"] * self.taco_amount
 
         if len(self.progression_item_names + self.useful_item_names) > total_locations:
             overflowing_item_count = len(self.progression_item_names + self.useful_item_names) - total_locations
@@ -380,6 +381,7 @@ class PVZRWorld(World):
         self.options.bonus_levels.value = slot_data["bonus_levels"]
         self.options.china_level.value = slot_data["china_level"]
         self.options.easy_upgrade_plants.value = slot_data["easy_upgrade_plants"]
+        self.options.shop_items.value = 64
 
         #UT Defaults
         self.included_levels = create_levels(self)
@@ -419,8 +421,8 @@ class PVZRWorld(World):
 
             for level in self.included_levels:
                 level_data = self.included_levels[level]
-                if str(level_data.level_id) in slot_data["zombie_map"]:
-                    zombies_indexes_for_level = slot_data["zombie_map"][str(level_data.level_id)]
+                if level_data.level_id in slot_data["zombie_map"]:
+                    zombies_indexes_for_level = slot_data["zombie_map"][level_data.level_id]
                     self.included_levels[level].zombies = [zombie_id_to_zombie_name[zombie_index] for zombie_index in zombies_indexes_for_level]
 
         #UT Enable easy upgrades
@@ -437,14 +439,14 @@ class PVZRWorld(World):
         if slot_data["firing_rates"] != {} or slot_data["sun_prices"] != {} or slot_data["plant_healths"] != {} or slot_data["recharge_times"] != {}:
             for plant in self.all_plants:
                 plant_data = self.all_plants[plant]
-                if str(plant_data.plant_id) in slot_data["sun_prices"]:
-                    self.all_plants[plant].cost = slot_data["sun_prices"][str(plant_data.plant_id)]
-                if str(plant_data.plant_id) in slot_data["recharge_times"]:
-                    self.all_plants[plant].packet_cooldown = slot_data["recharge_times"][str(plant_data.plant_id)]
-                if str(plant_data.plant_id) in slot_data["firing_rates"]:
-                    self.all_plants[plant].firing_cooldown = slot_data["firing_rates"][str(plant_data.plant_id)]
-                if str(plant_data.plant_id) in slot_data["plant_healths"]:
-                    self.all_plants[plant].health = slot_data["plant_healths"][str(plant_data.plant_id)]
+                if plant_data.plant_id in slot_data["sun_prices"]:
+                    self.all_plants[plant].cost = slot_data["sun_prices"][plant_data.plant_id]
+                if plant_data.plant_id in slot_data["recharge_times"]:
+                    self.all_plants[plant].packet_cooldown = slot_data["recharge_times"][plant_data.plant_id]
+                if plant_data.plant_id in slot_data["firing_rates"]:
+                    self.all_plants[plant].firing_cooldown = slot_data["firing_rates"][plant_data.plant_id]
+                if plant_data.plant_id in slot_data["plant_healths"]:
+                    self.all_plants[plant].health = slot_data["plant_healths"][plant_data.plant_id]
 
             #UT Projectile randomisation
             for projectile in self.all_projectiles:
@@ -478,6 +480,7 @@ class PVZRWorld(World):
         #Level modifications
         self.zombie_map = {}
         self.conveyor_map = {}
+        self.zombie_weight_map = {}
         for level in self.included_levels:
             level_data = self.included_levels[level]
             if level_data.zombies != [] and self.options.zombie_randomisation.value and self.options.zombie_randomised_modes.value[level_data.type]: #Zombie Rando
@@ -491,6 +494,14 @@ class PVZRWorld(World):
                 if level_data.conveyor_default > 0:
                     level_conveyor_map["default"] = list(level_conveyor_map["weights"].keys())[:level_data.conveyor_default]
                 self.conveyor_map[level_data.level_id] = level_conveyor_map
+#            if level_data.zombies != [] and self.options.zombie_weight_randomisation.value == 2 and self.options.zombie_weight_randomisation_modes[level_data.type]:
+#                zombie_weight_map = {}
+#                for zombie in level_data.zombies:
+#                    zombie_weight_map[self.all_zombies[zombie].zombie_id] = self.random.randint(1, 6000)
+#                self.zombie_weight_map[level_data.level_id] = zombie_weight_map
+#        if self.options.zombie_weight_randomisation.value == 1:
+#            for zombie in self.all_zombies:
+#                self.zombie_weight_map[self.all_zombies[zombie].zombie_id] = self.random.randint(1, 6000)
 
         #Plant stat rando
         self.sun_prices = {}
@@ -516,7 +527,7 @@ class PVZRWorld(World):
                 plant_data = self.all_plants[plant_name]
                 self.sun_prices[plant_data.plant_id] = plant_data.cost
 
-        return {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal, "easy_upgrade_plants": self.options.easy_upgrade_plants.value, "cloudy_day_levels_goal": self.cloudy_day_levels_goal, "bonus_levels_goal": self.bonus_levels_goal, "overall_levels_goal": self.overall_levels_goal, "cloudy_day_unlocks": self.cloudy_day_unlocks, "zombie_map": self.zombie_map, "minigame_levels": self.options.minigame_levels.value, "puzzle_levels": self.options.puzzle_levels.value, "survival_levels": self.options.survival_levels.value, "bonus_levels": self.options.bonus_levels.value, "cloudy_day_levels": self.options.cloudy_day_levels.value, "sun_prices": self.sun_prices, "recharge_times": self.recharge_times, "firing_rates": self.firing_rates, "projectile_damages": self.projectile_damages, "plant_healths": self.plant_healths, "conveyor_map": self.conveyor_map, "sun_per_upgrade": self.sun_per_upgrade, "energylink_enabled": self.options.energy_link.value, "taco_goal": self.taco_goal, "china_level": self.options.china_level.value}
+        return {"music_map": self.music_map, "starting_inv_count": len(self.starting_items), "adventure_mode_progression": self.options.adventure_mode_progression.value, "shop_prices": self.shop_prices, "minigame_unlocks": self.minigame_unlocks, "survival_unlocks": self.survival_unlocks, "izombie_unlocks": self.izombie_unlocks, "vasebreaker_unlocks": self.vasebreaker_unlocks, "gen_version": GEN_VERSION, "imitater_open": self.options.imitater_behaviour.value == 1, "disable_storm_flashes": self.options.disable_storm_flashes.value, "adventure_areas_goal": self.adventure_areas_goal, "minigame_levels_goal": self.minigame_levels_goal, "puzzle_levels_goal": self.puzzle_levels_goal, "survival_levels_goal": self.survival_levels_goal, "deathlink_enabled": self.options.death_link.value, "fast_goal": self.fast_goal, "adventure_levels_goal": self.adventure_levels_goal, "easy_upgrade_plants": self.options.easy_upgrade_plants.value, "cloudy_day_levels_goal": self.cloudy_day_levels_goal, "bonus_levels_goal": self.bonus_levels_goal, "overall_levels_goal": self.overall_levels_goal, "cloudy_day_unlocks": self.cloudy_day_unlocks, "zombie_map": self.zombie_map, "minigame_levels": self.options.minigame_levels.value, "puzzle_levels": self.options.puzzle_levels.value, "survival_levels": self.options.survival_levels.value, "bonus_levels": self.options.bonus_levels.value, "cloudy_day_levels": self.options.cloudy_day_levels.value, "sun_prices": self.sun_prices, "recharge_times": self.recharge_times, "firing_rates": self.firing_rates, "projectile_damages": self.projectile_damages, "plant_healths": self.plant_healths, "conveyor_map": self.conveyor_map, "sun_per_upgrade": self.sun_per_upgrade, "energylink_enabled": self.options.energy_link.value, "taco_goal": self.taco_goal, "china_level": self.options.china_level.value} #"zombie_weight_map": self.zombie_weight_map, "zombie_weight_randomisation": self.options.zombie_weight_randomisation.value}
 
     @staticmethod
     def interpret_slot_data(slot_data: dict[str, object]) -> dict[str, object]:

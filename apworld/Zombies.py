@@ -12,9 +12,6 @@ class Zombie:
     def __post_init__(self):
         self.unmodified = copy.deepcopy(self)
 
-    def randomise(self, world):
-        self.weight = world.random.randint(1, 6000)
-
 def create_zombies():
     return {
         "Normal": Zombie(name = "Normal", zombie_id = 0),
