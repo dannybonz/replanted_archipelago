@@ -134,6 +134,7 @@ namespace ReplantedArchipelago.Patches
 
                 Main.Log("Main Menu Panel View modified.");
                 menuLoaded = true;
+                refreshRequired = true;
             }
         }
 

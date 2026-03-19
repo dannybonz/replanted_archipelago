@@ -110,7 +110,7 @@ class PVZRWorld(World):
             for i in range(0, number_of_traps):
                 trap_items.append(self.random.choices(list(trap_weights.keys()), weights=list(trap_weights.values()), k=1)[0])
 
-        return trap_items
+        return sorted(trap_items)
 
     def pick_filler_items(self, remaining_locations) -> list[str]:
         filler_items = []

@@ -1179,7 +1179,15 @@ namespace ReplantedArchipelago.Patches
                     }
                     else
                     {
-                        __result.m_weight = 0;
+                        int levelId = Data.GetLevelIdFromGameplayActivity(__instance);
+                        if (levelId != -1 && APClient.zombieMap.ContainsKey(levelId.ToString()) && APClient.zombieMap[levelId.ToString()].Any(includedZombie => includedZombie.Value<int>() == 35))
+                        {
+                            __result.m_weight = 4000;
+                        }
+                        else
+                        {
+                            __result.m_weight = 0;
+                        }
                     }
                 }
             }
