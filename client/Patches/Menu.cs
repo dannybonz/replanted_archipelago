@@ -37,6 +37,8 @@ namespace ReplantedArchipelago.Patches
         public static GameObject EnergyLinkText;
         public static bool menuLoaded = false;
         public static bool refreshRequired = false;
+        public static bool displayedBossPopup = false;
+        public static GameObject EnergyLinkButton;
 
         public static GameObject RemoveUnwantedComponents(GameObject gameObject, bool aggressive)
         {
@@ -113,23 +115,22 @@ namespace ReplantedArchipelago.Patches
                 apGoalRect.pivot = new Vector2(0, 1);
                 apGoalRect.anchoredPosition = new Vector2(310, -200);
 
-                if (APClient.energyLinkEnabled)
-                {
-                    GameObject energyLinkButton = CreateButton("Energy Link", __instance.transform.Find("Canvas/Layout/Center/Main/Menu"), ShowEnergyLinkPanel);
-                    RectTransform energyLinkRect = energyLinkButton.GetComponent<RectTransform>();
-                    energyLinkRect.anchorMin = new Vector2(0, 1);
-                    energyLinkRect.anchorMax = new Vector2(0, 1);
-                    energyLinkRect.pivot = new Vector2(0, 1);
-                    energyLinkRect.anchoredPosition = new Vector2(310, -380);
-                }
+                EnergyLinkButton = CreateButton("Energy Link", __instance.transform.Find("Canvas/Layout/Center/Main/Menu"), ShowEnergyLinkPanel);
+                RectTransform energyLinkRect = EnergyLinkButton.GetComponent<RectTransform>();
+                energyLinkRect.anchorMin = new Vector2(0, 1);
+                energyLinkRect.anchorMax = new Vector2(0, 1);
+                energyLinkRect.pivot = new Vector2(0, 1);
+                energyLinkRect.anchoredPosition = new Vector2(310, -380);
+                EnergyLinkButton.SetActive(APClient.energyLinkEnabled);
 
                 if (!APClient.currentlyConnected)
                 {
                     ShowConnectionPanel();
                 }
-                else if (APClient.HasBoss() && !APClient.clearedLevels.Contains(50))
+                else if (APClient.HasBoss() && !APClient.clearedLevels.Contains(50) && !displayedBossPopup)
                 {
                     ShowErrorPanel("Goal Unlocked", "You have unlocked the final battle with Dr. Zomboss! Go fight him to complete your game!");
+                    displayedBossPopup = true;
                 }
 
                 Main.Log("Main Menu Panel View modified.");
@@ -179,6 +180,7 @@ namespace ReplantedArchipelago.Patches
                     if ((!APClient.currentlyConnected || APClient.apSession.Socket == null || !APClient.apSession.Socket.Connected) && (ConnectionPanel == null || !ConnectionPanel.active))
                     {
                         Main.Log("Lost connection to server.");
+                        HideErrorPanel();
                         ShowConnectionPanel();
                         ShowErrorPanel("Lost Connection", "You have been disconnected from the server.");
                     }

@@ -71,7 +71,7 @@ namespace ReplantedArchipelago.Patches
                 }
             }
 
-            if (APClient.receivedItems.Contains(6) && APClient.receivedItems.Contains(2)) //Add Zen Garden items
+            if (APClient.receivedItems.Contains(6) && (APClient.receivedItems.Contains(2) || APClient.receivedItems.Contains(28))) //Add Zen Garden items
             {
                 int pageNum = APClient.shopPagesVisible;
                 int positionOnPage = 0;
@@ -117,18 +117,15 @@ namespace ReplantedArchipelago.Patches
                 {
                     visiblePages++;
                 }
-                if (APClient.receivedItems.Contains(2))
+                if (APClient.receivedItems.Contains(2) || APClient.receivedItems.Contains(28))
                 {
                     for (int i = 0; i < visiblePages; i++) //Loop through desired number of visible pages
                     {
                         StorePageModel model = new StorePageModel(dataService, userService, __instance, i);
                         pagesModel.Add($"{i}", model);
                     }
-                }
 
-                //Create hints for accessible items
-                if (APClient.receivedItems.Contains(2))
-                {
+                    //Create hints for accessible items
                     long[] shopLocations = new long[APClient.shopPagesVisible * 8];
                     for (long i = 0; i < APClient.shopPagesVisible * 8; i++)
                     {
@@ -161,7 +158,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(StoreEntryModel __instance, ref bool __result)
             {
-                if (!APClient.receivedItems.Contains(2))
+                if (!(APClient.receivedItems.Contains(2) || APClient.receivedItems.Contains(28)))
                 {
                     __result = true;
                 }
@@ -350,7 +347,7 @@ namespace ReplantedArchipelago.Patches
                     }
                     else
                     {
-                        chosenSprite = Graphics.GetGraphic("Archipelago");
+                        chosenSprite = Graphics.GetGraphic("ArchipelagoFlower");
                     }
                 }
 

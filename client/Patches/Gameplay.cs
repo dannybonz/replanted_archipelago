@@ -24,10 +24,12 @@ namespace ReplantedArchipelago.Patches
         public static float displayingSeedStatsTime = 0;
         public static int displayingSeedStatsIndex = -1;
         public static int queuedMowerCoins = 0;
-        public static List<int> queuedFlagItems = new List<int>();
-        public static int currentLevelId = -1;
-        public static List<int> spawnedFlagItems = new List<int>();
         public static bool showAwardScreen = false;
+        public static int receivedRingLinkAmount = 0;
+        public static int previousSunAmount = -1;
+        public static bool redSunText = false;
+        public static List<int> availableWaveLocations = new List<int>();
+        public static List<int> allWavesanityLocations = new List<int>();
 
         [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.ActiveUpdate))] //Runs every frame during gameplay
         public class GameplayActivityUpdatePatch
@@ -37,6 +39,15 @@ namespace ReplantedArchipelago.Patches
                 if (Main.currentScene == "Gameplay" && __instance != null && __instance.m_board == null)
                 {
                     AwardScreen.EditAwardScreen(__instance);
+                }
+
+                if (__instance.GameMode == GameMode.ChallengeZenGarden)
+                {
+                    GameObject actionHud = GameObject.Find("Panels/P_ZenGarden_MainHUD/Canvas/Layout/Center/P_Zen_TopBar/ActionHud");
+                    if (actionHud != null && actionHud.activeSelf)
+                    {
+                        actionHud.transform.GetChild(7).gameObject.SetActive(true); //Enable the MoneySign
+                    }
                 }
 
                 if (Main.currentScene != "Gameplay" || __instance == null || __instance.m_board == null || !(__instance.GameScene == GameScenes.Playing || __instance.GameScene == GameScenes.LevelIntro))
@@ -50,7 +61,7 @@ namespace ReplantedArchipelago.Patches
                     APClient.chooserRefreshState = "none";
                 }
 
-                if (APClient.deathlinkEnabled && APClient.receivedDeathLink != null)
+                if (APClient.deathLinkEnabled && APClient.receivedDeathLink != null)
                 {
                     string deathMessage = $"DeathLink sent by {APClient.receivedDeathLink.Source}";
                     Main.Log(deathMessage);
@@ -64,7 +75,7 @@ namespace ReplantedArchipelago.Patches
                     return;
                 }
 
-                if (__instance.GameMode == GameMode.TreeOfWisdom && !APClient.receivedItems.Contains(2))
+                if (__instance.GameMode == GameMode.TreeOfWisdom && !(APClient.receivedItems.Contains(2) || APClient.receivedItems.Contains(28)))
                 {
                     GameObject shopButton = GameObject.Find("Panels/P_Gameplay_MainHUD/Canvas/Layout/Center/P_Zen_TopBar/KMBButtons/TutorialShopContainer");
                     if (shopButton != null)
@@ -284,6 +295,63 @@ namespace ReplantedArchipelago.Patches
                     }
                 }
 
+                //Ring Link
+                if (__instance.GameScene == GameScenes.Playing && APClient.ringLinkEnabled)
+                {
+                    if (previousSunAmount != board.mSunMoney[0].Amount)
+                    {
+                        int changedSun = 0;
+                        if (previousSunAmount == -1)
+                        {
+                            previousSunAmount = board.mSunMoney[0].Amount;
+                        }
+                        else
+                        {
+                            changedSun = board.mSunMoney[0].Amount - previousSunAmount;
+                            previousSunAmount = board.mSunMoney[0].Amount;
+                        }
+                        if (changedSun != 0)
+                        {
+                            APClient.SendRingLinkPacket(changedSun);
+                        }
+                    }
+
+                    if (receivedRingLinkAmount != 0)
+                    {
+                        if (receivedRingLinkAmount < (board.mSunMoney[0].Amount * -1)) //Prevent negative sun amount
+                        {
+                            receivedRingLinkAmount = board.mSunMoney[0].Amount * -1;
+                        }
+                        board.AddSunMoney(receivedRingLinkAmount, 0);
+                        previousSunAmount = board.mSunMoney[0].Amount;
+                        receivedRingLinkAmount = 0;
+                    }
+                }
+
+                //Sun Capacity
+                if (APClient.sunCapacityItems)
+                {
+                    if (board.mSunMoney[0].Amount >= APClient.maximumSunCapacity && !Data.ignoreLockedTileLevelIds.Contains(Data.GetLevelIdFromGameplayActivity(__instance))) //Exceeded sun capacity
+                    {
+                        board.mSunMoney[0].Amount = APClient.maximumSunCapacity;
+                        if (!redSunText)
+                        {
+                            GameObject sunLabel = GameObject.Find("Panels/P_Gameplay_MainHUD/Canvas/Layout/Center/TopLeftLayout/SeedBankContainer/SeedBank/SunAmount_Background/SunAmountLabel");
+                            if (sunLabel != null)
+                            {
+                                sunLabel.transform.GetComponent<TextMeshProUGUI>().color = new UnityEngine.Color(0.7058823529411765f, 0f, 0f);
+                                redSunText = true;
+                            }
+                        }
+                    }
+                    else if (redSunText) //Sun text is red without exceeding sun cap
+                    {
+                        GameObject sunLabel = GameObject.Find("Panels/P_Gameplay_MainHUD/Canvas/Layout/Center/TopLeftLayout/SeedBankContainer/SeedBank/SunAmount_Background/SunAmountLabel");
+                        sunLabel.transform.GetComponent<TextMeshProUGUI>().color = UnityEngine.Color.black;
+                        redSunText = false;
+                    }
+                }
+
                 if (APClient.queuedUpItemEffects.Count > 0 && __instance.GameScene == GameScenes.Playing && !board.HasLevelAwardDropped() && !__instance.IsIZombieLevel() && (board.mBackground == BackgroundType.Day || board.mBackground == BackgroundType.Night || board.mBackground == BackgroundType.Pool || board.mBackground == BackgroundType.Fog || board.mBackground == BackgroundType.Roof || board.mBackground == BackgroundType.China || board.mBackground == BackgroundType.Boss))
                 {
                     foreach (int itemId in APClient.queuedUpItemEffects)
@@ -299,6 +367,17 @@ namespace ReplantedArchipelago.Patches
                                 droppedSeed.mUsableSeedType = Data.GetFreeSeedType(board);
                                 __instance.m_audioService.PlaySample(Il2CppReloaded.Constants.Sound.SOUND_SEEDLIFT);
                             }
+                        }
+                        else if (itemId == 69) //Brain Freeze
+                        {
+                            for (int zombieIndex = 0; zombieIndex < board.m_zombies.Count; zombieIndex++)
+                            {
+                                board.m_zombies[zombieIndex].HitIceTrap();
+                            }
+                        }
+                        else if (itemId == 74) //Zen Garden sprout
+                        {
+                            ZenGard.AddRandomZenGardenPlant(__instance.m_zenGarden);
                         }
                         else if (itemId == 71) //Seed Packet Cooldown Trap
                         {
@@ -338,7 +417,15 @@ namespace ReplantedArchipelago.Patches
                                 board.SpawnZombiesFromSky();
                             }
                         }
-                        if (itemId == 50) //mustache
+                        else if (itemId == 73) //Zombie Shuffle Trap
+                        {
+                            for (int zombieIndex = 0; zombieIndex < board.m_zombies.Count; zombieIndex++)
+                            {
+                                board.m_zombies[zombieIndex].mYuckyFace = true;
+                                board.m_zombies[zombieIndex].mYuckyFaceCounter = 169;
+                            }
+                        }
+                        else if (itemId == 50) //mustache
                         {
                             __instance.UserService.ActiveUserProfile.mMustacheModeActive = true;
                             board.SetMustacheMode(true);
@@ -464,7 +551,7 @@ namespace ReplantedArchipelago.Patches
                         return false;
                     }
                 }
-                else if ((theCoinType == CoinType.PresentMinigames && queuedFlagItems.Count == 0) || theCoinType == CoinType.PresentPuzzleMode || theCoinType == CoinType.PresentSurvivalMode || theCoinType == CoinType.Chocolate)
+                else if ((theCoinType == CoinType.PresentMinigames && (availableWaveLocations.Count == 0 || availableWaveLocations[0] > __instance.mCurrentWave)) || theCoinType == CoinType.PresentPuzzleMode || theCoinType == CoinType.PresentSurvivalMode) //If it's a present and we don't have queued up wavesanity checks, delete it
                 {
                     return false;
                 }
@@ -493,7 +580,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(Coin __instance)
             {
-                if (__instance.mType == CoinType.PresentMinigames && __instance.mCoinAge >= 1000) //Auto-collect flag drops
+                if (__instance.mType == CoinType.PresentMinigames && (__instance.mCoinAge >= 1000 || __instance.mBoard.mLevelComplete)) //Auto-collect flag drops
                 {
                     __instance.UpdateCollected();
                 }
@@ -535,25 +622,39 @@ namespace ReplantedArchipelago.Patches
                         __instance.mUsableSeedType = SeedType.BeghouledButtonShuffle; //Marks the coin as adjusted so we don't need to update it again
                     }
                 }
-                else if (__instance.mType == CoinType.PresentMinigames && queuedFlagItems.Count > 0 && __instance.mUsableSeedType != SeedType.BeghouledButtonShuffle) //Flag items
+                else if (__instance.mType == CoinType.PresentMinigames && __instance.mUsableSeedType != SeedType.BeghouledButtonShuffle) //Wavesanity items
                 {
-                    int levelId = Data.GetLevelIdFromGameplayActivity(__instance.mApp);
-                    int queuedFlagNumber = queuedFlagItems[queuedFlagItems.Count - 1];
-                    long locationId = Data.AllLevelLocations[levelId].FlagLocations[queuedFlagNumber - 1];
-                    var (desiredSprite, scaler) = Graphics.GetSpriteAndScaleForItemDrop(APClient.scoutedLocations[locationId]);
-
-                    if (desiredSprite != null)
+                    foreach (int waveNumber in allWavesanityLocations)
                     {
-                        GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
-                        var potentialPresents = allObjects.Where(obj => obj.name == "Coin_Present").ToArray();
-                        GameObject presentObject = potentialPresents.FirstOrDefault(potentialPresent => potentialPresent.activeSelf);
-                        if (presentObject != null && presentObject.activeSelf)
+                        int currentWave = __instance.mBoard.mCurrentWave;
+                        if (__instance.mBoard.mApp.IsSurvivalMode() || __instance.mApp.GameMode == GameMode.ChallengeLastStand)
                         {
-                            SpriteRenderer spriteRenderer = presentObject.GetComponent<SpriteRenderer>();
-                            spriteRenderer.sprite = desiredSprite;
-                            presentObject.transform.localScale = new Vector3(scaler, scaler, 1);
-                            __instance.mUsableSeedType = SeedType.BeghouledButtonShuffle;
-                            queuedFlagItems.Remove(queuedFlagNumber);
+                            currentWave += ((__instance.mBoard.mChallenge.mSurvivalStage) * __instance.mBoard.GetNumWavesPerSurvivalStage());
+                        }
+
+                        long locationId = (Data.GetLevelIdFromGameplayActivity(__instance.mApp) * 10000) + waveNumber;
+                        if (waveNumber <= currentWave && APClient.apSession.Locations.AllMissingLocations.Contains(locationId))
+                        {
+                            var (desiredSprite, scaler) = Graphics.GetSpriteAndScaleForItemDrop(APClient.scoutedLocations[locationId]);
+                            if (desiredSprite != null)
+                            {
+                                GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
+                                var potentialPresents = allObjects.Where(obj => obj.name == "Coin_Present").ToArray();
+                                GameObject presentObject = potentialPresents.FirstOrDefault(potentialPresent => potentialPresent.activeSelf);
+                                if (presentObject != null && presentObject.activeSelf)
+                                {
+                                    //Correct present located - hide the present image, replace the Note image and show that instead
+                                    presentObject.SetActive(false);
+                                    Transform coinParent = presentObject.transform.parent;
+                                    Transform noteObject = coinParent.Find("Coin_Note");
+                                    SpriteRenderer spriteRenderer = noteObject.GetComponent<SpriteRenderer>();
+                                    spriteRenderer.sprite = desiredSprite;
+                                    noteObject.transform.localScale = new Vector3(scaler, scaler, 1);
+                                    __instance.mUsableSeedType = SeedType.BeghouledButtonShuffle;
+                                    noteObject.gameObject.SetActive(true);
+                                    return;
+                                }
+                            }
                         }
                     }
                 }
@@ -567,16 +668,21 @@ namespace ReplantedArchipelago.Patches
             {
                 if (__instance.mType == CoinType.PresentMinigames)
                 {
-                    if (__instance.mApp.IsSurvivalMode())
+                    foreach (int waveNumber in allWavesanityLocations)
                     {
-                        APClient.SendWaveLocation(__instance.mApp.LevelData, __instance.mBoard.GetSurvivalFlagsCompleted() - 1);
-                    }
-                    else
-                    {
-                        int clearedWaves = __instance.mBoard.mCurrentWave;
-                        int wavesPerFlag = __instance.mBoard.GetNumWavesPerFlag();
-                        int completedFlags = clearedWaves / wavesPerFlag;
-                        APClient.SendWaveLocation(__instance.mApp.LevelData, completedFlags - 1);
+                        int currentWave = __instance.mBoard.mCurrentWave;
+                        if (__instance.mBoard.mApp.IsSurvivalMode() || __instance.mApp.GameMode == GameMode.ChallengeLastStand)
+                        {
+                            currentWave += ((__instance.mBoard.mChallenge.mSurvivalStage) * __instance.mBoard.GetNumWavesPerSurvivalStage());
+                        }
+
+                        int locationId = (Data.GetLevelIdFromGameplayActivity(__instance.mApp) * 10000) + waveNumber;
+                        if (waveNumber <= currentWave && APClient.apSession.Locations.AllMissingLocations.Contains(locationId))
+                        {
+                            APClient.SendLocation(locationId, true);
+                            __instance.Die();
+                            return false;
+                        }
                     }
                     __instance.Die();
                     return false;
@@ -597,19 +703,13 @@ namespace ReplantedArchipelago.Patches
                 {
                     APClient.CompletedLevel(Data.GetLevelIdFromGameplayActivity(__instance.mApp));
                 }
-                else if ((__instance.mApp.IsSurvivalMode() && !__instance.IsFinalSurvivalStage()) || (__instance.mApp.GameMode == GameMode.ChallengeLastStand && !__instance.IsLastStandFinalStage()))
+                else
                 {
-                    int completedFlags = __instance.GetSurvivalFlagsCompleted();
-                    Main.Log($"Survival Flag {completedFlags}");
-                    if (Data.GameModeLevelIDs.ContainsKey(__instance.mApp.GameMode))
+                    foreach (var coin in __instance.m_coins.m_list) //Auto collect any check items if the round finished too fast
                     {
-                        try
+                        if (coin != null && coin.mItem != null && coin.mItem.mType != null && coin.mItem.mType == CoinType.PresentMinigames)
                         {
-                            APClient.SendWaveLocation(__instance.mApp.LevelData, completedFlags);
-                        }
-                        catch
-                        {
-                            Main.Log($"Unexpected Wave Number (#{completedFlags})");
+                            coin.mItem.UpdateCollected();
                         }
                     }
                 }
@@ -689,46 +789,33 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(Zombie __instance)
             {
-                if (APClient.scoutedLocations.ContainsKey(2000)) //Flag locations are enabled
+                int currentWave = __instance.mBoard.mCurrentWave;
+                if (__instance.mBoard.mApp.IsSurvivalMode() || __instance.mApp.GameMode == GameMode.ChallengeLastStand)
                 {
-                    int completedFlags = 0;
-                    if (__instance.mApp.GameMode != GameMode.ChallengeLastStand)
+                    currentWave += ((__instance.mBoard.mChallenge.mSurvivalStage) * __instance.mBoard.GetNumWavesPerSurvivalStage());
+                }
+
+                if (availableWaveLocations.Count > 0 && availableWaveLocations[0] <= currentWave) //Wave location available
+                {
+                    int waveNumber = availableWaveLocations[0];
+                    foreach (var coin in __instance.mBoard.m_coins.m_list) //Next, check if any presents already exist on the lawn
                     {
-                        int clearedWaves = __instance.mBoard.mCurrentWave;
-                        int wavesPerFlag = __instance.mBoard.GetNumWavesPerFlag();
-                        if (clearedWaves >= wavesPerFlag && clearedWaves < __instance.mBoard.mNumWaves)
+                        if (coin != null && coin.mItem != null && coin.mItem.mType != null && coin.mItem.mType == CoinType.PresentMinigames) //A present is already on the lawn
                         {
-                            if (__instance.mApp.IsSurvivalMode())
-                            {
-                                completedFlags = __instance.mBoard.GetSurvivalFlagsCompleted();
-                            }
-                            else
-                            {
-                                completedFlags = clearedWaves / wavesPerFlag;
-                            }
+                            coin.mItem.UpdateCollected(); //Auto-collect any existing presents
                         }
                     }
-                    if (completedFlags > 0)
-                    {
-                        if (!spawnedFlagItems.Contains(completedFlags)) //First, check if we already spawned the item in this session
-                        {
-                            foreach (var coin in __instance.mBoard.m_coins.m_list) //Next, check if any presents already exist on the lawn
-                            {
-                                if (coin != null && coin.mItem != null && coin.mItem.mType != null && coin.mItem.mType == CoinType.PresentMinigames) //A present is already on the lawn
-                                {
-                                    return;
-                                }
-                            }
 
-                            long locationId = Data.AllLevelLocations[currentLevelId].FlagLocations[completedFlags - 1]; //Finally, check if the location has already been sent
-                            if (APClient.apSession.Locations.AllMissingLocations.Contains(locationId))
-                            {
-                                queuedFlagItems.Add(completedFlags);
-                                spawnedFlagItems.Add(completedFlags);
-                                Rect zombieRect = __instance.GetZombieRect();
-                                __instance.mBoard.AddCoin(zombieRect.center[0], zombieRect.center[1], CoinType.PresentMinigames, CoinMotion.Coin);
-                            }
-                        }
+                    long locationId = (Data.GetLevelIdFromGameplayActivity(__instance.mApp) * 10000) + waveNumber;
+                    if (APClient.apSession.Locations.AllMissingLocations.Contains(locationId))
+                    {
+                        Rect zombieRect = __instance.GetZombieRect();
+                        __instance.mBoard.AddCoin(zombieRect.center[0], zombieRect.center[1], CoinType.PresentMinigames, CoinMotion.Coin);
+                        availableWaveLocations.RemoveAt(0);
+                    }
+                    else
+                    {
+                        availableWaveLocations.RemoveAt(0);
                     }
                 }
             }
@@ -740,25 +827,101 @@ namespace ReplantedArchipelago.Patches
             private static void Postfix(GameplayActivity __instance)
             {
                 Main.cachedGameplayActivity = __instance;
-                displayingSeedStatsTime = 0;
-                displayingSeedStatsIndex = -1;
-                currentLevelId = Data.GetLevelIdFromGameplayActivity(__instance);
                 Main.Log("Re-cached GameplayActivity.");
-                spawnedFlagItems.Clear();
-                queuedFlagItems.Clear();
+
+                int currentLevelId = Data.GetLevelIdFromGameplayActivity(__instance);
+
+                displayingSeedStatsTime = 0; //Reset custom tooltip timers
+                displayingSeedStatsIndex = -1;
+
+                //Set up wavesanity
+                availableWaveLocations = new List<int>();
+                if (APClient.wavesanityMap.ContainsKey(currentLevelId.ToString())) //This level has checks for waves
+                {
+                    foreach (string waveNumber in APClient.wavesanityMap[currentLevelId.ToString()])
+                    {
+                        long waveLocationId = (currentLevelId * 10000) + Convert.ToInt64(waveNumber);
+                        if (APClient.apSession.Locations.AllMissingLocations.Contains(waveLocationId))
+                        {
+                            availableWaveLocations.Add(Convert.ToInt32(waveNumber));
+                        }
+                    }
+                }
+                availableWaveLocations.Sort();
+                allWavesanityLocations = availableWaveLocations.ToList();
+
+                previousSunAmount = -1; //Used for ringlink
                 showAwardScreen = false;
+                redSunText = false; //Used for maximum sun capacity
+
                 if (__instance.GameMode == GameMode.ChallengeZenGarden)
                 {
-                    if (!APClient.receivedItems.Contains(2))
+                    if (!(APClient.receivedItems.Contains(2) || APClient.receivedItems.Contains(28)))
                     {
                         GameObject shopButton = GameObject.Find("Panels/P_ZenGarden_MainHUD/Canvas/Layout/Center/P_Zen_TopBar/KMBButtons/TutorialShopContainer");
                         shopButton.SetActive(false);
                         __instance.m_zenGarden._setTutorialDataState(false, false, false);
                     }
                 }
+                else
+                {
+                    if (APClient.individualTileUnlockItems && !Data.ignoreLockedTileLevelIds.Contains(currentLevelId)) //Add custom tile lock graphics
+                    {
+                        int numberOfRows = 5;
+                        if (__instance.m_board.StageHasPool())
+                        {
+                            numberOfRows = 6;
+                        }
+                        for (int rowIndex = 0; rowIndex < numberOfRows; rowIndex++)
+                        {
+                            if (!(Data.MissingRows.ContainsKey(currentLevelId) && Data.MissingRows[currentLevelId].Contains(rowIndex))) //Skip unsodded rows
+                            {
+                                for (int columnIndex = 0; columnIndex < 9; columnIndex++)
+                                {
+                                    if (!APClient.receivedItems.Contains(1000 + (rowIndex * 10) + columnIndex))
+                                    {
+                                        CreateLockedTileSprite(rowIndex, columnIndex, __instance.m_board);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 Graphics.LoadCustomGraphics();
             }
+        }
+
+        public static void CreateLockedTileSprite(int row, int column, Board board)
+        {
+            GameObject tile = new GameObject($"LockedTile_{row}_{column}");
+            GameObject gridOffset = GameObject.Find("GridOffset");
+            tile.transform.SetParent(gridOffset.transform, false);
+
+            var renderer = tile.AddComponent<SpriteRenderer>();
+            renderer.sprite = Graphics.GetGraphic("ArchipelagoShadow");
+            tile.transform.localScale = new Vector3(8, 8, 8);
+            renderer.sortingLayerID = -932889863;
+            renderer.sortingOrder = 6;
+            renderer.color = new UnityEngine.Color(1f, 1f, 1f, 0.4f);
+
+            int x = 218 + (227 * column);
+            int y = -355 + (-285 * row);
+
+            if (board.StageHasRoof())
+            {
+                y = -357 + (-240 * row);
+                if (column < 5)
+                {
+                    y -= (5 - column) * 60;
+                }
+            }
+            else if (board.StageHasPool())
+            {
+                y = -355 + (-255 * row);
+            }
+
+            tile.transform.localPosition = new Vector3(x, y, 0);
         }
 
         [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.GetSeedsAvailable))]
@@ -1029,7 +1192,11 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(Board __instance, int theGridX, int theGridY, SeedType theType, ref PlantingReason __result)
             {
-                if (APClient.easyUpgradePlants && __result == PlantingReason.Ok)
+                if (APClient.individualTileUnlockItems && !Data.ignoreLockedTileLevelIds.Contains(Data.GetLevelIdFromGameplayActivity(__instance.mApp)) && !APClient.receivedItems.Contains(1000 + (theGridY * 10) + theGridX))
+                {
+                    __result = PlantingReason.NotHere;
+                }
+                else if (APClient.easyUpgradePlants && __result == PlantingReason.Ok)
                 {
                     if (theType == SeedType.Cobcannon)
                     {
@@ -1053,7 +1220,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix()
             {
-                if (APClient.deathlinkEnabled && APClient.deathLinkService != null && APClient.receivedDeathLink == null)
+                if (APClient.deathLinkEnabled && APClient.deathLinkService != null && APClient.receivedDeathLink == null)
                 {
                     DeathLink deathLink = new DeathLink(APClient.slot);
                     APClient.deathLinkService.SendDeathLink(deathLink);
@@ -1066,7 +1233,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(Zombie __instance)
             {
-                if (APClient.deathlinkEnabled && APClient.deathLinkService != null)
+                if (APClient.deathLinkEnabled && APClient.deathLinkService != null)
                 {
                     string messageEnding = "";
                     if (Data.zombieTypeNames.ContainsKey(__instance.mZombieType))
@@ -1144,9 +1311,7 @@ namespace ReplantedArchipelago.Patches
                     JToken defaultSeeds = APClient.conveyorMap[levelId.ToString()]["default"];
                     for (int i = 0; i < defaultSeeds.Count(); i++)
                     {
-                        Main.Log($"{defaultSeeds[i]}");
                         int seedIndex = (int)defaultSeeds[i];
-                        Main.Log($"{seedIndex}");
                         __instance.mBoard.SeedBanks[0].mSeedPackets[i].mPacketType = Data.seedTypes[seedIndex];
                     }
                 }
@@ -1158,36 +1323,37 @@ namespace ReplantedArchipelago.Patches
         {
             private static void Postfix(GameplayActivity __instance, ref ZombieDefinition __result)
             {
-                __result.m_firstLevel = -1;
-                if (__result.ZombieType == ZombieType.PeaHead)
+                ZombieType theZombieType = __result.m_zombieType;
+
+                if (Data.zombieTypeWeights.ContainsKey(theZombieType))
                 {
-                    if (__instance.GameMode == GameMode.ChallengeWarAndPeas || __instance.GameMode == GameMode.ChallengeWarAndPeas2)
-                    {
-                        __result.m_value = 1; //Default Peahead point cost
-                    }
-                    else
+                    int levelId = Data.GetLevelIdFromGameplayActivity(__instance);
+                    __result.m_weight = Data.zombieTypeWeights[__result.m_zombieType];
+                    __result.m_firstLevel = -1;
+
+                    if (theZombieType == ZombieType.PeaHead && (__instance.GameMode != GameMode.ChallengeWarAndPeas && __instance.GameMode != GameMode.ChallengeWarAndPeas2))
                     {
                         __result.m_value = 3; //Re-values Peahead to not be so pervasive with Zombie rando enabled
                     }
 
-                }
-                else if (__result.ZombieType == ZombieType.TrashCan)
-                {
-                    if (__instance.GameMode == GameMode.Adventure)
+                    if (APClient.zombieWeightRandomisation != 0)
                     {
-                        __result.m_weight = 4000; //Makes Trash Can Zombie eligible to spawn
+                        string zombieIndex = Array.FindIndex(Data.zombieTypes, zombieType => zombieType == theZombieType).ToString();
+                        if (APClient.zombieWeightRandomisation == 1 && APClient.zombieWeightMap.ContainsKey(zombieIndex))
+                        {
+                            __result.m_weight = (int)APClient.zombieWeightMap[zombieIndex];
+                        }
+                        else if (APClient.zombieWeightRandomisation == 2)
+                        {
+                            if (APClient.zombieWeightMap.ContainsKey(levelId.ToString()) && ((JObject)APClient.zombieWeightMap[levelId.ToString()]).ContainsKey(zombieIndex))
+                            {
+                                __result.m_weight = (int)APClient.zombieWeightMap[levelId.ToString()][zombieIndex];
+                            }
+                        }
                     }
-                    else
+                    else if (theZombieType == ZombieType.TrashCan && levelId != -1 && APClient.zombieMap.ContainsKey(levelId.ToString()) && APClient.zombieMap[levelId.ToString()].Any(includedZombie => includedZombie.Value<int>() == 35))
                     {
-                        int levelId = Data.GetLevelIdFromGameplayActivity(__instance);
-                        if (levelId != -1 && APClient.zombieMap.ContainsKey(levelId.ToString()) && APClient.zombieMap[levelId.ToString()].Any(includedZombie => includedZombie.Value<int>() == 35))
-                        {
-                            __result.m_weight = 4000;
-                        }
-                        else
-                        {
-                            __result.m_weight = 0;
-                        }
+                        __result.m_weight = 4000;
                     }
                 }
             }
@@ -1209,6 +1375,7 @@ namespace ReplantedArchipelago.Patches
                         }
                     }
                 }
+                int currentLevelId = Data.GetLevelIdFromGameplayActivity(__instance.mApp);
                 if ((currentLevelId == 63 || currentLevelId == 69 || currentLevelId == 104) && APClient.zombieMap.ContainsKey(currentLevelId.ToString()))
                 {
                     if (APClient.zombieMap[currentLevelId.ToString()].Any(includedZombie => includedZombie.Value<int>() == 23)) //Gargantuar
@@ -1223,6 +1390,7 @@ namespace ReplantedArchipelago.Patches
                         }
                     }
                 }
+                receivedRingLinkAmount = 0;
             }
         }
 
@@ -1272,15 +1440,15 @@ namespace ReplantedArchipelago.Patches
                             {
                                 __result.m_damage = ((int)APClient.projectileDamages["0"]) * 2;
                             }
-                            else if (theProjectileType == ProjectileType.PeashooterPea && APClient.projectileDamages.ContainsKey("0"))
-                            {
-                                __result.m_damage = (int)APClient.projectileDamages["0"];
-                            }
                         }
                         else if (Data.defaultProjectileDamages.ContainsKey(theProjectileType))
                         {
                             __result.m_damage = Data.defaultProjectileDamages[theProjectileType];
                         }
+                    }
+                    else if (theProjectileType == ProjectileType.PeashooterPea && APClient.projectileDamages.ContainsKey("0"))
+                    {
+                        __result.m_damage = (int)APClient.projectileDamages["0"];
                     }
                 }
             }

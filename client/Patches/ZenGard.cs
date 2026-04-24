@@ -53,7 +53,7 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
-        [HarmonyPatch(typeof(TreeOfWisdomController), nameof(TreeOfWisdomController.HideSpeechBubble))] //Used to when Tree of Wisdom stops talking
+        [HarmonyPatch(typeof(TreeOfWisdomController), nameof(TreeOfWisdomController.HideSpeechBubble))] //Used when Tree of Wisdom stops talking
         public static class TreeOfWisdomStopTalkPatch
         {
             private static void Postfix(TreeOfWisdomController __instance)
@@ -66,25 +66,14 @@ namespace ReplantedArchipelago.Patches
             }
         }
 
-        [HarmonyPatch(typeof(Challenge), nameof(Challenge.TreeOfWisdomOpenStore))] //Used when Tree of Wisdom stops talking
-        public static class TreeOfWisdomOpenStorePatch
+        public static void AddRandomZenGardenPlant(ZenGarden zenGarden)
         {
-            private static void Postfix(TreeOfWisdomController __instance)
+            if (!ZenGarden.IsZenGardenFull(true, zenGarden.mApp))
             {
-                Main.Log("function called");
-            }
-        }
-
-        [HarmonyPatch(typeof(Dialog), nameof(Dialog.Show))]
-        public static class DialogShowPatch
-        {
-            private static bool Prefix(Dialog __instance)
-            {
-                if (__instance.mDialogType == Dialogs.Store)
-                {
-                    return false;
-                }
-                return true;
+                PottedPlant thePottedPlant = new PottedPlant();
+                SeedType[] pottedPlantTypes = { SeedType.Peashooter, SeedType.Sunflower, SeedType.Cherrybomb, SeedType.Wallnut, SeedType.Potatomine, SeedType.Snowpea, SeedType.Chomper, SeedType.Repeater, SeedType.Puffshroom, SeedType.Sunshroom, SeedType.Fumeshroom, SeedType.Gravebuster, SeedType.Hypnoshroom, SeedType.Scaredyshroom, SeedType.Iceshroom, SeedType.Doomshroom, SeedType.Lilypad, SeedType.Squash, SeedType.Threepeater, SeedType.Tanglekelp, SeedType.Jalapeno, SeedType.Spikeweed, SeedType.Torchwood, SeedType.Tallnut, SeedType.Seashroom, SeedType.Plantern, SeedType.Cactus, SeedType.Blover, SeedType.Splitpea, SeedType.Starfruit, SeedType.Pumpkinshell, SeedType.Magnetshroom, SeedType.Cabbagepult, SeedType.Kernelpult, SeedType.InstantCoffee, SeedType.Garlic, SeedType.Umbrella, SeedType.Marigold, SeedType.Melonpult };
+                thePottedPlant.InitializePottedPlant(pottedPlantTypes[Data.random.Next(pottedPlantTypes.Length)]);
+                zenGarden.AddPottedPlant(thePottedPlant);
             }
         }
     }

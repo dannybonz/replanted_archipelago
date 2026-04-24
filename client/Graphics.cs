@@ -17,9 +17,11 @@ namespace ReplantedArchipelago
         public static Dictionary<string, Texture2D> cachedTextures = new Dictionary<string, Texture2D>();
         public static Dictionary<string, string> customSprites = new Dictionary<string, string>()
         {
+            { "ArchipelagoLogo", "ReplantedArchipelago.Assets.ArchipelagoLogo.png" },
+            { "ArchipelagoShadow", "ReplantedArchipelago.Assets.ArchipelagoShadow.png" },
+            { "ArchipelagoFlower", "ReplantedArchipelago.Assets.ArchipelagoFlower.png" }, //drawn by groundpork! <3
+            { "Key", "ReplantedArchipelago.Assets.Key.png" },
             { "Repick", "ReplantedArchipelago.Assets.Repick.png" },
-            { "Archipelago", "ReplantedArchipelago.Assets.Archipelago.png" },
-            { "Key", "ReplantedArchipelago.Assets.Key.png" }
         };
 
         public class TextureAtlasMapping
@@ -185,6 +187,7 @@ namespace ReplantedArchipelago
             { 13, "SPR_Store_Item_PoolCleaner" },
             { 16, "SPR_Store_Item_FirstAid" },
             { 17, "SPR_Store_Item_Rake" },
+            { 28, "SPR_CarKeys" },
 
             { 20, "Key" },
             { 21, "Key" },
@@ -206,12 +209,12 @@ namespace ReplantedArchipelago
             { 66, "Fertilizer" },
             { 67, "bug_spray" },
             { 68, "Chocolate" },
+            { 69, "SPR_Scary_Pot_4" },
 
             { 70, "SPR_Scary_Pot_5" },
             { 71, "SPR_Scary_Pot_5" },
             { 72, "SPR_Scary_Pot_5" },
             { 73, "SPR_Scary_Pot_5" },
-            { 74, "SPR_Scary_Pot_5" },
             { 75, "SPR_Scary_Pot_5" },
             { 76, "SPR_Scary_Pot_5" },
 
@@ -303,14 +306,15 @@ namespace ReplantedArchipelago
             { "SPR_Scary_Pot_4", 0.35f },
             { "SPR_Scary_Pot_5", 0.35f },
             { "SPR_Taco", 0.35f },
-            { "Key", 0.125f }
+            { "Key", 0.125f },
+            { "SPR_WateringCan", 0.4f }
         };
 
         public static (Sprite sprite, float scale) GetSpriteAndScaleForItemDrop(ItemInfo itemInfo)
         {
             if (itemInfo.Player.Slot != APClient.apSession.Players.ActivePlayer.Slot) //Foreign items
             {
-                return (GetGraphic("Archipelago"), 0.1f);
+                return (GetGraphic("ArchipelagoFlower"), 0.5f);
             }
             else if (itemInfo.ItemId >= 200 && itemInfo.ItemId < 500) //Level unlocks
             {

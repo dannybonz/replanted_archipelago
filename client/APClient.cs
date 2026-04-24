@@ -4,8 +4,8 @@ using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
 using Archipelago.MultiClient.Net.Models;
+using Archipelago.MultiClient.Net.Packets;
 using Il2Cpp;
-using Il2CppReloaded.Data;
 using Il2CppReloaded.Gameplay;
 using Il2CppReloaded.TreeStateActivities;
 using Il2CppSource.Utils;
@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Unity.Collections;
+using UnityEngine;
 using static ReplantedArchipelago.Data;
 
 namespace ReplantedArchipelago
@@ -57,7 +58,7 @@ namespace ReplantedArchipelago
         public static int cloudyDayLevelsGoal;
         public static int bonusLevelsGoal;
         public static int overallLevelsGoal;
-        public static bool deathlinkEnabled;
+        public static bool deathLinkEnabled;
         public static bool fastGoal;
         public static int adventureProgression;
         public static int minigameLevels;
@@ -76,6 +77,12 @@ namespace ReplantedArchipelago
         public static bool energyLinkEnabled;
         public static int tacoGoal;
         public static bool plantStatRandomisationEnabled;
+        public static JObject zombieWeightMap;
+        public static int zombieWeightRandomisation;
+        public static bool ringLinkEnabled;
+        public static bool sunCapacityItems;
+        public static bool individualTileUnlockItems;
+        public static JObject wavesanityMap;
 
         public static int shopPages;
         public static int shopPagesVisible = 0;
@@ -86,6 +93,7 @@ namespace ReplantedArchipelago
         public static DeathLink receivedDeathLink = null;
         public static long energyLinkBalance;
         public static List<double> queuedUpItemEffects = new List<double>();
+        public static int maximumSunCapacity = 150;
 
         public static void AttemptConnection(string hostInput, string slotInput, string passwordInput)
         {
@@ -149,7 +157,7 @@ namespace ReplantedArchipelago
                     minigameLevelsGoal = Convert.ToInt32(slotData["minigame_levels_goal"]);
                     puzzleLevelsGoal = Convert.ToInt32(slotData["puzzle_levels_goal"]);
                     survivalLevelsGoal = Convert.ToInt32(slotData["survival_levels_goal"]);
-                    deathlinkEnabled = Convert.ToBoolean(slotData["deathlink_enabled"]);
+                    deathLinkEnabled = Convert.ToBoolean(slotData["deathlink_enabled"]);
                     fastGoal = Convert.ToBoolean(slotData["fast_goal"]);
                     cloudyDayLevelsGoal = Convert.ToInt32(slotData["cloudy_day_levels_goal"]);
                     bonusLevelsGoal = Convert.ToInt32(slotData["bonus_levels_goal"]);
@@ -163,6 +171,12 @@ namespace ReplantedArchipelago
                     conveyorMap = (JObject)slotData["conveyor_map"];
                     sunPerUpgrade = Convert.ToInt32(slotData["sun_per_upgrade"]);
                     tacoGoal = Convert.ToInt32(slotData["taco_goal"]);
+                    zombieWeightMap = (JObject)slotData["zombie_weight_map"];
+                    zombieWeightRandomisation = Convert.ToInt32(slotData["zombie_weight_randomisation"]);
+                    ringLinkEnabled = Convert.ToBoolean(slotData["ringlink_enabled"]);
+                    sunCapacityItems = Convert.ToBoolean(slotData["progressive_sun_capacity_items"]);
+                    individualTileUnlockItems = Convert.ToBoolean(slotData["individual_tile_unlock_items"]);
+                    wavesanityMap = (JObject)slotData["wavesanity_map"];
 
                     plantStatRandomisationEnabled = (firingRates.Count > 0 || rechargeTimes.Count > 0 || projectileDamages.Count > 0);
 
@@ -177,6 +191,7 @@ namespace ReplantedArchipelago
                                 energyLinkBalance = (long)newBalance;
                             }
                         };
+                        Menu.EnergyLinkButton.SetActive(true);
                     }
 
                     adventureProgression = Convert.ToInt32(slotData["adventure_mode_progression"]);
@@ -187,13 +202,7 @@ namespace ReplantedArchipelago
                     bonusLevels = Convert.ToInt32(slotData["bonus_levels"]);
 
                     //Scout locations and store each level's reward
-                    long[] clearLocationIds = Enumerable.Range(1000, 121).Select(i => (long)i).ToArray();
-                    long[] flagLocationIds = Enumerable.Range(2000, 161).Select(i => (long)i).ToArray();
-                    long[] shopLocationIds = Enumerable.Range(5000, shopPrices.Count).Select(i => (long)i).ToArray();
-                    long[] locationsArray = clearLocationIds
-                        .Concat(flagLocationIds)
-                        .Concat(shopLocationIds)
-                        .ToArray();
+                    long[] locationsArray = apSession.Locations.AllLocations.ToArray();
                     scoutedLocations = apSession.Locations.ScoutLocationsAsync(false, locationsArray).Result;
 
                     shopPages = (int)Math.Ceiling((double)shopPrices.Count / 8);
@@ -211,12 +220,20 @@ namespace ReplantedArchipelago
                     Data.levelOrders["puzzle"] = GetOrderedLevelIDs(vasebreakerUnlocks, 9, 71).Concat(GetOrderedLevelIDs(izombieUnlocks, 9, 80)).ToArray();
                     Data.levelOrders["cloudy"] = GetOrderedLevelIDs(cloudyDayUnlocks, 12, 109);
 
-                    if (deathlinkEnabled)
+                    //Set up links
+                    if (deathLinkEnabled)
                     {
-                        Main.Log("Deathlink enabled.");
+                        Main.Log("Death Link enabled.");
                         deathLinkService = apSession.CreateDeathLinkService();
                         deathLinkService.OnDeathLinkReceived += HandleDeathLink;
                         deathLinkService.EnableDeathLink();
+                    }
+
+                    if (ringLinkEnabled)
+                    {
+                        Main.Log("Ring Link enabled.");
+                        apSession.ConnectionInfo.UpdateConnectionOptions(apSession.ConnectionInfo.Tags.Append("RingLink").ToArray());
+                        apSession.Socket.PacketReceived += HandlePacket;
                     }
 
                     //Set up plant stats
@@ -379,6 +396,19 @@ namespace ReplantedArchipelago
                     queuedUpItemEffects.Add(item.ItemId);
                 }
 
+                if (Main.currentScene == "Gameplay" && item.ItemId > 1000 && item.ItemId < 2000) //Tile unlocks
+                {
+                    long value = item.ItemId - 1000;
+                    long row = value / 10;
+                    long column = value % 10;
+
+                    GameObject lockedTile = GameObject.Find($"LockedTile_{row}_{column}");
+                    if (lockedTile != null && lockedTile.activeSelf)
+                    {
+                        lockedTile.SetActive(false);
+                    }
+                }
+
                 //Increase counter for displayed messages (to prevent messages being displayed and consumables being given multiple times)
                 displayedIngameMessages++;
             }
@@ -401,10 +431,13 @@ namespace ReplantedArchipelago
             {
                 chooserRefreshState = "update"; //Used to force a Seed Chooser rebuild for any plants obtained after a level has already begun
             }
-
-            if (item.ItemId > 205 && item.ItemId < 250)
+            else if (item.ItemId > 205 && item.ItemId < 250)
             {
                 Profile.focusedLevelId = (int)item.ItemId - 200;
+            }
+            else if (item.ItemId == 35) //Sun capacity items
+            {
+                maximumSunCapacity = (int)(150 * Math.Pow(2, receivedItems.Count(itemId => itemId == 35)));
             }
         }
 
@@ -452,9 +485,33 @@ namespace ReplantedArchipelago
             }
         }
 
+        public static void HandlePacket(ArchipelagoPacketBase packet)
+        {
+            try
+            {
+                if (packet.PacketType == ArchipelagoPacketType.Bounced)
+                {
+                    BouncedPacket bouncedPacket = (BouncedPacket)packet;
+                    if (bouncedPacket != null && bouncedPacket.Data != null && bouncedPacket.Data.ContainsKey("source") && (int)bouncedPacket.Data["source"] != apSession.Players.ActivePlayer.Slot)
+                    {
+                        if (bouncedPacket.Tags.Contains("RingLink") && bouncedPacket.Data.ContainsKey("amount"))
+                        {
+                            int amount = (int)bouncedPacket.Data["amount"];
+                            Gameplay.receivedRingLinkAmount += amount;
+                        }
+                    }
+
+                }
+            }
+            catch
+            {
+                Main.Log("Ignoring packet.");
+            }
+        }
+
         public static void HandleError(Exception e, string reason)
         {
-            Main.Log("Connection error.");
+            Main.Log($"Connection error. {reason} {e.StackTrace} {e.Message}");
             currentlyConnected = false;
             if (Main.currentScene != "Frontend")
             {
@@ -481,31 +538,6 @@ namespace ReplantedArchipelago
                     }
                 }
                 apSession.Locations.CompleteLocationChecks(locationId);
-            }
-        }
-
-        public static void SendWaveLocation(LevelEntryData levelData, int hugeWaveNumber)
-        {
-            if (levelData.ReloadedGameMode == ReloadedGameMode.CloudyDay)
-            {
-                if (Data.AllLevelLocations[109 + levelData.m_subIndex].FlagLocations.Length > hugeWaveNumber)
-                {
-                    SendLocation(Data.AllLevelLocations[109 + levelData.m_subIndex].FlagLocations[hugeWaveNumber], true);
-                }
-            }
-            else if (levelData.GameMode == GameMode.Adventure)
-            {
-                if (Data.AllLevelLocations[levelData.m_levelNumber].FlagLocations.Length > hugeWaveNumber)
-                {
-                    SendLocation(Data.AllLevelLocations[levelData.m_levelNumber].FlagLocations[hugeWaveNumber], true);
-                }
-            }
-            else if (Data.GameModeLevelIDs.ContainsKey(levelData.GameMode))
-            {
-                if (Data.AllLevelLocations[Data.GameModeLevelIDs[levelData.GameMode]].FlagLocations.Length > hugeWaveNumber && hugeWaveNumber >= 0)
-                {
-                    SendLocation(Data.AllLevelLocations[Data.GameModeLevelIDs[levelData.GameMode]].FlagLocations[hugeWaveNumber], true);
-                }
             }
         }
 
@@ -795,6 +827,19 @@ namespace ReplantedArchipelago
             };
 
             return hintStrings[random.Next(hintStrings.Count())];
+        }
+
+        public static void SendRingLinkPacket(int amount)
+        {
+            BouncePacket ringLinkPacket = new BouncePacket();
+            ringLinkPacket.Tags = new List<string>() { "RingLink" };
+            ringLinkPacket.Data = new Dictionary<string, JToken>
+            {
+                { "source", apSession.ConnectionInfo.Slot },
+                { "time",  DateTimeOffset.UtcNow.ToUnixTimeSeconds()},
+                { "amount", amount }
+            };
+            apSession.Socket.SendPacketAsync(ringLinkPacket);
         }
     }
 }

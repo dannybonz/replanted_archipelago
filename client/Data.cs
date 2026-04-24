@@ -13,7 +13,7 @@ namespace ReplantedArchipelago
     public class Data
     {
         //Version to match with generation
-        public static string GenVersion = "1.6";
+        public static string GenVersion = "1.7";
         //Whether cheat keys are enabled
         public static bool CheatKeys = false;
         public static bool SkipAwardScreen = false;
@@ -80,14 +80,10 @@ namespace ReplantedArchipelago
             { "sukhbir", 55 },
             { "dance", 56 },
 
-            { "Mower Deploy Trap", 70 },
-            { "Seed Packet Cooldown Trap", 71 },
-            { "Zombie Ambush Trap", 72 },
-
             { "Imitater", 148 }
         };
 
-        public static double[] gameEffectItems = { 50, 51, 52, 53, 54, 55, 56, 64, 70, 71, 72 };
+        public static double[] gameEffectItems = { 50, 51, 52, 53, 54, 55, 56, 64, 69, 70, 71, 72, 73, 74 };
 
         public static Dictionary<long, string> itemIdDefaultTooltips = new Dictionary<long, string>
         {
@@ -97,7 +93,8 @@ namespace ReplantedArchipelago
             { 6, "WATERING_CAN_DESCRIPTION" },
             { 60, "ADVICE_CLICKED_ON_COIN" },
             { 61, "ADVICE_CLICKED_ON_COIN" },
-            { 62, "ADVICE_CLICKED_ON_COIN" }
+            { 62, "ADVICE_CLICKED_ON_COIN" },
+            { 74, "ADVICE_FOUND_PLANT" }
         };
 
         public static Dictionary<long, string> itemIdCustomDescriptions = new Dictionary<long, string>
@@ -134,6 +131,8 @@ namespace ReplantedArchipelago
             { 70, "Instantly deploys your lawn mowers" },
             { 71, "Puts all seeds on cooldown" },
             { 72, "Summons an ambush of zombies" },
+            { 73, "Causes zombies to change lanes" },
+            { 69, "Freezes all zombies" },
         };
 
         public static Dictionary<long, CoinType> awardCoinTypes = new Dictionary<long, CoinType>
@@ -406,6 +405,46 @@ namespace ReplantedArchipelago
             ZombieType.TrashCan
         };
 
+        public static System.Collections.Generic.Dictionary<ZombieType, int> zombieTypeWeights = new System.Collections.Generic.Dictionary<ZombieType, int>
+        {
+            { ZombieType.Normal, 4000 },
+            { ZombieType.Flag, 0 },
+            { ZombieType.TrafficCone, 4000 },
+            { ZombieType.Polevaulter, 2000 },
+            { ZombieType.Pail, 3000 },
+            { ZombieType.Newspaper, 1000 },
+            { ZombieType.Door, 3500 },
+            { ZombieType.Football, 2000 },
+            { ZombieType.Dancer, 1000 },
+            { ZombieType.BackupDancer, 0 },
+            { ZombieType.DuckyTube, 0 },
+            { ZombieType.Snorkel, 2000 },
+            { ZombieType.Zamboni, 2000 },
+            { ZombieType.Bobsled, 2000 },
+            { ZombieType.DolphinRider, 1500 },
+            { ZombieType.JackInTheBox, 1000 },
+            { ZombieType.Balloon, 2000 },
+            { ZombieType.Digger, 1000 },
+            { ZombieType.Pogo, 1000 },
+            { ZombieType.Yeti, 1 },
+            { ZombieType.Bungee, 1000 },
+            { ZombieType.Ladder, 1000 },
+            { ZombieType.Catapult, 1500 },
+            { ZombieType.Gargantuar, 1500 },
+            { ZombieType.Imp, 0 },
+            { ZombieType.Boss, 0 },
+            { ZombieType.PeaHead, 4000 },
+            { ZombieType.WallnutHead, 3000 },
+            { ZombieType.JalapenoHead, 1000 },
+            { ZombieType.GatlingHead, 2000 },
+            { ZombieType.SquashHead, 2000 },
+            { ZombieType.TallnutHead, 2000 },
+            { ZombieType.RedeyeGargantuar, 6000 },
+            { ZombieType.Zombatar, 0 },
+            { ZombieType.Target, 0 },
+            { ZombieType.TrashCan, 4000 }
+        };
+
         //Location IDs
         public static readonly Dictionary<int, LevelLocationsEntry> AllLevelLocations = new Dictionary<int, LevelLocationsEntry>
         {
@@ -600,6 +639,16 @@ namespace ReplantedArchipelago
 
             { GameMode.BonusChina, 121 }
         };
+
+        public static readonly Dictionary<int, int[]> MissingRows = new Dictionary<int, int[]>
+        {
+            { 1, new int[] { 0, 1, 3, 4 } },
+            { 2, new int[] { 0, 4 } },
+            { 3, new int[] { 0, 4 } },
+            { 101, new int[] { 0, 4 } },
+        };
+
+        public static int[] ignoreLockedTileLevelIds = { 5, 15, 35, 52, 53, 55, 57, 58, 59, 65, 68, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 99, 103 };
 
         //Base costs for store items
         public static Dictionary<ItemFlags, int> BaseCosts = new Dictionary<ItemFlags, int>

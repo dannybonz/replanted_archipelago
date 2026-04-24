@@ -79,7 +79,7 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(ref bool __result)
             {
-                __result = APClient.receivedItems.Contains(Data.itemIds["Crazy Dave's Car Keys"]);
+                __result = (APClient.receivedItems.Contains(2) || APClient.receivedItems.Contains(28));
                 return false;
             }
         }

@@ -134,7 +134,7 @@ namespace ReplantedArchipelago.Patches
                 }
                 else
                 {
-                    awardItem.GetComponentInChildren<Image>(true).sprite = Graphics.GetGraphic("Archipelago");
+                    awardItem.GetComponentInChildren<Image>(true).sprite = Graphics.GetGraphic("ArchipelagoFlower");
                 }
                 awardItem.gameObject.GetComponentInChildren<Image>(true).enabled = true;
             }
