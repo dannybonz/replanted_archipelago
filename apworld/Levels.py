@@ -13,6 +13,7 @@ class Level:
     location: str = "Day"
     zombies: list[str] = field(default_factory = list)
     flags: int = 0
+    waves: int = 0
     type: str = "Adventure"
     flag_location_ids: list[int] = field(default_factory = list)
     conveyor_default: int = 0
@@ -28,12 +29,17 @@ class Level:
 
     expected_loadout: list[str] = None
     plant_combinations = None
+    lawn_rows: int = 5
+    ignore_locked_tiles: bool = False
 
     def __post_init__(self):
         self.has_pool = self.location == "Pool" or self.location == "Fog"
         self.on_roof = self.location == "Roof" or self.location == "Night Roof"
         self.at_night = self.location == "Night" or self.location == "Fog"
         self.on_ceramic = self.location == "Roof" or self.location == "Night Roof" or self.location == "China"
+        if self.has_pool:
+            self.lawn_rows = 6
+
         self.unmodified = copy.deepcopy(self)
 
     def randomise_zombies(self, world, zombie_blacklist):
@@ -160,22 +166,82 @@ class Level:
 
         self.conveyor = conveyor_weights
 
+    def requires_a_wall_plant(self):
+        return self.type == "Survival" or self.name in ["Roof: Level 5-5", "Mini-games: Column Like You See 'Em"] or any(zombie in self.zombies for zombie in ["PeaHead", "GatlingHead", "TallnutHead"])
+
     def can_clear(self, state, world, player):
         #Non-negotiables
         required_items = []
         if self.on_roof and (self.name in ["Mini-games: Pogo Party", "Mini-games: Column Like You See 'Em"] or "GigaGargantuar" in self.zombies):
             required_items.append("Roof Cleaners")
-        if self.name in ["Mini-games: Pogo Party", "Mini-games: Bobsled Bonanza", "Bonus Levels: Air Raid"] and "Gargantuar" in self.zombies:
+        if (self.name in ["Mini-games: Pogo Party", "Mini-games: Bobsled Bonanza", "Bonus Levels: Air Raid"] and "Gargantuar" in self.zombies) or (world.options.individual_tile_unlock_items.value and self.flags >= 2 and not self.ignore_locked_tiles):
             required_items.append("Shovel")
 
         if not all(state.has(item, player) for item in required_items):
             return False
+
+        #Tile unlocks
+        if world.options.individual_tile_unlock_items.value and not self.ignore_locked_tiles:
+            tile_numbers = {}
+            available_tiles = {}
+            total_tiles_unlocked = 0
+            for row_index in range(1, self.lawn_rows + 1):
+                available_tiles[row_index] = []
+                for column_index in range(1, 10):
+                    if state.has(f"Tile Unlock: Row #{row_index}, Column #{column_index}", player):
+                        available_tiles[row_index].append(column_index)
+                        total_tiles_unlocked += 1
+                tile_numbers[row_index] = {"total": len(available_tiles[row_index]), "rear": sum(1 for column_index in available_tiles[row_index] if column_index <= 4), "front": sum(1 for column_index in available_tiles[row_index] if column_index >= 7)}
+
+            if self.name == "Day: Level 1-1":
+                del available_tiles[1]
+                del available_tiles[2]
+                del available_tiles[4]
+                del available_tiles[5]
+            elif self.name in ["Day: Level 1-2", "Day: Level 1-3"]:
+                del available_tiles[1]
+                del available_tiles[5]
+
+            required_rear_columns_per_row = 1
+            required_total_columns_per_row = 1 + self.flags
+            required_front_columns_per_row = 0
+
+            if self.choose and not self.name in ["Day: Level 1-1", "Day: Level 1-2", "Day: Level 1-3", "Day: Level 1-4"]:
+                required_total_tiles = int(self.lawn_rows * 1.5)
+                if (self.at_night):
+                    required_total_tiles += self.lawn_rows
+                if total_tiles_unlocked < required_total_tiles:
+                    return False
+
+            if self.requires_a_wall_plant() or any(zombie in self.zombies for zombie in ["Snorkel", "DolphinRider", "Polevaulter", "Football"]):
+                required_front_columns_per_row += 1
+            
+            if self.name in ["Mini-games: Pogo Party", "Mini-games: Bobsled Bonanza", "Bonus Levels: Air Raid"]:
+                required_total_columns_per_row += 4
+                required_rear_columns_per_row += 1
+                if "Gargantuar" in self.zombies:
+                    required_total_columns_per_row = 7
+            elif self.name in ["Mini-games: Column Like You See 'Em"] or self.type == "Survival" or self.special == "boss":
+                required_total_columns_per_row = 7
+
+            for row_index in range(1, self.lawn_rows + 1):
+                if min(required_total_columns_per_row, 9) > tile_numbers[row_index]["total"] or min(required_rear_columns_per_row, 4) > tile_numbers[row_index]["rear"] or min(required_front_columns_per_row, 3) > tile_numbers[row_index]["front"]:
+                    return False
 
         if self.choose:
             #Get relevant unlocked plants
             if self.plant_combinations == None:
                 self.plant_combinations = self.create_plant_combinations(world)
             unlocked_plants = {plant for plant in world.progression_plants if (state.has(plant, player) or plant in self.forced_plants)}
+
+            if world.options.progressive_sun_capacity_items.value: #Check plants are affordable with sun cap limits
+                total_sun_capacity = 150 * (2 ** state.count("Progressive Sun Capacity", player))
+                unlocked_plants = {plant for plant in unlocked_plants if world.all_plants[plant].cost * 1.1 <= total_sun_capacity}
+
+                if self.type in ["Survival", "Cloudy Day"] and total_sun_capacity < 1000:
+                    return False
+                elif self.name == "Mini-games: Last Stand" and total_sun_capacity < 5000:
+                    return False
 
             #Get unlocked combinations to counter threat
             unlocked_combinations = {}
@@ -242,7 +308,7 @@ class Level:
                 possible_combinations["sun"] = [{"Sunflower"}]
 
         #Wall plants
-        if self.type == "Survival" or self.name in ["Roof: Level 5-5", "Mini-games: Column Like You See 'Em"] or any(zombie in self.zombies for zombie in ["PeaHead", "GatlingHead", "TallnutHead"]):
+        if self.requires_a_wall_plant():
             possible_combinations["wall"] = [] + world.wall_plants
 
         #AOE plants
@@ -407,7 +473,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1000,
             unlock_item_name = "Day Unlock: Level 1-1",
-            level_id = 1
+            level_id = 1,
+            waves = 4
         ),
 
         "1-2": Level(
@@ -417,7 +484,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1001,
             unlock_item_name = "Day Unlock: Level 1-2",
-            level_id = 2
+            level_id = 2,
+            waves = 6
         ),
 
         "1-3": Level(
@@ -427,7 +495,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1002,
             unlock_item_name = "Day Unlock: Level 1-3",
-            level_id = 3
+            level_id = 3,
+            waves = 8
         ),
 
         "1-4": Level(
@@ -437,7 +506,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1003,
             unlock_item_name = "Day Unlock: Level 1-4",
-            level_id = 4
+            level_id = 4,
+            waves = 10
         ),
 
         "1-5": Level(
@@ -449,7 +519,9 @@ def create_levels(world = None):
             clear_location_id = 1004,
             special = "bowling",
             unlock_item_name = "Day Unlock: Level 1-5",
-            level_id = 5
+            level_id = 5,
+            ignore_locked_tiles = True,
+            waves = 8
         ),
 
         "1-6": Level(
@@ -459,7 +531,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1005,
             unlock_item_name = "Day Unlock: Level 1-6",
-            level_id = 6
+            level_id = 6,
+            waves = 10
         ),
 
         "1-7": Level(
@@ -469,7 +542,8 @@ def create_levels(world = None):
             flag_location_ids = [2000],
             clear_location_id = 1006,
             unlock_item_name = "Day Unlock: Level 1-7",
-            level_id = 7
+            level_id = 7,
+            waves = 20
         ),
 
         "1-8": Level(
@@ -479,7 +553,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1007,
             unlock_item_name = "Day Unlock: Level 1-8",
-            level_id = 8
+            level_id = 8,
+            waves = 10
         ),
 
         "1-9": Level(
@@ -489,7 +564,8 @@ def create_levels(world = None):
             flag_location_ids = [2001],
             clear_location_id = 1008,
             unlock_item_name = "Day Unlock: Level 1-9",
-            level_id = 9
+            level_id = 9,
+            waves = 20
         ),
 
         "1-10": Level(
@@ -501,7 +577,8 @@ def create_levels(world = None):
             clear_location_id = 1009,
             conveyor = {'Peashooter': 20, 'Cherry Bomb': 20, 'Wall-nut': 15, 'Repeater': 20, 'Snow Pea': 10, 'Chomper': 5, 'Potato Mine': 10},
             unlock_item_name = "Day Unlock: Level 1-10",
-            level_id = 10
+            level_id = 10,
+            waves = 20
         ),
 
         "2-1": Level(
@@ -512,7 +589,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1010,
             unlock_item_name = "Night Unlock: Level 2-1",
-            level_id = 11
+            level_id = 11,
+            waves = 10
         ),
 
         "2-2": Level(
@@ -523,7 +601,8 @@ def create_levels(world = None):
             flag_location_ids = [2003],
             clear_location_id = 1011,
             unlock_item_name = "Night Unlock: Level 2-2",
-            level_id = 12
+            level_id = 12,
+            waves = 20
         ),
 
         "2-3": Level(
@@ -534,7 +613,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1012,
             unlock_item_name = "Night Unlock: Level 2-3",
-            level_id = 13
+            level_id = 13,
+            waves = 10
         ),
 
         "2-4": Level(
@@ -545,7 +625,8 @@ def create_levels(world = None):
             flag_location_ids = [2004],
             clear_location_id = 1013,
             unlock_item_name = "Night Unlock: Level 2-4",
-            level_id = 14
+            level_id = 14,
+            waves = 20
         ),
 
         "2-5": Level(
@@ -557,7 +638,9 @@ def create_levels(world = None):
             clear_location_id = 1014,
             special = "whack",
             unlock_item_name = "Night Unlock: Level 2-5",
-            level_id = 15
+            level_id = 15,
+            ignore_locked_tiles = True,
+            waves = 8
         ),
 
         "2-6": Level(
@@ -568,7 +651,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1015,
             unlock_item_name = "Night Unlock: Level 2-6",
-            level_id = 16
+            level_id = 16,
+            waves = 10
         ),
 
         "2-7": Level(
@@ -579,7 +663,8 @@ def create_levels(world = None):
             flag_location_ids = [2005],
             clear_location_id = 1016,
             unlock_item_name = "Night Unlock: Level 2-7",
-            level_id = 17
+            level_id = 17,
+            waves = 20
         ),
 
         "2-8": Level(
@@ -590,7 +675,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1017,
             unlock_item_name = "Night Unlock: Level 2-8",
-            level_id = 18
+            level_id = 18,
+            waves = 10
         ),
 
         "2-9": Level(
@@ -601,7 +687,8 @@ def create_levels(world = None):
             flag_location_ids = [2006],
             clear_location_id = 1018,
             unlock_item_name = "Night Unlock: Level 2-9",
-            level_id = 19
+            level_id = 19,
+            waves = 20
         ),
 
         "2-10": Level(
@@ -614,7 +701,8 @@ def create_levels(world = None):
             clear_location_id = 1019,
             conveyor = {'Grave Buster': 20, 'Ice-shroom': 15, 'Doom-shroom': 15, 'Hypno-shroom': 10, 'Scaredy-shroom': 15, 'Fume-shroom': 15, 'Puff-shroom': 10},
             unlock_item_name = "Night Unlock: Level 2-10",
-            level_id = 20
+            level_id = 20,
+            waves = 20
         ),
 
         "3-1": Level(
@@ -625,7 +713,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1020,
             unlock_item_name = "Pool Unlock: Level 3-1",
-            level_id = 21
+            level_id = 21,
+            waves = 10
         ),
 
         "3-2": Level(
@@ -636,7 +725,8 @@ def create_levels(world = None):
             flag_location_ids = [2008],
             clear_location_id = 1021,
             unlock_item_name = "Pool Unlock: Level 3-2",
-            level_id = 22
+            level_id = 22,
+            waves = 20
         ),
 
         "3-3": Level(
@@ -647,7 +737,8 @@ def create_levels(world = None):
             flag_location_ids = [2009],
             clear_location_id = 1022,
             unlock_item_name = "Pool Unlock: Level 3-3",
-            level_id = 23
+            level_id = 23,
+            waves = 20
         ),
 
         "3-4": Level(
@@ -658,7 +749,8 @@ def create_levels(world = None):
             flag_location_ids = [2010, 2011],
             clear_location_id = 1023,
             unlock_item_name = "Pool Unlock: Level 3-4",
-            level_id = 24
+            level_id = 24,
+            waves = 30
         ),
 
         "3-5": Level(
@@ -672,7 +764,8 @@ def create_levels(world = None):
             conveyor = {'Lily Pad': 25, 'Wall-nut': 15, 'Peashooter': 25, 'Cherry Bomb': 35},
             special = "little",
             unlock_item_name = "Pool Unlock: Level 3-5",
-            level_id = 25
+            level_id = 25,
+            waves = 20
         ),
 
         "3-6": Level(
@@ -683,7 +776,8 @@ def create_levels(world = None):
             flag_location_ids = [2013],
             clear_location_id = 1025,
             unlock_item_name = "Pool Unlock: Level 3-6",
-            level_id = 26
+            level_id = 26,
+            waves = 20
         ),
 
         "3-7": Level(
@@ -694,7 +788,8 @@ def create_levels(world = None):
             flag_location_ids = [2014, 2015],
             clear_location_id = 1026,
             unlock_item_name = "Pool Unlock: Level 3-7",
-            level_id = 27
+            level_id = 27,
+            waves = 30
         ),
 
         "3-8": Level(
@@ -705,7 +800,8 @@ def create_levels(world = None):
             flag_location_ids = [2016],
             clear_location_id = 1027,
             unlock_item_name = "Pool Unlock: Level 3-8",
-            level_id = 28
+            level_id = 28,
+            waves = 20
         ),
 
         "3-9": Level(
@@ -716,7 +812,8 @@ def create_levels(world = None):
             flag_location_ids = [2017, 2018],
             clear_location_id = 1028,
             unlock_item_name = "Pool Unlock: Level 3-9",
-            level_id = 29
+            level_id = 29,
+            waves = 30
         ),
 
         "3-10": Level(
@@ -729,7 +826,8 @@ def create_levels(world = None):
             clear_location_id = 1029,
             conveyor = {'Lily Pad': 25, 'Squash': 5, 'Threepeater': 25, 'Tangle Kelp': 5, 'Jalapeno': 10, 'Spikeweed': 10, 'Torchwood': 10, 'Tall-nut': 10},
             unlock_item_name = "Pool Unlock: Level 3-10",
-            level_id = 30
+            level_id = 30,
+            waves = 30
         ),
 
         "4-1": Level(
@@ -740,7 +838,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1030,
             unlock_item_name = "Fog Unlock: Level 4-1",
-            level_id = 31
+            level_id = 31,
+            waves = 10
         ),
 
         "4-2": Level(
@@ -751,7 +850,8 @@ def create_levels(world = None):
             flag_location_ids = [2021],
             clear_location_id = 1031,
             unlock_item_name = "Fog Unlock: Level 4-2",
-            level_id = 32
+            level_id = 32,
+            waves = 20
         ),
 
         "4-3": Level(
@@ -762,7 +862,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1032,
             unlock_item_name = "Fog Unlock: Level 4-3",
-            level_id = 33
+            level_id = 33,
+            waves = 10
         ),
 
         "4-4": Level(
@@ -773,7 +874,8 @@ def create_levels(world = None):
             flag_location_ids = [2022],
             clear_location_id = 1033,
             unlock_item_name = "Fog Unlock: Level 4-4",
-            level_id = 34
+            level_id = 34,
+            waves = 10
         ),
 
         "4-5": Level(
@@ -785,7 +887,8 @@ def create_levels(world = None):
             clear_location_id = 1034,
             special = "vasebreaker",
             unlock_item_name = "Fog Unlock: Level 4-5",
-            level_id = 35
+            level_id = 35,
+            ignore_locked_tiles = True,
         ),
 
         "4-6": Level(
@@ -796,7 +899,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1035,
             unlock_item_name = "Fog Unlock: Level 4-6",
-            level_id = 36
+            level_id = 36,
+            waves = 10
         ),
 
         "4-7": Level(
@@ -807,7 +911,8 @@ def create_levels(world = None):
             flag_location_ids = [2023],
             clear_location_id = 1036,
             unlock_item_name = "Fog Unlock: Level 4-7",
-            level_id = 37
+            level_id = 37,
+            waves = 20
         ),
 
         "4-8": Level(
@@ -818,7 +923,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1037,
             unlock_item_name = "Fog Unlock: Level 4-8",
-            level_id = 38
+            level_id = 38,
+            waves = 10
         ),
 
         "4-9": Level(
@@ -829,7 +935,8 @@ def create_levels(world = None):
             flag_location_ids = [2024],
             clear_location_id = 1038,
             unlock_item_name = "Fog Unlock: Level 4-9",
-            level_id = 39
+            level_id = 39,
+            waves = 20
         ),
 
         "4-10": Level(
@@ -842,7 +949,8 @@ def create_levels(world = None):
             clear_location_id = 1039,
             conveyor = {'Lily Pad': 25, 'Sea-shroom': 10, 'Magnet-shroom': 5, 'Blover': 5, 'Cactus': 15, 'Starfruit': 25, 'Split Pea': 5, 'Pumpkin': 10},
             unlock_item_name = "Fog Unlock: Level 4-10",
-            level_id = 40
+            level_id = 40,
+            waves = 20
         ),
 
         "5-1": Level(
@@ -853,7 +961,8 @@ def create_levels(world = None):
             flag_location_ids = [],
             clear_location_id = 1040,
             unlock_item_name = "Roof Unlock: Level 5-1",
-            level_id = 41
+            level_id = 41,
+            waves = 10
         ),
 
         "5-2": Level(
@@ -864,7 +973,8 @@ def create_levels(world = None):
             flag_location_ids = [2026],
             clear_location_id = 1041,
             unlock_item_name = "Roof Unlock: Level 5-2",
-            level_id = 42
+            level_id = 42,
+            waves = 20
         ),
 
         "5-3": Level(
@@ -875,7 +985,8 @@ def create_levels(world = None):
             flag_location_ids = [2027],
             clear_location_id = 1042,
             unlock_item_name = "Roof Unlock: Level 5-3",
-            level_id = 43
+            level_id = 43,
+            waves = 20
         ),
 
         "5-4": Level(
@@ -886,7 +997,8 @@ def create_levels(world = None):
             flag_location_ids = [2028, 2029],
             clear_location_id = 1043,
             unlock_item_name = "Roof Unlock: Level 5-4",
-            level_id = 44
+            level_id = 44,
+            waves = 30
         ),
 
         "5-5": Level(
@@ -899,7 +1011,8 @@ def create_levels(world = None):
             clear_location_id = 1044,
             conveyor = {'Flower Pot': 50, 'Chomper': 25, 'Pumpkin': 15, 'Cherry Bomb': 10},
             unlock_item_name = "Roof Unlock: Level 5-5",
-            level_id = 45
+            level_id = 45,
+            waves = 20
         ),
 
         "5-6": Level(
@@ -910,7 +1023,8 @@ def create_levels(world = None):
             flag_location_ids = [2031],
             clear_location_id = 1045,
             unlock_item_name = "Roof Unlock: Level 5-6",
-            level_id = 46
+            level_id = 46,
+            waves = 20
         ),
 
         "5-7": Level(
@@ -921,7 +1035,8 @@ def create_levels(world = None):
             flag_location_ids = [2032, 2033],
             clear_location_id = 1046,
             unlock_item_name = "Roof Unlock: Level 5-7",
-            level_id = 47
+            level_id = 47,
+            waves = 30
         ),
 
         "5-8": Level(
@@ -932,7 +1047,8 @@ def create_levels(world = None):
             flag_location_ids = [2034],
             clear_location_id = 1047,
             unlock_item_name = "Roof Unlock: Level 5-8",
-            level_id = 48
+            level_id = 48,
+            waves = 20
         ),
 
         "5-9": Level(
@@ -943,7 +1059,8 @@ def create_levels(world = None):
             flag_location_ids = [2035, 2036],
             clear_location_id = 1048,
             unlock_item_name = "Roof Unlock: Level 5-9",
-            level_id = 49
+            level_id = 49,
+            waves = 30
         ),
 
         "5-10": Level(
@@ -971,7 +1088,8 @@ def create_levels(world = None):
                 flag_location_ids = [2037],
                 clear_location_id = 1050,
                 unlock_item_name = "Mini-game Unlock: ZomBotany",
-                level_id = 51
+                level_id = 51,
+                waves = 20
             ),
 
             "ChallengeWallnutBowling": Level(
@@ -984,7 +1102,9 @@ def create_levels(world = None):
                 clear_location_id = 1051,
                 special = "bowling",
                 unlock_item_name = "Mini-game Unlock: Wall-nut Bowling",
-                level_id = 52
+                level_id = 52,
+                ignore_locked_tiles = True,
+                waves = 20
             ),
 
             "ChallengeSlotMachine": Level(
@@ -996,7 +1116,8 @@ def create_levels(world = None):
                 clear_location_id = 1052,
                 special = "slot",
                 unlock_item_name = "Mini-game Unlock: Slot Machine",
-                level_id = 53
+                level_id = 53,
+                ignore_locked_tiles = True
             ),
 
             "ChallengeRainingSeeds": Level(
@@ -1010,7 +1131,8 @@ def create_levels(world = None):
                 clear_location_id = 1053,
                 special = "raining",
                 unlock_item_name = "Mini-game Unlock: It's Raining Seeds",
-                level_id = 54
+                level_id = 54,
+                waves = 40
             ),
 
             "ChallengeBeghouled": Level(
@@ -1023,7 +1145,8 @@ def create_levels(world = None):
                 clear_location_id = 1054,
                 special = "beghouled",
                 unlock_item_name = "Mini-game Unlock: Beghouled",
-                level_id = 55
+                level_id = 55,
+                ignore_locked_tiles = True
             ),
 
             "ChallengeInvisighoul": Level(
@@ -1038,7 +1161,8 @@ def create_levels(world = None):
                 conveyor = {'Peashooter': 25, 'Wall-nut': 15, 'Kernel-pult': 5, 'Squash': 15, 'Lily Pad': 30, 'Ice-shroom': 10},
                 conveyor_default = 2,
                 unlock_item_name = "Mini-game Unlock: Invisi-ghoul",
-                level_id = 56
+                level_id = 56,
+                waves = 20
             ),
 
             "ChallengeSeeingStars": Level(
@@ -1050,7 +1174,8 @@ def create_levels(world = None):
                 special = "art",
                 forced_plants = {'Starfruit'},
                 unlock_item_name = "Mini-game Unlock: Seeing Stars",
-                level_id = 57
+                level_id = 57,
+                ignore_locked_tiles = True
             ),
 
             "ChallengeZombiquarium": Level(
@@ -1062,7 +1187,8 @@ def create_levels(world = None):
                 clear_location_id = 1057,
                 special = "zombiquarium",
                 unlock_item_name = "Mini-game Unlock: Zombiquarium",
-                level_id = 58
+                level_id = 58,
+                ignore_locked_tiles = True
             ),
 
             "ChallengeBeghouledTwist": Level(
@@ -1075,7 +1201,8 @@ def create_levels(world = None):
                 clear_location_id = 1058,
                 special = "beghouled",
                 unlock_item_name = "Mini-game Unlock: Beghouled Twist",
-                level_id = 59
+                level_id = 59,
+                ignore_locked_tiles = True
             ),
 
             "ChallengeLittleTrouble": Level(
@@ -1090,7 +1217,8 @@ def create_levels(world = None):
                 conveyor = {'Lily Pad': 25, 'Wall-nut': 15, 'Peashooter': 25, 'Cherry Bomb': 35},
                 special = "little",
                 unlock_item_name = "Mini-game Unlock: Big Trouble Little Zombie",
-                level_id = 60
+                level_id = 60,
+                waves = 30
             ),
 
             "ChallengePortalCombat": Level(
@@ -1104,7 +1232,8 @@ def create_levels(world = None):
                 clear_location_id = 1060,
                 conveyor = {'Peashooter': 25, 'Repeater': 20, 'Torchwood': 10, 'Cactus': 15, 'Wall-nut': 15, 'Cherry Bomb': 15},
                 unlock_item_name = "Mini-game Unlock: Portal Combat",
-                level_id = 61
+                level_id = 61,
+                waves = 20
             ),
 
             "ChallengeColumn": Level(
@@ -1120,7 +1249,8 @@ def create_levels(world = None):
                 special = "column",
                 conveyor_default = 6,
                 unlock_item_name = "Mini-game Unlock: Column Like You See 'Em",
-                level_id = 62
+                level_id = 62,
+                waves = 30
             ),
 
             "ChallengeBobsledBonanza": Level(
@@ -1132,7 +1262,8 @@ def create_levels(world = None):
                 flag_location_ids = [2048, 2049, 2050],
                 clear_location_id = 1062,
                 unlock_item_name = "Mini-game Unlock: Bobsled Bonanza",
-                level_id = 63
+                level_id = 63,
+                waves = 40
             ),
 
             "ChallengeSpeed": Level(
@@ -1144,7 +1275,8 @@ def create_levels(world = None):
                 flag_location_ids = [2051, 2052, 2053],
                 clear_location_id = 1063,
                 unlock_item_name = "Mini-game Unlock: Zombie Nimble Zombie Quick",
-                level_id = 64
+                level_id = 64,
+                waves = 40
             ),
 
             "ChallengeWhackAZombie": Level(
@@ -1157,7 +1289,9 @@ def create_levels(world = None):
                 clear_location_id = 1064,
                 special = "whack",
                 unlock_item_name = "Mini-game Unlock: Whack a Zombie",
-                level_id = 65
+                level_id = 65,
+                ignore_locked_tiles = True,
+                waves = 12
             ),
 
             "ChallengeLastStand": Level(
@@ -1169,7 +1303,8 @@ def create_levels(world = None):
                 flag_location_ids = [2054, 2055, 2056, 2057],
                 clear_location_id = 1065,
                 unlock_item_name = "Mini-game Unlock: Last Stand",
-                level_id = 66
+                level_id = 66,
+                waves = 50
             ),
 
             "ChallengeWarAndPeas2": Level(
@@ -1181,7 +1316,8 @@ def create_levels(world = None):
                 flag_location_ids = [2058, 2059],
                 clear_location_id = 1066,
                 unlock_item_name = "Mini-game Unlock: ZomBotany 2",
-                level_id = 67
+                level_id = 67,
+                waves = 30
             ),
 
             "ChallengeWallnutBowling2": Level(
@@ -1194,7 +1330,9 @@ def create_levels(world = None):
                 clear_location_id = 1067,
                 special = "bowling",
                 unlock_item_name = "Mini-game Unlock: Wall-nut Bowling 2",
-                level_id = 68
+                level_id = 68,
+                ignore_locked_tiles = True,
+                waves = 30
             ),
 
             "ChallengePogoParty": Level(
@@ -1206,7 +1344,8 @@ def create_levels(world = None):
                 flag_location_ids = [2062, 2063],
                 clear_location_id = 1068,
                 unlock_item_name = "Mini-game Unlock: Pogo Party",
-                level_id = 69
+                level_id = 69,
+                waves = 30
             ),
 
             "ChallengeFinalBoss": Level(
@@ -1237,7 +1376,8 @@ def create_levels(world = None):
                 clear_location_id = 1070,
                 special = "vasebreaker",
                 unlock_item_name = "Puzzle Unlock: Vasebreaker",
-                level_id = 71
+                level_id = 71,
+                ignore_locked_tiles = True
             ),
 
             "ScaryPotter2": Level(
@@ -1250,7 +1390,8 @@ def create_levels(world = None):
                 clear_location_id = 1071,
                 special = "vasebreaker",
                 unlock_item_name = "Puzzle Unlock: To The Left",
-                level_id = 72
+                level_id = 72,
+                ignore_locked_tiles = True
             ),
 
             "ScaryPotter3": Level(
@@ -1263,7 +1404,8 @@ def create_levels(world = None):
                 clear_location_id = 1072,
                 special = "vasebreaker",
                 unlock_item_name = "Puzzle Unlock: Third Vase",
-                level_id = 73
+                level_id = 73,
+                ignore_locked_tiles = True
             ),
 
             "ScaryPotter4": Level(
@@ -1276,7 +1418,8 @@ def create_levels(world = None):
                 clear_location_id = 1073,
                 special = "vasebreaker",
                 unlock_item_name = "Puzzle Unlock: Chain Reaction",
-                level_id = 74
+                level_id = 74,
+                ignore_locked_tiles = True
             ),
 
             "ScaryPotter5": Level(
@@ -1289,7 +1432,8 @@ def create_levels(world = None):
                 clear_location_id = 1074,
                 special = "vasebreaker",
                 unlock_item_name = "Puzzle Unlock: M is for Metal",
-                level_id = 75
+                level_id = 75,
+                ignore_locked_tiles = True
             ),
 
             "ScaryPotter6": Level(
@@ -1302,7 +1446,8 @@ def create_levels(world = None):
                 clear_location_id = 1075,
                 special = "vasebreaker",
                 unlock_item_name = "Puzzle Unlock: Scary Potter",
-                level_id = 76
+                level_id = 76,
+                ignore_locked_tiles = True
             ),
 
             "ScaryPotter7": Level(
@@ -1315,7 +1460,8 @@ def create_levels(world = None):
                 clear_location_id = 1076,
                 special = "vasebreaker",
                 unlock_item_name = "Puzzle Unlock: Hokey Pokey",
-                level_id = 77
+                level_id = 77,
+                ignore_locked_tiles = True
             ),
 
             "ScaryPotter8": Level(
@@ -1328,7 +1474,8 @@ def create_levels(world = None):
                 clear_location_id = 1077,
                 special = "vasebreaker",
                 unlock_item_name = "Puzzle Unlock: Another Chain Reaction",
-                level_id = 78
+                level_id = 78,
+                ignore_locked_tiles = True
             ),
 
             "ScaryPotter9": Level(
@@ -1341,7 +1488,8 @@ def create_levels(world = None):
                 clear_location_id = 1078,
                 special = "vasebreaker",
                 unlock_item_name = "Puzzle Unlock: Ace of Vase",
-                level_id = 79
+                level_id = 79,
+                ignore_locked_tiles = True
             ),
 
             "PuzzleIZombie1": Level(
@@ -1354,7 +1502,8 @@ def create_levels(world = None):
                 clear_location_id = 1079,
                 special = "izombie",
                 unlock_item_name = "Puzzle Unlock: I, Zombie",
-                level_id = 80
+                level_id = 80,
+                ignore_locked_tiles = True
             ),
 
             "PuzzleIZombie2": Level(
@@ -1367,7 +1516,8 @@ def create_levels(world = None):
                 clear_location_id = 1080,
                 special = "izombie",
                 unlock_item_name = "Puzzle Unlock: I, Zombie Too",
-                level_id = 81
+                level_id = 81,
+                ignore_locked_tiles = True
             ),
 
             "PuzzleIZombie3": Level(
@@ -1380,7 +1530,8 @@ def create_levels(world = None):
                 clear_location_id = 1081,
                 special = "izombie",
                 unlock_item_name = "Puzzle Unlock: Can You Dig It?",
-                level_id = 82
+                level_id = 82,
+                ignore_locked_tiles = True
             ),
 
             "PuzzleIZombie4": Level(
@@ -1393,7 +1544,8 @@ def create_levels(world = None):
                 clear_location_id = 1082,
                 special = "izombie",
                 unlock_item_name = "Puzzle Unlock: Totally Nuts",
-                level_id = 83
+                level_id = 83,
+                ignore_locked_tiles = True
             ),
 
             "PuzzleIZombie5": Level(
@@ -1406,7 +1558,8 @@ def create_levels(world = None):
                 clear_location_id = 1083,
                 special = "izombie",
                 unlock_item_name = "Puzzle Unlock: Dead Zeppelin",
-                level_id = 84
+                level_id = 84,
+                ignore_locked_tiles = True
             ),
 
             "PuzzleIZombie6": Level(
@@ -1419,7 +1572,8 @@ def create_levels(world = None):
                 clear_location_id = 1084,
                 special = "izombie",
                 unlock_item_name = "Puzzle Unlock: Me Smash!",
-                level_id = 85
+                level_id = 85,
+                ignore_locked_tiles = True
             ),
 
             "PuzzleIZombie7": Level(
@@ -1432,7 +1586,8 @@ def create_levels(world = None):
                 clear_location_id = 1085,
                 special = "izombie",
                 unlock_item_name = "Puzzle Unlock: ZomBoogie",
-                level_id = 86
+                level_id = 86,
+                ignore_locked_tiles = True
             ),
 
             "PuzzleIZombie8": Level(
@@ -1445,7 +1600,8 @@ def create_levels(world = None):
                 clear_location_id = 1086,
                 special = "izombie",
                 unlock_item_name = "Puzzle Unlock: Three Hit Wonder",
-                level_id = 87
+                level_id = 87,
+                ignore_locked_tiles = True
             ),
 
             "PuzzleIZombie9": Level(
@@ -1458,7 +1614,8 @@ def create_levels(world = None):
                 clear_location_id = 1087,
                 special = "izombie",
                 unlock_item_name = "Puzzle Unlock: All your brainz r belong to us",
-                level_id = 88
+                level_id = 88,
+                ignore_locked_tiles = True
             )
             }
     if world == None or world.options.survival_levels.value != 0:
@@ -1471,7 +1628,8 @@ def create_levels(world = None):
                 flag_location_ids = [2064, 2065, 2066, 2067],
                 clear_location_id = 1088,
                 unlock_item_name = "Survival Unlock: Day",
-                level_id = 89
+                level_id = 89,
+                waves = 50
             ),
 
             "SurvivalNormalStage2": Level(
@@ -1483,7 +1641,8 @@ def create_levels(world = None):
                 flag_location_ids = [2068, 2069, 2070, 2071],
                 clear_location_id = 1089,
                 unlock_item_name = "Survival Unlock: Night",
-                level_id = 90
+                level_id = 90,
+                waves = 50
             ),
 
             "SurvivalNormalStage3": Level(
@@ -1495,7 +1654,8 @@ def create_levels(world = None):
                 flag_location_ids = [2072, 2073, 2074, 2075],
                 clear_location_id = 1090,
                 unlock_item_name = "Survival Unlock: Pool",
-                level_id = 91
+                level_id = 91,
+                waves = 50
             ),
 
             "SurvivalNormalStage4": Level(
@@ -1507,7 +1667,8 @@ def create_levels(world = None):
                 flag_location_ids = [2076, 2077, 2078, 2079],
                 clear_location_id = 1091,
                 unlock_item_name = "Survival Unlock: Fog",
-                level_id = 92
+                level_id = 92,
+                waves = 50
             ),
 
             "SurvivalNormalStage5": Level(
@@ -1519,7 +1680,8 @@ def create_levels(world = None):
                 flag_location_ids = [2080, 2081, 2082, 2083],
                 clear_location_id = 1092,
                 unlock_item_name = "Survival Unlock: Roof",
-                level_id = 93
+                level_id = 93,
+                waves = 50
             ),
 
             "SurvivalHardStage1": Level(
@@ -1530,7 +1692,8 @@ def create_levels(world = None):
                 flag_location_ids = [2084, 2085, 2086, 2087, 2088, 2089, 2090, 2091, 2092],
                 clear_location_id = 1093,
                 unlock_item_name = "Survival Unlock: Day (Hard)",
-                level_id = 94
+                level_id = 94,
+                waves = 100
             ),
 
             "SurvivalHardStage2": Level(
@@ -1542,7 +1705,8 @@ def create_levels(world = None):
                 flag_location_ids = [2093, 2094, 2095, 2096, 2097, 2098, 2099, 2100, 2101],
                 clear_location_id = 1094,
                 unlock_item_name = "Survival Unlock: Night (Hard)",
-                level_id = 95
+                level_id = 95,
+                waves = 100
             ),
 
             "SurvivalHardStage3": Level(
@@ -1554,7 +1718,8 @@ def create_levels(world = None):
                 flag_location_ids = [2102, 2103, 2104, 2105, 2106, 2107, 2108, 2109, 2110],
                 clear_location_id = 1095,
                 unlock_item_name = "Survival Unlock: Pool (Hard)",
-                level_id = 96
+                level_id = 96,
+                waves = 100
             ),
 
             "SurvivalHardStage4": Level(
@@ -1566,7 +1731,8 @@ def create_levels(world = None):
                 flag_location_ids = [2111, 2112, 2113, 2114, 2115, 2116, 2117, 2118, 2119],
                 clear_location_id = 1096,
                 unlock_item_name = "Survival Unlock: Fog (Hard)",
-                level_id = 97
+                level_id = 97,
+                waves = 100
             ),
 
             "SurvivalHardStage5": Level(
@@ -1578,7 +1744,8 @@ def create_levels(world = None):
                 flag_location_ids = [2120, 2121, 2122, 2123, 2124, 2125, 2126, 2127, 2128],
                 clear_location_id = 1097,
                 unlock_item_name = "Survival Unlock: Roof (Hard)",
-                level_id = 98
+                level_id = 98,
+                waves = 100
             )
         }
 
@@ -1593,7 +1760,8 @@ def create_levels(world = None):
                 special = "art",
                 forced_plants = {'Wall-nut'},
                 unlock_item_name = "Bonus Levels Unlock: Art Challenge Wall-nut",
-                level_id = 99
+                level_id = 99,
+                ignore_locked_tiles = True
             ),
 
             "ChallengeSunnyDay": Level(
@@ -1604,7 +1772,8 @@ def create_levels(world = None):
                 flag_location_ids = [2129, 2130, 2131],
                 clear_location_id = 1099,
                 unlock_item_name = "Bonus Levels Unlock: Sunny Day",
-                level_id = 100
+                level_id = 100,
+                waves = 40
             ),
 
             "ChallengeResodded": Level(
@@ -1615,7 +1784,8 @@ def create_levels(world = None):
                 flag_location_ids = [2132, 2133, 2134],
                 clear_location_id = 1100,
                 unlock_item_name = "Bonus Levels Unlock: Unsodded",
-                level_id = 101
+                level_id = 101,
+                waves = 40
             ),
 
             "ChallengeBigTime": Level(
@@ -1626,7 +1796,8 @@ def create_levels(world = None):
                 flag_location_ids = [2135, 2136, 2137],
                 clear_location_id = 1101,
                 unlock_item_name = "Bonus Levels Unlock: Big Time",
-                level_id = 102
+                level_id = 102,
+                waves = 40
             ),
 
             "ChallengeArtChallenge2": Level(
@@ -1638,7 +1809,8 @@ def create_levels(world = None):
                 special = "art",
                 forced_plants = {'Starfruit', 'Umbrella Leaf', 'Wall-nut'},
                 unlock_item_name = "Bonus Levels Unlock: Art Challenge Sunflower",
-                level_id = 103
+                level_id = 103,
+                ignore_locked_tiles = True
             ),
 
             "ChallengeAirRaid": Level(
@@ -1650,7 +1822,8 @@ def create_levels(world = None):
                 flag_location_ids = [2138],
                 clear_location_id = 1103,
                 unlock_item_name = "Bonus Levels Unlock: Air Raid",
-                level_id = 104
+                level_id = 104,
+                waves = 20
             ),
 
             "ChallengeHighGravity": Level(
@@ -1662,7 +1835,8 @@ def create_levels(world = None):
                 flag_location_ids = [2139],
                 clear_location_id = 1104,
                 unlock_item_name = "Bonus Levels Unlock: High Gravity",
-                level_id = 105
+                level_id = 105,
+                waves = 20
             ),
 
             "ChallengeGraveDanger": Level(
@@ -1674,7 +1848,8 @@ def create_levels(world = None):
                 flag_location_ids = [2140],
                 clear_location_id = 1105,
                 unlock_item_name = "Bonus Levels Unlock: Grave Danger",
-                level_id = 106
+                level_id = 106,
+                waves = 20
             ),
 
             "ChallengeShovel": Level(
@@ -1687,7 +1862,8 @@ def create_levels(world = None):
                 clear_location_id = 1106,
                 conveyor = {'Peashooter': 100},
                 unlock_item_name = "Bonus Levels Unlock: Can You Dig It?",
-                level_id = 107
+                level_id = 107,
+                waves = 30
             ),
 
             "ChallengeStormyNight": Level(
@@ -1701,7 +1877,8 @@ def create_levels(world = None):
                 clear_location_id = 1107,
                 conveyor = {'Lily Pad': 30, 'Cactus': 10, 'Peashooter': 20, 'Puff-shroom': 15, 'Cherry Bomb': 25},
                 unlock_item_name = "Bonus Levels Unlock: Dark Stormy Night",
-                level_id = 108
+                level_id = 108,
+                waves = 30
             )
         }
 
@@ -1715,7 +1892,8 @@ def create_levels(world = None):
                 flag_location_ids = [],
                 clear_location_id = 1108,
                 unlock_item_name = "Cloudy Day Unlock: Level 1",
-                level_id = 109
+                level_id = 109,
+                waves = 10
             ),
 
             "CloudyDay2": Level(
@@ -1726,7 +1904,8 @@ def create_levels(world = None):
                 flag_location_ids = [2145],
                 clear_location_id = 1109,
                 unlock_item_name = "Cloudy Day Unlock: Level 2",
-                level_id = 110
+                level_id = 110,
+                waves = 20
             ),
 
             "CloudyDay3": Level(
@@ -1737,7 +1916,8 @@ def create_levels(world = None):
                 flag_location_ids = [],
                 clear_location_id = 1110,
                 unlock_item_name = "Cloudy Day Unlock: Level 3",
-                level_id = 111
+                level_id = 111,
+                waves = 10
             ),
 
             "CloudyDay4": Level(
@@ -1748,7 +1928,8 @@ def create_levels(world = None):
                 flag_location_ids = [2146, 2147],
                 clear_location_id = 1111,
                 unlock_item_name = "Cloudy Day Unlock: Level 4",
-                level_id = 112
+                level_id = 112,
+                waves = 30
             ),
 
             "CloudyDay5": Level(
@@ -1760,7 +1941,8 @@ def create_levels(world = None):
                 flag_location_ids = [2148],
                 clear_location_id = 1112,
                 unlock_item_name = "Cloudy Day Unlock: Level 5",
-                level_id = 113
+                level_id = 113,
+                waves = 20
             ),
 
             "CloudyDay6": Level(
@@ -1772,7 +1954,8 @@ def create_levels(world = None):
                 flag_location_ids = [2149, 2150],
                 clear_location_id = 1113,
                 unlock_item_name = "Cloudy Day Unlock: Level 6",
-                level_id = 114
+                level_id = 114,
+                waves = 30
             ),
 
             "CloudyDay7": Level(
@@ -1784,7 +1967,8 @@ def create_levels(world = None):
                 flag_location_ids = [2151],
                 clear_location_id = 1114,
                 unlock_item_name = "Cloudy Day Unlock: Level 7",
-                level_id = 115
+                level_id = 115,
+                waves = 20
             ),
 
             "CloudyDay8": Level(
@@ -1796,7 +1980,8 @@ def create_levels(world = None):
                 flag_location_ids = [2152, 2153],
                 clear_location_id = 1115,
                 unlock_item_name = "Cloudy Day Unlock: Level 8",
-                level_id = 116
+                level_id = 116,
+                waves = 30
             ),
 
             "CloudyDay9": Level(
@@ -1808,7 +1993,8 @@ def create_levels(world = None):
                 flag_location_ids = [2154],
                 clear_location_id = 1116,
                 unlock_item_name = "Cloudy Day Unlock: Level 9",
-                level_id = 117
+                level_id = 117,
+                waves = 20
             ),
 
             "CloudyDay10": Level(
@@ -1820,7 +2006,8 @@ def create_levels(world = None):
                 flag_location_ids = [2155, 2156],
                 clear_location_id = 1117,
                 unlock_item_name = "Cloudy Day Unlock: Level 10",
-                level_id = 118
+                level_id = 118,
+                waves = 30
             ),
 
             "CloudyDay11": Level(
@@ -1832,7 +2019,8 @@ def create_levels(world = None):
                 flag_location_ids = [2157],
                 clear_location_id = 1118,
                 unlock_item_name = "Cloudy Day Unlock: Level 11",
-                level_id = 119
+                level_id = 119,
+                waves = 20
             ),
 
             "CloudyDay12": Level(
@@ -1844,7 +2032,8 @@ def create_levels(world = None):
                 flag_location_ids = [2158, 2159],
                 clear_location_id = 1119,
                 unlock_item_name = "Cloudy Day Unlock: Level 12",
-                level_id = 120
+                level_id = 120,
+                waves = 30
             )
         }
 
@@ -1859,7 +2048,8 @@ def create_levels(world = None):
                 flag_location_ids = [2160],
                 clear_location_id = 1120,
                 unlock_item_name = "China Unlock: The Great Wall",
-                level_id = 121
+                level_id = 121,
+                waves = 20
             )
         }
 
@@ -1867,8 +2057,8 @@ def create_levels(world = None):
 
 def randomise_zombie_lists(world):
     zombie_blacklist = ["Normal", "Flag", "DuckyTube", "Yeti", "Target", "Zombatar", "Imp", "Boss", "Bobsled", "BackupDancer"]
-    for zombie in world.options.randomised_zombies.value:
-        if world.options.randomised_zombies[zombie] == 0:
+    for zombie in ["Conehead", "Polevaulter", "Buckethead", "Newspaper", "ScreenDoor", "Football", "Dancer", "Snorkel", "Zomboni", "DolphinRider", "JackInTheBox", "Balloon", "Digger", "Pogo", "Bungee", "Ladder", "Catapult", "Gargantuar", "PeaHead", "WallnutHead", "JalapenoHead", "GatlingHead", "SquashHead", "TallnutHead", "GigaGargantuar", "TrashCan"]:
+        if (zombie not in world.options.randomised_zombies.value) or world.options.randomised_zombies.value[zombie] == 0:
             zombie_blacklist.append(zombie)
 
     permitted_zombie_rando_modes = []

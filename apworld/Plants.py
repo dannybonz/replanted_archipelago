@@ -128,7 +128,7 @@ class Plant:
             else: #Buff
                 firing_cooldown_multiplier = base_number - (weighted_roll(world, maximum_firing_cooldown_mult_loss * 100, 2) / 100)
 
-            firing_cooldown_multiplier = max(0.1, firing_cooldown_multiplier)
+            firing_cooldown_multiplier = max(0.2, firing_cooldown_multiplier)
             if self.projectiles_per_shot > 2: #Can't shoot too fast
                 firing_cooldown_multiplier = max(0.45, firing_cooldown_multiplier) #Won't drop below 0.45
 
@@ -243,6 +243,9 @@ class Plant:
             max_sun_cost = 0
         elif self.name == "Sun-shroom":
             max_sun_cost = 50
+        elif world.options.progressive_sun_capacity_items.value and self.name == world.starting_plants[0]:
+            max_sun_cost = 135
+
         exceeded_sun_cost = self.cost - max_sun_cost
         if exceeded_sun_cost > 0:
             self.cost = max_sun_cost

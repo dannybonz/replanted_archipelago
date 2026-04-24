@@ -38,6 +38,7 @@ item_ids: dict[str, int] = {
 	"Phonograph": 32,
 	"Stinky": 33,
 	"Wheelbarrow": 34,
+	"Progressive Sun Capacity": 35,
 	"Mustache Mode": 50,
 	"Future Zombies Mode": 51,
 	"Tricked Out Mode": 52,
@@ -54,10 +55,12 @@ item_ids: dict[str, int] = {
 	"Fertilizer": 66,
 	"Bug Spray": 67,
 	"Chocolate": 68,
-	"Zombie Freeze": 69,
+	"Mass Zombie Freeze": 69,
 	"Mower Deploy Trap": 70,
 	"Seed Packet Cooldown Trap": 71,
-	"Zombie Ambush Trap": 72
+	"Zombie Ambush Trap": 72,
+	"Zombie Shuffle Trap": 73,
+	"Zen Garden Sprout": 74
 }
 
 #100-199 is reserved for plants
@@ -69,3 +72,8 @@ for plant_name in plant_names:
 level_unlock_names: list[str] = ['Day Unlock: Level 1-1', 'Day Unlock: Level 1-2', 'Day Unlock: Level 1-3', 'Day Unlock: Level 1-4', 'Day Unlock: Level 1-5', 'Day Unlock: Level 1-6', 'Day Unlock: Level 1-7', 'Day Unlock: Level 1-8', 'Day Unlock: Level 1-9', 'Day Unlock: Level 1-10', 'Night Unlock: Level 2-1', 'Night Unlock: Level 2-2', 'Night Unlock: Level 2-3', 'Night Unlock: Level 2-4', 'Night Unlock: Level 2-5', 'Night Unlock: Level 2-6', 'Night Unlock: Level 2-7', 'Night Unlock: Level 2-8', 'Night Unlock: Level 2-9', 'Night Unlock: Level 2-10', 'Pool Unlock: Level 3-1', 'Pool Unlock: Level 3-2', 'Pool Unlock: Level 3-3', 'Pool Unlock: Level 3-4', 'Pool Unlock: Level 3-5', 'Pool Unlock: Level 3-6', 'Pool Unlock: Level 3-7', 'Pool Unlock: Level 3-8', 'Pool Unlock: Level 3-9', 'Pool Unlock: Level 3-10', 'Fog Unlock: Level 4-1', 'Fog Unlock: Level 4-2', 'Fog Unlock: Level 4-3', 'Fog Unlock: Level 4-4', 'Fog Unlock: Level 4-5', 'Fog Unlock: Level 4-6', 'Fog Unlock: Level 4-7', 'Fog Unlock: Level 4-8', 'Fog Unlock: Level 4-9', 'Fog Unlock: Level 4-10', 'Roof Unlock: Level 5-1', 'Roof Unlock: Level 5-2', 'Roof Unlock: Level 5-3', 'Roof Unlock: Level 5-4', 'Roof Unlock: Level 5-5', 'Roof Unlock: Level 5-6', 'Roof Unlock: Level 5-7', 'Roof Unlock: Level 5-8', 'Roof Unlock: Level 5-9', 'Night Roof Unlock: Dr. Zomboss', 'Mini-game Unlock: ZomBotany', 'Mini-game Unlock: Wall-nut Bowling', 'Mini-game Unlock: Slot Machine', "Mini-game Unlock: It's Raining Seeds", 'Mini-game Unlock: Beghouled', 'Mini-game Unlock: Invisi-ghoul', 'Mini-game Unlock: Seeing Stars', 'Mini-game Unlock: Zombiquarium', 'Mini-game Unlock: Beghouled Twist', 'Mini-game Unlock: Big Trouble Little Zombie', 'Mini-game Unlock: Portal Combat', "Mini-game Unlock: Column Like You See 'Em", 'Mini-game Unlock: Bobsled Bonanza', 'Mini-game Unlock: Zombie Nimble Zombie Quick', 'Mini-game Unlock: Whack a Zombie', 'Mini-game Unlock: Last Stand', 'Mini-game Unlock: ZomBotany 2', 'Mini-game Unlock: Wall-nut Bowling 2', 'Mini-game Unlock: Pogo Party', "Mini-game Unlock: Dr. Zomboss's Revenge", 'Puzzle Unlock: Vasebreaker', 'Puzzle Unlock: To The Left', 'Puzzle Unlock: Third Vase', 'Puzzle Unlock: Chain Reaction', 'Puzzle Unlock: M is for Metal', 'Puzzle Unlock: Scary Potter', 'Puzzle Unlock: Hokey Pokey', 'Puzzle Unlock: Another Chain Reaction', 'Puzzle Unlock: Ace of Vase', 'Puzzle Unlock: I, Zombie', 'Puzzle Unlock: I, Zombie Too', 'Puzzle Unlock: Can You Dig It?', 'Puzzle Unlock: Totally Nuts', 'Puzzle Unlock: Dead Zeppelin', 'Puzzle Unlock: Me Smash!', 'Puzzle Unlock: ZomBoogie', 'Puzzle Unlock: Three Hit Wonder', 'Puzzle Unlock: All your brainz r belong to us', 'Survival Unlock: Day', 'Survival Unlock: Night', 'Survival Unlock: Pool', 'Survival Unlock: Fog', 'Survival Unlock: Roof', 'Survival Unlock: Day (Hard)', 'Survival Unlock: Night (Hard)', 'Survival Unlock: Pool (Hard)', 'Survival Unlock: Fog (Hard)', 'Survival Unlock: Roof (Hard)', 'Bonus Levels Unlock: Art Challenge Wall-nut', 'Bonus Levels Unlock: Sunny Day', 'Bonus Levels Unlock: Unsodded', 'Bonus Levels Unlock: Big Time', 'Bonus Levels Unlock: Art Challenge Sunflower', 'Bonus Levels Unlock: Air Raid', 'Bonus Levels Unlock: High Gravity', 'Bonus Levels Unlock: Grave Danger', 'Bonus Levels Unlock: Can You Dig It?', 'Bonus Levels Unlock: Dark Stormy Night', 'Cloudy Day Unlock: Level 1', 'Cloudy Day Unlock: Level 2', 'Cloudy Day Unlock: Level 3', 'Cloudy Day Unlock: Level 4', 'Cloudy Day Unlock: Level 5', 'Cloudy Day Unlock: Level 6', 'Cloudy Day Unlock: Level 7', 'Cloudy Day Unlock: Level 8', 'Cloudy Day Unlock: Level 9', 'Cloudy Day Unlock: Level 10', 'Cloudy Day Unlock: Level 11', 'Cloudy Day Unlock: Level 12', 'China Unlock: The Great Wall']
 for i in range(0, len(level_unlock_names)):
 	item_ids[level_unlock_names[i]] = 201 + i
+
+#Lawn tiles ID format = 10AB where A is row and B is column (1000-2000 reserved)
+for row_index in range(0, 6): #6 rows
+	for column_index in range(0, 9): #9 Columns
+		item_ids[f"Tile Unlock: Row #{row_index + 1}, Column #{column_index + 1}"] = 1000 + (row_index * 10) + column_index

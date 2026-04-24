@@ -27,15 +27,14 @@ class HugeWaveLocations(Toggle):
 
 class ZombieRandomisation(Toggle):
     """
-    Randomises the Zombie types included in each level.
+    Randomises the zombie types included in each level.
     """
     display_name = "Zombie Randomisation"
     default = False
 
 class RandomisedZombies(OptionCounter):
     """
-    Determines which Zombie types will be included in randomisation.
-    This setting only matters if zombie_randomisation is set to true.
+    Determines which zombie types will be included in randomisation.
     If zombie_randomisation is set to false, this option will be ignored and no Zombies will be randomised.
 
     Any Zombie type set to 1 will be included in randomisation and can appear in randomly selected levels.
@@ -78,12 +77,13 @@ class RandomisedZombies(OptionCounter):
 
 class ZombieRandomisedModes(OptionCounter):
     """
-    Determines which levels will have their Zombies randomised.
-    This setting only matters if zombie_randomisation is set to true.
-    If zombie_randomisation is set to false, this option will be ignored and no Zombies will be randomised.
+    Determines which levels will have their zombie types randomised.
+    If zombie_randomisation is set to false, this option will be ignored and no zombies will be randomised.
 
-    Any mode set to 1 will feature levels with randomised selection of Zombies.
-    Any mode set to 0 will contain its usual Zombies from the original game.
+    Any mode set to 1 will feature levels with randomised selection of zombies.
+    Any mode set to 0 will contain its usual zombies from the original game.
+
+    *Survival, Cloudy Day and Bonus Levels will be forced to 0 if goty_compatability_mode is enabled.
     """
     display_name = "Zombie Randomised Modes"
     min = 0
@@ -112,10 +112,6 @@ class PlantStatRandomisation(Toggle):
 
     While this affects the majority of levels in the game, it doesn't affect Puzzle levels or certain Mini-game levels.
     It only affects Conveyor Belt levels if conveyor_randomisation is set to true.
-
-    This is a brand new option that has not yet been heavily tested. 
-    It may be unwise to bring it to group multiworlds in its current state.
-    Enable at your own risk, but if you're up to the challenge, let me know how you get on!
     """
     display_name = "Plant Stat Randomisation"
     default = False  
@@ -326,7 +322,6 @@ class TotalLevelsGoal(Range):
 class TacoHuntItems(Range):
     """
     Determines the total number of Taco items to be included in the item pool.
-    If necessary, this number will be automatically reduced to match the amount of remaining locations.
     """
     display_name = "Taco Hunt Items"
     range_start = 0
@@ -356,20 +351,30 @@ class FastGoal(Toggle):
     display_name = "Fast Goal"
     default = False
 
+class ShopBehaviour(Choice):
+    """
+    Determines how access is granted to Crazy Dave's shop.
+
+    - off: Crazy Dave's shop will not be included.
+    - normal: Finding the "Crazy Dave's Car Key" item will grant access to Crazy Dave's shop. "Twiddydinkies Restock" items will unlock new pages.
+    - progressive: The first "Progressive Twiddydinkies" item you find will grant access to Crazy Dave's shop. Additional "Progressive Twiddydinkies" items will unlock new pages.
+    """
+    display_name = "Shop Behaviour"
+    option_off = 0
+    option_normal = 1
+    option_progressive = 2
+    default = 1
+
 class ShopItems(Range):
     """
     How many items to include in Crazy Dave's shop.
-    You cannot access the shop until you obtain Crazy Dave's Car Keys. 
 
-    Each page contains eight items. 
-    Each page after the first must be unlocked by obtaining a "Twiddydinkies Restock" item.
-
-    A value of 0 disables the shop entirely.
-    A value of 64 has eight pages.
+    Each page contains eight items.
+    A value of 96 has twelve pages.
     """
     display_name = "Shop Items"
-    range_start = 0
-    range_end = 64
+    range_start = 1
+    range_end = 96
     default = 16
 
 class StartingPlants(Range):
@@ -429,16 +434,24 @@ class ZenGardenItems(Toggle):
 class RandomSeedFiller(Toggle):
     """
     Determines whether to include "Random Seed Packet" filler items.
-    This item drops a random Seed Packet onto the lawn which can be freely picked up and planted, just like the ones you see in Vasebreaker.
+    This item drops a random seed packet onto the lawn which can be freely picked up and planted, just like the ones you see in Vasebreaker.
     """
     display_name = "Random Seed Packet Filler"
+    default = False
+
+class ZombieFreezeFiller(Toggle):
+    """
+    Determines whether to include "Mass Zombie Freeze" filler items.
+    This item instantly freezes all zombies on the lawn.
+    """
+    display_name = "Zombie Freeze Filler"
     default = False
 
 class EasyUpgradePlants(Toggle):
     """
     Allows you to place upgrade plants without requiring their base form.
     For example, Gatling Pea could be placed straight onto the lawn without requiring a Repeater first.
-    Enabling this option increases the Sun prices of Upgrade Plants accordingly.
+    Enabling this option increases the Sun prices of upgrade plants accordingly.
     """
     display_name = "Easy Upgrade Plants"
     default = False
@@ -458,12 +471,12 @@ class ImitaterBehaviour(Choice):
 class StartingSunUpgrades(Choice):
     """
     Adds "Additional Starting Sun" items to the item pool.
-    Obtaining an "Additional Starting Sun" item increases the amount of Sun you will start a level with.
+    Obtaining an "Additional Starting Sun" item increases the amount of sun you will start a level with.
     
     - off: No "Additional Starting Sun" items will be generated.
-    - 5_sun_each: Each "Additional Starting Sun" item you obtain will give you 5 additional Sun at the beginning of each level.
-    - 25_sun_each: Each "Additional Starting Sun" item you obtain will give you 25 additional Sun at the beginning of each level.
-    - 50_sun_each: Each "Additional Starting Sun" item you obtain will give you 50 additional Sun at the beginning of each level.
+    - 5_sun_each: Each "Additional Starting Sun" item you obtain will give you 5 additional sun at the beginning of each level.
+    - 25_sun_each: Each "Additional Starting Sun" item you obtain will give you 25 additional sun at the beginning of each level.
+    - 50_sun_each: Each "Additional Starting Sun" item you obtain will give you 50 additional sun at the beginning of each level.
     """
     display_name = "Starting Sun Upgrades"
     option_off = 0
@@ -472,12 +485,12 @@ class StartingSunUpgrades(Choice):
     option_50_sun_each = 3
     default = 0
 
-class MaximumSunUpgrade(Range):
+class MaximumSunUpgrades(Range):
     """
-    Determines the maximum amount of additional Sun that "Additional Starting Sun" items can provide.
+    Determines the maximum amount of additional sun that "Additional Starting Sun" items can provide.
     Increasing this number results in more "Additional Starting Sun" items being generated.    
     """
-    display_name = "Maximum Sun Upgrade"
+    display_name = "Maximum Sun Upgrades"
     range_start = 50
     range_end = 150
     default = 50
@@ -491,6 +504,16 @@ class MowerRewardUpgrades(Range):
     range_start = 0
     range_end = 5
     default = 0
+
+class ProgressiveLootRateItems(Range):
+    """
+    Determines the number of "Progressive Loot Rate" items to include in the item pool.
+    Each "Progressive Loot Rate" item adds a +10% chance for zombies to drop loot.
+    """
+    display_name = "Progressive Loot Rate Items"
+    range_start = 0
+    range_end = 10
+    default = 0    
 
 class MusicShuffle(Choice):
     """
@@ -520,7 +543,7 @@ class TrapPercentage(Range):
 
 class MowerDeployTrapWeight(Range):
     """
-    This trap instantly activates all Lawn Mowers on the lawn.
+    This trap instantly activates all lawn mowers on the lawn.
     A higher number means that you are more likely to see the given trap. A value of 0 means the trap will not appear.
     """
     display_name = "Mower Deploy Trap Weight"
@@ -530,7 +553,7 @@ class MowerDeployTrapWeight(Range):
 
 class SeedPacketCooldownTrapWeight(Range):
     """
-    This trap instantly puts all Seed Packets on cooldown.
+    This trap instantly puts all seed packets on cooldown.
     A higher number means that you are more likely to see the given trap. A value of 0 means the trap will not appear.
     """
     display_name = "Seed Packet Cooldown Trap Weight"
@@ -540,10 +563,20 @@ class SeedPacketCooldownTrapWeight(Range):
 
 class ZombieAmbushTrapWeight(Range):
     """
-    This trap instantly causes an ambush of Zombies.
+    This trap instantly causes an ambush of zombies.
     A higher number means that you are more likely to see the given trap. A value of 0 means the trap will not appear.
     """
     display_name = "Zombie Ambush Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 50
+
+class ZombieShuffleTrapWeight(Range):
+    """
+    This trap causes zombies to change lanes.
+    A higher number means that you are more likely to see the given trap. A value of 0 means the trap will not appear.
+    """
+    display_name = "Zombie Shuffle Trap Weight"
     range_start = 0
     range_end = 100
     default = 50
@@ -564,22 +597,70 @@ class EnergyLink(Toggle):
     display_name = "Energy Link"
     default = False
 
+class RingLink(Toggle):
+    """
+    Enables Ring Link for Sun.
+    """
+    display_name = "Ring Link"
+    default = False
+
+class ZombieWeightRandomisation(Choice):
+    """
+    Randomises the spawning weights for each zombie type. This affects how zombies are chosen to spawn in each level.
+    As an extreme example, this could result in more Gargantuars spawning in a level than standard zombies.
+    As such, this option is only recommended for somewhat experienced players.
+
+    - off: Zombies will be spawned using their usual ratios.
+    - randomise_once: One randomised set of weights will be generated and used across every level.
+    - randomise_per_level: A different set of randomised weights will be generated for each level.
+    """
+    display_name = "Zombie Weight Randomisation"
+    option_off = 0
+    option_randomise_once = 1
+    option_randomise_per_level = 2    
+    default = 0
+
+class ProgressiveSunCapacityItems(Toggle):
+    """
+    Restricts the amount of sun that can be held at once until enough "Progressive Sun Capacity" items are collected. 
+    You will begin the game with the ability to hold a maximum of 150 sun at a time.
+    Each "Progressive Sun Capacity" item you obtain doubles your current maximum.
+    """
+    display_name = "Progressive Sun Capacity Items"
+    default = False
+
+class IndividualTileUnlockItems(Toggle):
+    """
+    Locks planting on each individual lawn tile behind receiving a corresponding item.
+    You will start the game with a random assortment of tiles unlocked.
+
+    This can make the game much more difficult, especially when combined with other forms of randomisation.
+    You may be expected to exploit lawn mowers and zombie spawning patterns in order to progress.
+
+    This adds ~42 items to the item pool and is recommended as a unique challenge for experienced players only.
+
+    This option is brand new and likely requires further testing and balancing to keep things fun and fair.
+    Enable at your own risk, but if you do, please let me know how you get on!
+    """
+    display_name = "Individual Tile Unlock Items"
+    default = False        
+
 @dataclass
 class PVZROptions(PerGameCommonOptions):
+    goty_compatability_mode: GotyCompatabilityMode 
+    death_link: DeathLink
+    ring_link: RingLink
+    energy_link: EnergyLink
     adventure_mode_progression: AdventureModeProgression
-    huge_wave_locations: HugeWaveLocations
-    zombie_randomisation: ZombieRandomisation
-    randomised_zombies: RandomisedZombies
-    zombie_randomised_modes: ZombieRandomisedModes
-    conveyor_randomisation: ConveyorRandomisation
-    plant_stat_randomisation: PlantStatRandomisation
-    maintain_vanilla_projectile_strength: MaintainVanillaProjectileStrength
     minigame_levels: MinigameLevels
     puzzle_levels: PuzzleLevels
     survival_levels: SurvivalLevels
     cloudy_day_levels: CloudyDayLevels
     bonus_levels: BonusLevels
     china_level: ChinaLevel
+    huge_wave_locations: HugeWaveLocations
+    shop_behaviour: ShopBehaviour
+    shop_items: ShopItems
     adventure_levels_goal: AdventureLevelsGoal
     adventure_areas_goal: AdventureAreasGoal
     minigame_levels_goal: MinigameLevelsGoal
@@ -591,36 +672,43 @@ class PVZROptions(PerGameCommonOptions):
     taco_hunt_items: TacoHuntItems
     taco_hunt_percentage: TacoHuntPercentage
     fast_goal: FastGoal
-    shop_items: ShopItems
+    conveyor_randomisation: ConveyorRandomisation
+    zombie_randomisation: ZombieRandomisation
+    randomised_zombies: RandomisedZombies
+    zombie_randomised_modes: ZombieRandomisedModes
+    zombie_weight_randomisation: ZombieWeightRandomisation
+    plant_stat_randomisation: PlantStatRandomisation
+    maintain_vanilla_projectile_strength: MaintainVanillaProjectileStrength
+    easy_upgrade_plants: EasyUpgradePlants
+    imitater_behaviour: ImitaterBehaviour
+    disable_storm_flashes: DisableStormFlashes
+    music_shuffle: MusicShuffle
+    zen_garden_items: ZenGardenItems
+    starting_sun_upgrades: StartingSunUpgrades
+    maximum_sun_upgrades: MaximumSunUpgrades
+    mower_reward_upgrades: MowerRewardUpgrades
+    random_seed_filler: RandomSeedFiller
+    zombie_freeze_filler: ZombieFreezeFiller
     starting_plants: StartingPlants
     starting_seed_slots: StartingSeedSlots
-    zen_garden_items: ZenGardenItems
-    random_seed_filler: RandomSeedFiller
     early_sunflower: EarlySunflower
     early_shovel: EarlyShovel
     early_zen_garden: EarlyZenGarden
-    easy_upgrade_plants: EasyUpgradePlants
-    starting_sun_upgrades: StartingSunUpgrades
-    mower_reward_upgrades: MowerRewardUpgrades
-    maximum_sun_upgrade: MaximumSunUpgrade
-    imitater_behaviour: ImitaterBehaviour
-    music_shuffle: MusicShuffle
-    disable_storm_flashes: DisableStormFlashes
-    goty_compatability_mode: GotyCompatabilityMode 
-    death_link: DeathLink
-    energy_link: EnergyLink
+    progressive_sun_capacity_items: ProgressiveSunCapacityItems
+    individual_tile_unlock_items: IndividualTileUnlockItems
     trap_percentage: TrapPercentage
     mower_deploy_trap_weight: MowerDeployTrapWeight
     seed_packet_cooldown_trap_weight: SeedPacketCooldownTrapWeight
     zombie_ambush_trap_weight: ZombieAmbushTrapWeight
+    zombie_shuffle_trap_weight: ZombieShuffleTrapWeight
 
 OPTION_GROUPS = [
-    OptionGroup("AP Settings", [GotyCompatabilityMode, DeathLink, EnergyLink]),
+    OptionGroup("AP Settings", [GotyCompatabilityMode, DeathLink, RingLink, EnergyLink]),
     OptionGroup("Level Access", [AdventureModeProgression, MinigameLevels, PuzzleLevels, SurvivalLevels, CloudyDayLevels, BonusLevels, ChinaLevel]),    
-    OptionGroup("Extra Locations", [HugeWaveLocations, ShopItems]),
+    OptionGroup("Extra Locations", [HugeWaveLocations, ShopBehaviour, ShopItems]),
     OptionGroup("Goal", [AdventureLevelsGoal, AdventureAreasGoal, MinigameLevelsGoal, PuzzleLevelsGoal, SurvivalLevelsGoal, CloudyDayLevelsGoal, BonusLevelsGoal, TotalLevelsGoal, TacoHuntItems, TacoHuntPercentage, FastGoal]),
-    OptionGroup("Zombie & Plant Randomisation", [ConveyorRandomisation, ZombieRandomisation, ZombieRandomisedModes, RandomisedZombies, PlantStatRandomisation, MaintainVanillaProjectileStrength]),
+    OptionGroup("Zombie & Plant Randomisation", [ConveyorRandomisation, ZombieRandomisation, RandomisedZombies, ZombieRandomisedModes, ZombieWeightRandomisation, PlantStatRandomisation, MaintainVanillaProjectileStrength]),
     OptionGroup("Gameplay Tweaks", [EasyUpgradePlants, ImitaterBehaviour, DisableStormFlashes, MusicShuffle]),
-    OptionGroup("Item Generation", [ZenGardenItems, StartingSunUpgrades, MaximumSunUpgrade, MowerRewardUpgrades, RandomSeedFiller, StartingPlants, StartingSeedSlots, EarlySunflower, EarlyShovel, EarlyZenGarden]),
-    OptionGroup("Traps", [TrapPercentage, MowerDeployTrapWeight, SeedPacketCooldownTrapWeight, ZombieAmbushTrapWeight])
+    OptionGroup("Item Generation", [ZenGardenItems, StartingSunUpgrades, MaximumSunUpgrades, MowerRewardUpgrades, RandomSeedFiller, ZombieFreezeFiller, StartingPlants, StartingSeedSlots, EarlySunflower, EarlyShovel, EarlyZenGarden, ProgressiveSunCapacityItems, IndividualTileUnlockItems]),
+    OptionGroup("Traps", [TrapPercentage, MowerDeployTrapWeight, SeedPacketCooldownTrapWeight, ZombieAmbushTrapWeight, ZombieShuffleTrapWeight]),
 ]

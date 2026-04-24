@@ -84,9 +84,8 @@ def create_regions(world: World) -> None:
         level_data = world.included_levels[level]
 
         region_locations = [level_data.clear_location_id]
-        if (world.options.huge_wave_locations.value):
-            for flag_location in level_data.flag_location_ids:
-                region_locations.append(flag_location)
+        if level_data.level_id in world.wavesanity_map:
+            region_locations += [(level_data.level_id * 10000) + wave_number for wave_number in world.wavesanity_map[level_data.level_id]]
 
         level_region = Region(level_data.name, player, multiworld)
         multiworld.regions.append(level_region)
@@ -120,6 +119,7 @@ def create_regions(world: World) -> None:
 
     shop_region = Region("Crazy Dave's Twiddydinkies", player, multiworld)
     multiworld.regions.append(shop_region)
-    for x in range(0, world.options.shop_items.value):
-        shop_region.locations += [PVZRLocation(player, f"Crazy Dave's Twiddydinkies: Item #{str(x + 1)}", 5000 + x, shop_region)]
+    if world.options.shop_behaviour.value > 0:
+        for x in range(0, world.options.shop_items.value):
+            shop_region.locations += [PVZRLocation(player, f"Crazy Dave's Twiddydinkies: Item #{str(x + 1)}", 5000 + x, shop_region)]
     menu_region.connect(connecting_region = shop_region, rule = lambda state: state.has("Crazy Dave's Car Keys", player) or state.has("Progressive Twiddydinkies", player))
