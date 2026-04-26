@@ -495,8 +495,8 @@ class PVZRWorld(World):
 
             for level in self.included_levels:
                 level_data = self.included_levels[level]
-                if level_data.level_id in slot_data["zombie_map"]:
-                    zombies_indexes_for_level = slot_data["zombie_map"][level_data.level_id]
+                if str(level_data.level_id) in slot_data["zombie_map"]:
+                    zombies_indexes_for_level = slot_data["zombie_map"][str(level_data.level_id)]
                     self.included_levels[level].zombies = [zombie_id_to_zombie_name[zombie_index] for zombie_index in zombies_indexes_for_level]
 
         #UT Enable easy upgrades
@@ -513,20 +513,20 @@ class PVZRWorld(World):
         if slot_data["firing_rates"] != {} or slot_data["sun_prices"] != {} or slot_data["plant_healths"] != {} or slot_data["recharge_times"] != {}:
             for plant in self.all_plants:
                 plant_data = self.all_plants[plant]
-                if plant_data.plant_id in slot_data["sun_prices"]:
-                    self.all_plants[plant].cost = slot_data["sun_prices"][plant_data.plant_id]
-                if plant_data.plant_id in slot_data["recharge_times"]:
-                    self.all_plants[plant].packet_cooldown = slot_data["recharge_times"][plant_data.plant_id]
-                if plant_data.plant_id in slot_data["firing_rates"]:
-                    self.all_plants[plant].firing_cooldown = slot_data["firing_rates"][plant_data.plant_id]
-                if plant_data.plant_id in slot_data["plant_healths"]:
-                    self.all_plants[plant].health = slot_data["plant_healths"][plant_data.plant_id]
+                if str(plant_data.plant_id) in slot_data["sun_prices"]:
+                    self.all_plants[plant].cost = slot_data["sun_prices"][str(plant_data.plant_id)]
+                if str(plant_data.plant_id) in slot_data["recharge_times"]:
+                    self.all_plants[plant].packet_cooldown = slot_data["recharge_times"][str(plant_data.plant_id)]
+                if str(plant_data.plant_id) in slot_data["firing_rates"]:
+                    self.all_plants[plant].firing_cooldown = slot_data["firing_rates"][str(plant_data.plant_id)]
+                if str(plant_data.plant_id) in slot_data["plant_healths"]:
+                    self.all_plants[plant].health = slot_data["plant_healths"][str(plant_data.plant_id)]
 
             #UT Projectile randomisation
             for projectile in self.all_projectiles:
                 projectile_data = self.all_projectiles[projectile]
-                if projectile_data.projectile_id in slot_data["projectile_damages"]:
-                    self.all_projectiles[projectile].damage = slot_data["projectile_damages"][projectile_data.projectile_id]
+                if str(projectile_data.projectile_id) in slot_data["projectile_damages"]:
+                    self.all_projectiles[projectile].damage = slot_data["projectile_damages"][str(projectile_data.projectile_id)]
 
             self.usable_plants = [plant_name for plant_name in self.all_plants if self.all_plants[plant_name].is_usable(self)]
             self.plantable_plants = [plant_name for plant_name in self.all_plants if self.all_plants[plant_name].is_plantable()]
