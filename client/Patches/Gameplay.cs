@@ -1331,9 +1331,16 @@ namespace ReplantedArchipelago.Patches
                     __result.m_weight = Data.zombieTypeWeights[__result.m_zombieType];
                     __result.m_firstLevel = -1;
 
-                    if (theZombieType == ZombieType.PeaHead && (__instance.GameMode != GameMode.ChallengeWarAndPeas && __instance.GameMode != GameMode.ChallengeWarAndPeas2))
+                    if (theZombieType == ZombieType.PeaHead)
                     {
-                        __result.m_value = 3; //Re-values Peahead to not be so pervasive with Zombie rando enabled
+                        if (__instance.GameMode != GameMode.ChallengeWarAndPeas && __instance.GameMode != GameMode.ChallengeWarAndPeas2)
+                        {
+                            __result.m_value = 3; //Re-values Peahead to not be so pervasive with Zombie rando enabled
+                        }
+                        else
+                        {
+                            __result.m_value = 1;
+                        }
                     }
 
                     if (APClient.zombieWeightRandomisation != 0)
