@@ -45,6 +45,7 @@ class PVZRWorld(World):
     item_name_groups = {
         "Level": {level.unlock_item_name for level in create_levels().values()},
         "Plant": {plant.name for plant in create_plants().values()},
+        "Money": {"Silver Coin", "Gold Coin", "Diamond"},
 
         "Adventure": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure"}.union({"Day Access", "Night Access", "Pool Access", "Fog Access", "Roof Access"}),
         "Day": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Day"}.union({"Day Access"}),
@@ -58,6 +59,17 @@ class PVZRWorld(World):
         "Survival": {level.unlock_item_name for level in create_levels().values() if level.type == "Survival"}.union({"Survival Mode"}),
         "Bonus Levels": {level.unlock_item_name for level in create_levels().values() if level.type == "Bonus Levels"}.union({"Bonus Levels"}),
         "Cloudy Day": {level.unlock_item_name for level in create_levels().values() if level.type == "Cloudy Day"}.union({"Cloudy Day"})
+    }
+    
+    location_name_groups = {
+        "Crazy Dave's Twiddydinkies": {f"Crazy Dave's Twiddydinkies: Item #{str(x + 1)}" for x in range(0, 200)}, # Should probably be taking them directly from Locations.py instead of incrementing the number manually but I'm not smart enough to do that sorry
+    
+        "Adventure (Clear)": {f"{level.name} (Clear)" for level in create_levels().values() if level.type == "Adventure" and level.name != "Roof: Dr. Zomboss"}, # Excludes beating Dr. Zomboss since I'm pretty sure it's meant to always give the music video item. I figure trying to use something like plando would mess up if it was included
+        "Mini-games (Clear)": {f"{level.name} (Clear)" for level in create_levels().values() if level.type == "Mini-games"},
+        "Puzzle (Clear)": {f"{level.name} (Clear)" for level in create_levels().values() if level.type == "Puzzle"},
+        "Survival (Clear)": {f"{level.name} (Clear)" for level in create_levels().values() if level.type == "Survival"},
+        "Bonus Level (Clear)": {f"{level.name} (Clear)" for level in create_levels().values() if level.type == "Bonus Levels"},
+        "Cloudy Day (Clear)": {f"{level.name} (Clear)" for level in create_levels().values() if level.type == "Cloudy Day"}
     }
 
     ut_can_gen_without_yaml = True
