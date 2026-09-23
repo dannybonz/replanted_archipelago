@@ -213,34 +213,35 @@ class Level:
                     zombie_types[zombie] = unmodified_wave_of_zombies[zombie]
 
             vases_to_fill = target_zombie_total - sum(zombie_types.values())
-            additional_zombie_types = world.random.sample(possible_zombies, world.random.randint(1, vases_to_fill))
-            for zombie in additional_zombie_types:
-                zombie_types[zombie] = 1   
+            if vases_to_fill > 0:
+                additional_zombie_types = world.random.sample(possible_zombies, world.random.randint(1, vases_to_fill))
+                for zombie in additional_zombie_types:
+                    zombie_types[zombie] = 1   
         
-            zombie_maxes = {"Gargantuar": 5, "GigaGargantuar": 3}
+                zombie_maxes = {"Gargantuar": 5, "GigaGargantuar": 3}
 
-            weakest_to_strongest = sorted(additional_zombie_types, key=lambda zombie: world.all_zombies[zombie].value)
-            zombie_index = 0
-            loops_completed = 0
-            while target_zombie_total - sum(zombie_types.values()) > 0:
-                zombie_type = weakest_to_strongest[zombie_index]
+                weakest_to_strongest = sorted(additional_zombie_types, key=lambda zombie: world.all_zombies[zombie].value)
+                zombie_index = 0
+                loops_completed = 0
+                while target_zombie_total - sum(zombie_types.values()) > 0:
+                    zombie_type = weakest_to_strongest[zombie_index]
 
-                amount_to_add = min(1, target_zombie_total - sum(zombie_types.values()) * 0.5)
-                if zombie_type in zombie_maxes and zombie_types[zombie_type] + amount_to_add > zombie_maxes[zombie_type]:
-                    amount_to_add = zombie_maxes[zombie_type] - zombie_types[zombie_type]
-                zombie_types[zombie_type] += amount_to_add
+                    amount_to_add = min(1, target_zombie_total - sum(zombie_types.values()) * 0.5)
+                    if zombie_type in zombie_maxes and zombie_types[zombie_type] + amount_to_add > zombie_maxes[zombie_type]:
+                        amount_to_add = zombie_maxes[zombie_type] - zombie_types[zombie_type]
+                    zombie_types[zombie_type] += amount_to_add
 
-                zombie_index += 1
-                if zombie_index >= len(weakest_to_strongest):
-                    zombie_index = 0
-                    loops_completed += 1
+                    zombie_index += 1
+                    if zombie_index >= len(weakest_to_strongest):
+                        zombie_index = 0
+                        loops_completed += 1
 
-                #Prevent a rare infinite loop
-                if loops_completed > 20:
-                    if "Normal" in zombie_types:
-                        zombie_types["Normal"] += target_zombie_total - sum(zombie_types.values())
-                    else:
-                        zombie_types["Normal"] = target_zombie_total - sum(zombie_types.values())
+                    #Prevent a rare infinite loop
+                    if loops_completed > 20:
+                        if "Normal" in zombie_types:
+                            zombie_types["Normal"] += target_zombie_total - sum(zombie_types.values())
+                        else:
+                            zombie_types["Normal"] = target_zombie_total - sum(zombie_types.values())
             
             self.vasebreaker_zombies[wave_index] = zombie_types
 
