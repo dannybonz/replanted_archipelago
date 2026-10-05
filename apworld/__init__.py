@@ -47,18 +47,18 @@ class PVZRWorld(World):
         "Plant": {plant.name for plant in create_plants().values()},
         "Money": {"Silver Coin", "Gold Coin", "Diamond"},
 
-        "Adventure": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure"}.union({"Day Access", "Night Access", "Pool Access", "Fog Access", "Roof Access"}),
-        "Day": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Day"}.union({"Day Access"}),
-        "Night": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Night"}.union({"Night Access"}),
-        "Pool": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Pool"}.union({"Pool Access"}),
-        "Fog": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Fog"}.union({"Fog Access"}),
-        "Roof": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Roof"}.union({"Roof Access"}),
+        "Adventure Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure"}.union({"Day Access", "Night Access", "Pool Access", "Fog Access", "Roof Access"}),
+        "Day Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Day"}.union({"Day Access"}),
+        "Night Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Night"}.union({"Night Access"}),
+        "Pool Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Pool"}.union({"Pool Access"}),
+        "Fog Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Fog"}.union({"Fog Access"}),
+        "Roof Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Adventure" and level.location == "Roof"}.union({"Roof Access"}),
 
-        "Mini-games": {level.unlock_item_name for level in create_levels().values() if level.type == "Mini-games"}.union({"Mini-games"}),
-        "Puzzle": {level.unlock_item_name for level in create_levels().values() if level.type == "Puzzle"}.union({"Puzzle Mode"}),
-        "Survival": {level.unlock_item_name for level in create_levels().values() if level.type == "Survival"}.union({"Survival Mode"}),
-        "Bonus Levels": {level.unlock_item_name for level in create_levels().values() if level.type == "Bonus Levels"}.union({"Bonus Levels"}),
-        "Cloudy Day": {level.unlock_item_name for level in create_levels().values() if level.type == "Cloudy Day"}.union({"Cloudy Day"})
+        "Mini-games Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Mini-games"}.union({"Mini-games"}),
+        "Puzzle Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Puzzle"}.union({"Puzzle Mode"}),
+        "Survival Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Survival"}.union({"Survival Mode"}),
+        "Bonus Levels Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Bonus Levels"}.union({"Bonus Levels"}),
+        "Cloudy Day Level Unlocks": {level.unlock_item_name for level in create_levels().values() if level.type == "Cloudy Day"}.union({"Cloudy Day"})
     }
     
     location_name_groups = {

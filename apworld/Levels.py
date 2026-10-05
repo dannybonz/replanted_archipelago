@@ -267,6 +267,13 @@ class Level:
 
             vases_to_fill = target_plant_total - sum(plant_types.values())
 
+            #Too many plants
+            while sum(plant_types.values()) > target_plant_total:
+                plant_to_reduce = world.random.choice(plant_types)
+                plant_types[plant_to_reduce] -= 1
+                if plant_types[plant_to_reduce] <= 0:
+                    del plant_types[plant_to_reduce]
+
             #Utility
             for plant in ["Plantern", "Cherry Bomb", "Squash"]:
                 amount_to_add = world.random.randint(0, min(2, vases_to_fill))
