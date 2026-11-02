@@ -44,6 +44,11 @@ namespace ReplantedArchipelago.Patches
         public static int wavePointsAdjusted = -1;
         public static List<ZombieGrowingInformation> growingZombies = new List<ZombieGrowingInformation>();
 
+        private static void StopJackInTheBoxFoley(Task task, object state)
+        {
+            ((GameplayActivity)state).m_audioService.StopFoley(FoleyType.JackInThebox);
+        }
+
         [HarmonyPatch(typeof(GameplayActivity), nameof(GameplayActivity.ActiveUpdate))] //Runs every frame during gameplay
         public class GameplayActivityUpdatePatch
         {
@@ -679,7 +684,7 @@ namespace ReplantedArchipelago.Patches
                         else if (itemId == 2001) //Paranoia Trap
                         {
                             __instance.m_audioService.PlayFoley(FoleyType.JackInThebox);
-                            Task.Delay(UnityEngine.Random.Range(7000, 20000)).ContinueWith(t => __instance.m_audioService.StopFoley(FoleyType.JackInThebox));
+                            Task.Delay(UnityEngine.Random.Range(7000, 20000)).ContinueWith(StopJackInTheBoxFoley, __instance);
                         }
                         else if (itemId == 2002) //Ladder Trap
                         {

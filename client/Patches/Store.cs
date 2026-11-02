@@ -31,21 +31,26 @@ namespace ReplantedArchipelago.Patches
 
         public static void UpdateCustomEntries()
         {
-            customStoreEntries = new System.Collections.Generic.Dictionary<int, CustomStoreEntry> { }; //Reset store entries
+            customStoreEntries = new System.Collections.Generic.Dictionary<int, CustomStoreEntry>
+                { }; //Reset store entries
 
             int itemIndex = 0;
             foreach (int shopPrice in APClient.shopPrices)
             {
                 ScoutedItemInfo scoutedLocation = APClient.scoutedLocations[5000 + itemIndex];
                 ItemFlags itemClass = APClient.GetPrimaryItemClassification(scoutedLocation.Flags);
-                customStoreEntries[itemIndex] = new CustomStoreEntry { Name = scoutedLocation.ItemName, Class = itemClass, Cost = BaseCosts[itemClass] + (shopPrice * 10) };
+                customStoreEntries[itemIndex] = new CustomStoreEntry
+                {
+                    Name = scoutedLocation.ItemName, Class = itemClass, Cost = BaseCosts[itemClass] + (shopPrice * 10)
+                };
                 itemIndex++;
             }
         }
 
         public static void PatchStoreEntryData(ref object __result) //Patches the shop items
         {
-            Il2CppSystem.Collections.Generic.List<StoreEntryData> newEntries = new Il2CppSystem.Collections.Generic.List<StoreEntryData>();
+            Il2CppSystem.Collections.Generic.List<StoreEntryData> newEntries =
+                new Il2CppSystem.Collections.Generic.List<StoreEntryData>();
 
             for (int i = 0; i < customStoreEntries.Count; i++)
             {
@@ -71,7 +76,8 @@ namespace ReplantedArchipelago.Patches
                 }
             }
 
-            if (APClient.receivedItems.Contains(6) && (APClient.receivedItems.Contains(2) || APClient.receivedItems.Contains(28))) //Add Zen Garden items
+            if (APClient.receivedItems.Contains(6) &&
+                (APClient.receivedItems.Contains(2) || APClient.receivedItems.Contains(28))) //Add Zen Garden items
             {
                 int pageNum = APClient.shopPagesVisible;
                 int positionOnPage = 0;
@@ -117,6 +123,7 @@ namespace ReplantedArchipelago.Patches
                 {
                     visiblePages++;
                 }
+
                 if (APClient.receivedItems.Contains(2) || APClient.receivedItems.Contains(28))
                 {
                     for (int i = 0; i < visiblePages; i++) //Loop through desired number of visible pages
@@ -136,6 +143,7 @@ namespace ReplantedArchipelago.Patches
                     {
                         Array.Resize(ref shopLocations, APClient.shopPrices.Count());
                     }
+
                     APClient.apSession.Hints.CreateHints(locationIds: shopLocations);
                 }
 
@@ -148,7 +156,9 @@ namespace ReplantedArchipelago.Patches
         {
             private static bool Prefix(StoreModel __instance, ref bool __result, StorePage thePage)
             {
-                __result = (int)thePage <= APClient.shopPagesVisible; //Decides whether a page should be marked as visible or not by the game
+                __result = (int)thePage <=
+                           APClient
+                               .shopPagesVisible; //Decides whether a page should be marked as visible or not by the game
                 return false;
             }
         }
@@ -166,22 +176,27 @@ namespace ReplantedArchipelago.Patches
                 {
                     if (__instance.m_entryData.DescriptionIndex == 5000)
                     {
-                        __result = (__instance.m_userService.ActiveUserProfile.mPurchases[(int)StoreItem.Fertilizer] > 1115);
+                        __result = (__instance.m_userService.ActiveUserProfile.mPurchases[(int)StoreItem.Fertilizer] >
+                                    1115);
                     }
                     else if (__instance.m_entryData.DescriptionIndex == 5001)
                     {
-                        __result = (__instance.m_userService.ActiveUserProfile.mPurchases[(int)StoreItem.BugSpray] > 1115);
+                        __result = (__instance.m_userService.ActiveUserProfile.mPurchases[(int)StoreItem.BugSpray] >
+                                    1115);
                     }
                     else if (__instance.m_entryData.DescriptionIndex == 5002)
                     {
-                        __result = (__instance.m_userService.ActiveUserProfile.mPurchases[(int)StoreItem.TreeFood] > 1119);
+                        __result = (__instance.m_userService.ActiveUserProfile.mPurchases[(int)StoreItem.TreeFood] >
+                                    1119);
                     }
                 }
                 else
                 {
                     long locationId = 5000 + __instance.m_entryData.DescriptionIndex;
-                    __result = APClient.apSession.Locations.AllLocationsChecked.Contains(locationId); //If the location has been checked, mark the item as Sold Out
+                    __result = APClient.apSession.Locations.AllLocationsChecked
+                        .Contains(locationId); //If the location has been checked, mark the item as Sold Out
                 }
+
                 return false;
             }
         }
@@ -206,7 +221,9 @@ namespace ReplantedArchipelago.Patches
                         Profile.AddConsumablePurchase(__instance.m_userService, (int)StoreItem.TreeFood, 1);
                     }
                 }
-                APClient.SendLocation(5000 + __instance.m_purchaseData.m_entryDescriptionIndex, false); //Send out location when purchasing a shop item
+
+                APClient.SendLocation(5000 + __instance.m_purchaseData.m_entryDescriptionIndex,
+                    false); //Send out location when purchasing a shop item
                 return true;
             }
         }
@@ -214,11 +231,14 @@ namespace ReplantedArchipelago.Patches
         [HarmonyPatch(typeof(StoreModel), nameof(StoreModel.SetBubbleText))]
         public class SetBubbleTextPatch
         {
-            private static bool Prefix(StoreModel __instance, int theCrazyDaveMessage, int theTime, bool theClickToContinue)
+            private static bool Prefix(StoreModel __instance, int theCrazyDaveMessage, int theTime,
+                bool theClickToContinue)
             {
-                if (theCrazyDaveMessage != __instance.m_currentMessage && Data.zenGardenItemStrings.ContainsKey(theCrazyDaveMessage)) //Zen Garden shop items
+                if (theCrazyDaveMessage != __instance.m_currentMessage &&
+                    Data.zenGardenItemStrings.ContainsKey(theCrazyDaveMessage)) //Zen Garden shop items
                 {
-                    string textFromGame = Common.TodStringTranslate($"${Data.zenGardenItemStrings[theCrazyDaveMessage]}");
+                    string textFromGame =
+                        Common.TodStringTranslate($"${Data.zenGardenItemStrings[theCrazyDaveMessage]}");
 
                     StringValueModel daveSaying = __instance.m_daveSaying;
                     daveSaying.Value = textFromGame.Substring(textFromGame.LastIndexOf('}') + 1);
@@ -243,11 +263,18 @@ namespace ReplantedArchipelago.Patches
                     {
                         flavourTexts = DaveFlavourTexts[ItemFlags.None];
                     }
+
                     if (DaveCrossoverTexts.ContainsKey(scoutedLocation.ItemGame))
                     {
                         flavourTexts = DaveCrossoverTexts[scoutedLocation.ItemGame].Concat(flavourTexts).ToArray();
                     }
+
                     string flavourText = flavourTexts[random.Next(flavourTexts.Length)];
+                    if (Main.dialogueClient.TryGetDialogue(DialogueType.CrazyDave, scoutedLocation, APClient.apSession,
+                            out var dialogue))
+                    {
+                        flavourText = dialogue;
+                    }
 
                     string playerNameText = "";
                     if (scoutedLocation.Player.Slot != APClient.apSession.Players.ActivePlayer.Slot)
@@ -256,13 +283,15 @@ namespace ReplantedArchipelago.Patches
                     }
 
                     StringValueModel daveSaying = __instance.m_daveSaying;
-                    daveSaying.Value = $"{playerNameText}<color={itemColors[itemClass]}>{scoutedLocation.ItemDisplayName}</color><br><br>{flavourText}";
+                    daveSaying.Value =
+                        $"{playerNameText}<color={itemColors[itemClass]}>{scoutedLocation.ItemDisplayName}</color><br><br>{flavourText}";
 
                     __instance.m_currentMessage = theCrazyDaveMessage;
                     __instance.m_isDaveTalking.Value = true;
                     __instance.mBubbleCountDown = theTime;
                     __instance.mBubbleClickToContinue = theClickToContinue;
                 }
+
                 return false;
             }
         }
@@ -326,7 +355,8 @@ namespace ReplantedArchipelago.Patches
                         {
                             chosenSprite = Graphics.GetGraphic(Graphics.itemIdSpriteName[scoutedLocation.ItemId]);
                         }
-                        else if ((scoutedLocation.ItemId >= 200 && scoutedLocation.ItemId < 500) || (scoutedLocation.ItemId >= 20 && scoutedLocation.ItemId < 26))
+                        else if ((scoutedLocation.ItemId >= 200 && scoutedLocation.ItemId < 500) ||
+                                 (scoutedLocation.ItemId >= 20 && scoutedLocation.ItemId < 26))
                         {
                             chosenSprite = Graphics.GetGraphic("Key");
                         }
@@ -334,6 +364,7 @@ namespace ReplantedArchipelago.Patches
                         {
                             chosenSprite = Graphics.GetGraphic("SPR_Present");
                         }
+
                         if (scoutedLocation.ItemId == 60)
                         {
                             scaler = 0.75f;
@@ -373,7 +404,8 @@ namespace ReplantedArchipelago.Patches
                 if (textColor != null)
                 {
                     Transform child = rowTransform.GetChild(i);
-                    TextMeshProUGUI textObject = child.Find("Holder/NotComingSoonContainer/ItemText").GetComponent<TextMeshProUGUI>();
+                    TextMeshProUGUI textObject = child.Find("Holder/NotComingSoonContainer/ItemText")
+                        .GetComponent<TextMeshProUGUI>();
                     textObject.text = $"<color={textColor}>{textObject.text}</color>";
                 }
             }
@@ -388,10 +420,14 @@ namespace ReplantedArchipelago.Patches
                 {
                     if (pageUpdateQueued == 1)
                     {
-                        GameObject trunkOpen = GameObject.Find("P_Store/Canvas/Layout/Center/Car/TrunkOpen"); //When viewing store direct from main menu
+                        GameObject trunkOpen =
+                            GameObject.Find(
+                                "P_Store/Canvas/Layout/Center/Car/TrunkOpen"); //When viewing store direct from main menu
                         if (trunkOpen != null && trunkOpen.activeSelf)
                         {
-                            GameObject storePage = GameObject.Find("P_Store/Canvas/Layout/Center/Car/StorePages/Page01"); //When viewing store direct from main menu
+                            GameObject storePage =
+                                GameObject.Find(
+                                    "P_Store/Canvas/Layout/Center/Car/StorePages/Page01"); //When viewing store direct from main menu
                             if (storePage != null)
                             {
                                 Transform topRow = storePage.transform.Find("ItemListTop");

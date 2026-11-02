@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
 using static ReplantedArchipelago.Data;
@@ -149,6 +150,12 @@ namespace ReplantedArchipelago
                     slot = apSession.Players.ActivePlayer.Name;
                     host = hostInput;
                     password = passwordInput;
+                    
+                    //Download game dialogue
+                    foreach (var game in apSession.Players.AllPlayers.Select(player => player.Game).Distinct())
+                    {
+                        Task.CompletedTask.ContinueWith(DownloadGameDialogue, game);
+                    }
 
                     //Slot data
                     musicMap = (JArray)slotData["music_map"];
@@ -290,6 +297,11 @@ namespace ReplantedArchipelago
                     }
                 }
             }
+        }
+        
+        private static async Task DownloadGameDialogue(Task task, object state)
+        {
+            await Main.dialogueClient.DownloadGameMeta((string)state);
         }
 
         public static int[] GetOrderedLevelIDs(JObject unlockRequirements, int levelCount, int startingLevelId) //Returns a list of Level IDs sorted in the order they will be unlocked
