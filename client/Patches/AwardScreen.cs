@@ -103,6 +103,12 @@ namespace ReplantedArchipelago.Patches
                         playerText = $"for {itemInfo.Player.Name}";
                     }
 
+                    if (Main.dialogueClient.TryGetDialogue(DialogueType.AwardScreen, itemInfo, APClient.apSession,
+                            out var dialogue))
+                    {
+                        playerText = dialogue;
+                    }
+
                     awardScreen.transform.Find("Canvas/Layout/Center/Panel/Inset/InsetBodyText").GetComponentInChildren<TMP_Text>(true).text = $"{itemText} {playerText}";
                 }
 

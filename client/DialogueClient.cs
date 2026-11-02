@@ -50,7 +50,7 @@ namespace ReplantedArchipelago
                 GameMeta = await HttpClient.GetFromJsonAsync<Dictionary<string, GameMeta>>(
                     DialogueBaseUrl + "/item-text/meta.json", CancellationToken.None);
             }
-            catch (Exception e)
+            catch (Exception _)
             {
                 Main.Log("Unable to download dialogue meta");
             }
@@ -85,7 +85,7 @@ namespace ReplantedArchipelago
                         dialogueFile.Dialogue.Add(dialogue.Key, dialogue.Value);
                     }
                 }
-                catch (Exception e)
+                catch (Exception _)
                 {
                     Main.Log($"Unable to download dialogue for game {gameName} from location {location}");
                 }
