@@ -6,6 +6,7 @@ using ReplantedArchipelago.Patches;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static ReplantedArchipelago.Patches.Menu;
@@ -29,6 +30,8 @@ namespace ReplantedArchipelago
         public static Queue<Data.QueuedIngameMessage> QueuedIngameMessages = new Queue<Data.QueuedIngameMessage>();
         public static string currentMessage;
         public static string currentScene;
+
+        public static DialogueClient dialogueClient;
 
         public static void OnSceneUnloaded(Scene scene)
         {
@@ -58,9 +61,14 @@ namespace ReplantedArchipelago
             SceneManager.sceneLoaded += new Action<Scene, LoadSceneMode>(OnSceneLoaded);
 
             //Patch DataService getters
-            var storeEntryProperty = typeof(DataService).GetProperty("StoreEntryData", BindingFlags.Instance | BindingFlags.Public);
+            var storeEntryProperty =
+                typeof(DataService).GetProperty("StoreEntryData", BindingFlags.Instance | BindingFlags.Public);
             MethodInfo storeGetter = storeEntryProperty.GetGetMethod();
-            harmony.Patch(storeGetter, postfix: new HarmonyLib.HarmonyMethod(typeof(Store).GetMethod(nameof(Store.PatchStoreEntryData))));
+            harmony.Patch(storeGetter,
+                postfix: new HarmonyLib.HarmonyMethod(typeof(Store).GetMethod(nameof(Store.PatchStoreEntryData))));
+
+            dialogueClient = new DialogueClient();
+            Task.Run(dialogueClient.DownloadRepository);
 
             APSettings.Init();
             defaultHost = APSettings.Host.Value;
